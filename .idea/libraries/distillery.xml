@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="distillery" type="mix">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/distillery/lib" />
+      <root url="file://$PROJECT_DIR$/deps/distillery/priv" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="artificery" type="mix">
+    <CLASSES />
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/artificery/lib" />
+    </SOURCES>
+  </library>
+</component>
