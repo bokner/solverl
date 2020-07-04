@@ -3,4 +3,8 @@ defmodule MinizincInstance do
   def build_command_args(args) do
     "-a #{args[:model]}"
   end
+
+
+
+
 end
