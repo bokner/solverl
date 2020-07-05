@@ -13,10 +13,10 @@ defmodule MinizincPort do
     # Locate minizinc executable and run it with args converted to CLI params.
     command = "#{System.find_executable("minizinc")} #{MinizincUtils.build_command_args(args)}"
     Logger.warn "Command: #{command}"
-    port = Port.open({:spawn, command}, [:binary, :exit_status, line: 64*1024 ])
+    port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, last_output: nil, exit_status: nil} }
+    {:ok, %{port: port, fsm_state: :start, last_output: nil, exit_status: nil} }
   end
 
   def terminate(reason, %{port: port} = state) do
@@ -39,8 +39,8 @@ defmodule MinizincPort do
   def handle_info({port, {:data, line}}, %{port: port} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    parse_line(text_line)
-    {:noreply, %{state | last_output: String.trim(text_line)}}
+    fsm_state = parse_line(text_line)
+    {:noreply, %{state | fsm_state: fsm_state, last_output: String.trim(text_line)}}
   end
 
   # Handle process exits
