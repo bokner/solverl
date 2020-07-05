@@ -13,7 +13,7 @@ defmodule MinizincPort do
     # Locate minizinc executable and run it with args converted to CLI params.
     command = "#{System.find_executable("minizinc")} #{MinizincUtils.build_command_args(args)}"
     Logger.warn "Command: #{command}"
-    port = Port.open({:spawn, command}, [:binary, :exit_status])
+    port = Port.open({:spawn, command}, [:binary, :exit_status, line: 64*1024 ])
     Port.monitor(port)
 
     {:ok, %{port: port, last_output: nil, exit_status: nil} }
@@ -26,14 +26,20 @@ defmodule MinizincPort do
     port_info = Port.info(port)
     os_pid = port_info[:os_pid]
 
-    if os_pid, do:  Logger.warn "Orphaned OS process: #{os_pid}"
+    if os_pid do
+      Logger.warn "Orphaned OS process: #{os_pid}"
+      Port.close(port)
+    end
 
     :normal
   end
 
-  # Handle data coming from the command's STDOUT
-  def handle_info({port, {:data, text_line}}, %{port: port} = state) do
-    Logger.info "Data: #{inspect text_line}"
+  # Handle incoming stream from the command's STDOUT
+  # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
+  def handle_info({port, {:data, line}}, %{port: port} = state) do
+    ##TODO: handle long lines
+    {_eol, text_line} = line
+    parse_line(text_line)
     {:noreply, %{state | last_output: String.trim(text_line)}}
   end
 
@@ -59,6 +65,14 @@ defmodule MinizincPort do
   def handle_info(msg, state) do
     Logger.info "Unhandled message: #{inspect msg}"
     {:noreply, state}
+  end
+
+  ## Helpers
+  ## Parse incoming line from the port.
+  ## TODO
+  def parse_line(text) do
+    Logger.info "Data: #{inspect text}"
+    :todo
   end
 
 end

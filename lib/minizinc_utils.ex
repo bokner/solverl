@@ -3,6 +3,8 @@ defmodule MinizincUtils do
 
   @solution_status_reg  ~r/^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}/
   @json_reg ~r/\{[^\}]+\}/
+  @solution_delimiter_reg ~r/-{10}/
+  @solution_optimal_delimiter_reg ~r/={10}/
 
   def build_command_args(args) do
     defaults = [solver: "gecode", time_limit: 60*5*1000]
