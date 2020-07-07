@@ -2,6 +2,7 @@ defmodule MinizincPort do
 
   use GenServer
   require Logger
+  import MinizincParser
 
   # GenServer API
   def start_link(args \\ [], opts \\ []) do
@@ -16,7 +17,7 @@ defmodule MinizincPort do
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, fsm_state: :start, last_output: nil, exit_status: nil} }
+    {:ok, %{port: port, solution: solution_rec(), exit_status: nil} }
   end
 
   def terminate(reason, %{port: port} = state) do
@@ -36,11 +37,11 @@ defmodule MinizincPort do
 
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
-  def handle_info({port, {:data, line}}, %{port: port} = state) do
+  def handle_info({port, {:data, line}}, %{solution: solution} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    fsm_state = parse_line(text_line)
-    {:noreply, %{state | fsm_state: fsm_state, last_output: String.trim(text_line)}}
+    {_, solution_data} = MinizincParser.read_solution(solution, text_line)
+    {:noreply, %{state | solution: solution_data}}
   end
 
   # Handle process exits
@@ -57,7 +58,7 @@ defmodule MinizincPort do
     {:stop, :normal, state}
   end
 
-  def handle_info({:EXIT, port, :normal}, state) do
+  def handle_info({:EXIT, _port, :normal}, state) do
     Logger.info "handle_info: EXIT"
     {:stop, :normal, state}
   end
