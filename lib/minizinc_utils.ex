@@ -7,8 +7,7 @@ defmodule MinizincUtils do
   @solution_optimal_delimiter_reg ~r/={10}/
 
   def build_command_args(args) do
-    defaults = [solver: "gecode", time_limit: 60*5*1000]
-    args = Keyword.merge(defaults, args)
+
     solver_str = "--solver #{args[:solver]}"
     time_limit_str = "--time-limit #{args[:time_limit]}"
     model_str = "#{args[:model]}"

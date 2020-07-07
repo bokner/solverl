@@ -6,6 +6,8 @@ defmodule MinizincPort do
 
   # GenServer API
   def start_link(args \\ [], opts \\ []) do
+    defaults = [solver: "gecode", time_limit: 60*5*1000, solution_handler: &__MODULE__.default_solution_handler/1]
+    args = Keyword.merge(defaults, args)
     GenServer.start_link(__MODULE__, args, opts)
   end
 
@@ -17,7 +19,9 @@ defmodule MinizincPort do
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, solution: solution_rec(), exit_status: nil} }
+    {:ok, %{port: port, solution: solution_rec(),
+      solution_handler: args[:solution_handler],
+      exit_status: nil} }
   end
 
   def terminate(reason, %{port: port} = state) do
@@ -37,11 +41,17 @@ defmodule MinizincPort do
 
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
-  def handle_info({port, {:data, line}}, %{solution: solution} = state) do
+  def handle_info({port, {:data, line}}, %{solution: solution, solution_handler: handlerFun} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    {_, solution_data} = MinizincParser.read_solution(solution, text_line)
-    {:noreply, %{state | solution: solution_data}}
+    {parse_status, solution} = MinizincParser.read_solution(solution, text_line)
+    case parse_status do
+      :ok ->
+        handlerFun.(solution)
+        {:noreply, %{state | solution: MinizincParser.reset_solution(solution)}}
+      _ ->
+        {:noreply, %{state | solution: solution}}
+    end
   end
 
   # Handle process exits
@@ -66,6 +76,11 @@ defmodule MinizincPort do
   def handle_info(msg, state) do
     Logger.info "Unhandled message: #{inspect msg}"
     {:noreply, state}
+  end
+
+  ## Default solution handler: prints the solution.
+  def default_solution_handler(solution) do
+    Logger.info "Solution: #{inspect solution}"
   end
 
   ## Helpers
