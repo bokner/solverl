@@ -2,11 +2,12 @@ defmodule MinizincPort do
 
   use GenServer
   require Logger
+  import MinizincUtils
   import MinizincParser
 
   # GenServer API
   def start_link(args \\ [], opts \\ []) do
-    defaults = [solver: "gecode", time_limit: 60*5*1000, solution_handler: &__MODULE__.default_solution_handler/1]
+    defaults = MinizincUtils.default_args
     args = Keyword.merge(defaults, args)
     GenServer.start_link(__MODULE__, args, opts)
   end
@@ -78,10 +79,7 @@ defmodule MinizincPort do
     {:noreply, state}
   end
 
-  ## Default solution handler: prints the solution.
-  def default_solution_handler(solution) do
-    Logger.info "Solution: #{inspect solution}"
-  end
+
 
   ## Helpers
   ## Parse incoming line from the port.
