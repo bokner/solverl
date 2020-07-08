@@ -1,10 +1,12 @@
 defmodule MinizincParser do
   @moduledoc false
   require Logger
+  import Jason
+
   require Record
   Record.defrecord :solution_rec,
                    [status: nil, solver_stats: %{}, mzn_stats: %{},
-                     solution: %{}, time_elapsed: nil, misc: %{},
+                     solution_data: %{}, time_elapsed: nil, misc: %{},
                      json_buffer: ""
                    ]
 
@@ -33,6 +35,25 @@ defmodule MinizincParser do
     solution_rec(solution_record, solver_stats: process_stats(stats, rest))
   end
 
+  # JSON-formatted solution data
+  ## Opening of JSON
+  def update_solution(solution_record, "{") do
+    solution_rec(solution_record, json_buffer: "{")
+  end
+
+  ## Closing of JSON
+  def update_solution(solution_rec(json_buffer: "{"<> jbuffer = buff) = solution_record, "}") do
+    {:ok, solution_data} = Jason.decode(
+        buff <> "}")
+    solution_rec(solution_record, json_buffer: "", solution_data: solution_data)
+  end
+
+  ## Collecting JSON data
+  def update_solution(solution_rec(json_buffer: "{"<> jbuffer = buff) = solution_record, json_chunk) do
+    solution_rec(solution_record, json_buffer: buff <> json_chunk)
+  end
+
+
   def update_solution(solution_record, "%%%mzn-stat-end "<> rest) do
     solution_record
   end
@@ -47,7 +68,7 @@ defmodule MinizincParser do
   end
 
   def reset_solution(solution_record) do
-    solution_rec(solution_record, solution: %{}, time_elapsed: nil, misc: %{},
+    solution_rec(solution_record, solution_data: %{}, time_elapsed: nil, misc: %{},
                                       json_buffer: "")
   end
 end
