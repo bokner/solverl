@@ -21,6 +21,15 @@ defmodule MinizincParser do
     {:ok, solution_rec(solution_record, status: :satisfied)}
   end
 
+  ## TODO: parsing/capturing status
+  def read_solution(solution_record, @optimal) do
+    {:ok, solution_rec(solution_record, status: :optimal)}
+  end
+
+  def read_solution(solution_record, @unsatisfiable) do
+    {:ok, solution_rec(solution_record, status: :unsatisfiable)}
+  end
+
   def read_solution(solution_record, new_line) do
     Logger.info "Data: #{inspect new_line}"
     {:incomplete, update_solution(solution_record, new_line)}
@@ -61,15 +70,6 @@ defmodule MinizincParser do
 
   def update_solution(solution_record, "%%%mzn-stat-end "<> rest) do
     solution_record
-  end
-
-  ## TODO: parsing/capturing status
-  def update_solution(solution_record, @optimal) do
-    solution_rec(solution_record, status: :optimal)
-  end
-
-  def update_solution(solution_record, @unsatisfiable) do
-    solution_rec(solution_record, status: :unsatisfiable)
   end
 
   def update_solution(solution_record, _unhandled) do
