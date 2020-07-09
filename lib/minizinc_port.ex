@@ -15,7 +15,7 @@ defmodule MinizincPort do
   def init(args \\ []) do
     Process.flag(:trap_exit, true)
     # Locate minizinc executable and run it with args converted to CLI params.
-    command = "#{System.find_executable("minizinc")} #{MinizincUtils.build_command_args(args)}"
+    command = "#{System.find_executable("minizinc")} #{MinizincUtils.prepare_solver_cmd(args)}"
     Logger.warn "Command: #{command}"
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
