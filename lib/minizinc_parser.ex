@@ -11,6 +11,9 @@ defmodule MinizincParser do
                    ]
 
   @solution_separator "----------"
+  @solution_optimal   "=========="
+  @solution_status_reg  ~r/^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}/
+
 
   def read_solution(solution_record, @solution_separator) do
     {:ok, solution_record}
@@ -58,6 +61,7 @@ defmodule MinizincParser do
     solution_record
   end
 
+  ## TODO: parsing/capturing status
   def update_solution(solution_record, _unhandled) do
     solution_record
   end

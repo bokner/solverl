@@ -3,10 +3,6 @@ defmodule MinizincUtils do
 
   require Logger
 
-  @solution_status_reg  ~r/^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}/
-  @json_reg ~r/\{[^\}]+\}/
-  @solution_delimiter_reg ~r/-{10}/
-  @solution_optimal_delimiter_reg ~r/={10}/
 
   @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/1]
 
