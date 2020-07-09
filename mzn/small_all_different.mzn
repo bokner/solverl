@@ -1,6 +1,8 @@
 % --- small_alldifferent.mzn ---
 include "all_different.mzn";
-int: test_data;
+int: test_data1;
+int: test_data2;
+
 %array[1..4] of var 1..10: x;
 array[1..4] of var 1..6: y;
 var 1..3: z;

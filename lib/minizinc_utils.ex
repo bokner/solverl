@@ -17,7 +17,8 @@ defmodule MinizincUtils do
     model_str = "#{args[:model]}"
     {:ok, dzn_str} = make_dzn(args[:dzn])
     String.trim(
-    "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
+    "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
+    "#{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
     )
   end
 
@@ -47,7 +48,7 @@ defmodule MinizincUtils do
     target_file = String.replace_suffix(target, ".dzn", "") <> ".dzn"
     for f <- datafiles do
       {:ok, content} = File.read(f)
-      File.write(target_file, content, [:append])
+      File.write(target_file, content <> "\n", [:append])
     end
     {:ok, target_file}
   end
