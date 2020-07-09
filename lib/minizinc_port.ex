@@ -20,7 +20,8 @@ defmodule MinizincPort do
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, solution: solution_rec(),
+    {:ok, %{port: port, current_solution: solution_rec(),
+      last_solution: nil,
       solution_handler: args[:solution_handler],
       exit_status: nil} }
   end
@@ -42,16 +43,16 @@ defmodule MinizincPort do
 
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
-  def handle_info({port, {:data, line}}, %{solution: solution, solution_handler: handlerFun} = state) do
+  def handle_info({port, {:data, line}}, %{current_solution: solution, solution_handler: handlerFun} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
     {parse_status, solution} = MinizincParser.read_solution(solution, text_line)
     case parse_status do
       :ok ->
         handlerFun.(solution)
-        {:noreply, %{state | solution: MinizincParser.reset_solution(solution)}}
+        {:noreply, %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}}
       _ ->
-        {:noreply, %{state | solution: solution}}
+        {:noreply, %{state | current_solution: solution}}
     end
   end
 
