@@ -16,4 +16,7 @@ constraint y[1] > y[2];
 %constraint y[1] + y[2] <= 0;
 
 solve maximize y[1] + y[2];
+
+output ["test data: \(test_data1), \(test_data2)\n"];
+output ["y = \(y)"];
 % ------------------------------
