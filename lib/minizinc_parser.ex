@@ -16,7 +16,7 @@ defmodule MinizincParser do
 
 
   def read_solution(solution_record, @solution_separator) do
-    {:ok, solution_record}
+    {:ok, solution_rec(solution_record, status: :satisfied)}
   end
 
   def read_solution(solution_record, new_line) do
@@ -62,6 +62,10 @@ defmodule MinizincParser do
   end
 
   ## TODO: parsing/capturing status
+  def update_solution(solution_record, @solution_optimal) do
+    solution_rec(solution_record, status: :optimal)
+  end
+
   def update_solution(solution_record, _unhandled) do
     solution_record
   end
