@@ -11,7 +11,9 @@ defmodule MinizincParser do
                    ]
 
   @solution_separator "----------"
-  @solution_optimal   "=========="
+  @optimal       "=========="
+  @unsatisfiable "=====UNSATISFIABLE====="
+
   @solution_status_reg  ~r/^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}/
 
 
@@ -62,8 +64,12 @@ defmodule MinizincParser do
   end
 
   ## TODO: parsing/capturing status
-  def update_solution(solution_record, @solution_optimal) do
+  def update_solution(solution_record, @optimal) do
     solution_rec(solution_record, status: :optimal)
+  end
+
+  def update_solution(solution_record, @unsatisfiable) do
+    solution_rec(solution_record, status: :unsatisfiable)
   end
 
   def update_solution(solution_record, _unhandled) do
