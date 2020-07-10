@@ -43,16 +43,25 @@ defmodule MinizincPort do
 
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
-  def handle_info({port, {:data, line}}, %{current_solution: solution, solution_handler: handlerFun} = state) do
+  def handle_info({port, {:data, line}},
+        %{current_solution: solution,
+          last_solution: last_solution,
+          solution_handler: handlerFun} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    {parse_status, solution} = MinizincParser.read_solution(solution, text_line)
-    case parse_status do
-      :ok ->
-        handlerFun.(solution)
-        {:noreply, %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}}
-      _ ->
+    {status, solution} = MinizincParser.read_solution(solution, text_line)
+    solution = MinizincParser.update_status(solution, status)
+    case status do
+      nil ->
         {:noreply, %{state | current_solution: solution}}
+      :satisfied ->
+        handlerFun.(status, solution)
+        {:noreply, %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}}
+      _terminal_status ->
+        last_solution = MinizincParser.update_status(last_solution, status)
+        handlerFun.(status, last_solution)
+        {:noreply, %{state | current_solution: solution, last_solution: last_solution}}
+
     end
   end
 
@@ -83,11 +92,6 @@ defmodule MinizincPort do
 
 
   ## Helpers
-  ## Parse incoming line from the port.
-  ## TODO
-  def parse_line(text) do
-    Logger.info "Data: #{inspect text}"
-    :todo
-  end
+
 
 end

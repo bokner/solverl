@@ -5,8 +5,13 @@ defmodule MinizincParser do
 
   require Record
   Record.defrecord :solution_rec,
-                   [status: nil, solver_stats: %{}, mzn_stats: %{},
-                     solution_data: %{}, time_elapsed: nil, misc: %{},
+                   [
+                     status: nil,
+                     solver_stats: %{},
+                     mzn_stats: %{},
+                     solution_data: %{},
+                     time_elapsed: nil,
+                     misc: %{},
                      json_buffer: ""
                    ]
 
@@ -22,40 +27,40 @@ defmodule MinizincParser do
 
 
   def read_solution(solution_record, @solution_separator) do
-    {:ok, solution_rec(solution_record, status: :satisfied)}
+    {:satisfied, solution_record}
   end
 
   ## TODO: parsing/capturing status
   def read_solution(solution_record, @status_optimal) do
-    {:ok, solution_rec(solution_record, status: :optimal)}
+    {:optimal, solution_record}
   end
 
   def read_solution(solution_record, @status_unsatisfiable) do
-    {:ok, solution_rec(solution_record, status: :unsatisfiable)}
+    {:unsatisfiable, solution_record}
   end
 
   def read_solution(solution_record, @status_unknown) do
-    {:ok, solution_rec(solution_record, status: :unknown)}
+    {:unknown, solution_record}
   end
 
   def read_solution(solution_record, @status_error) do
-    {:ok, solution_rec(solution_record, status: :error)}
+    {:error, solution_record}
   end
 
   def read_solution(solution_record, @status_unsatOrUnbounded) do
-    {:ok, solution_rec(solution_record, status: :unsatOrUnbounded)}
+    {:unsatOrUnbounded, solution_record}
   end
 
   def read_solution(solution_record, @status_unbounded) do
-    {:ok, solution_rec(solution_record, status: :ubounded)}
+    {:ubounded, solution_record}
   end
 
   def read_solution(solution_record, new_line) do
-    Logger.info "Data: #{inspect new_line}"
-    {:incomplete, update_solution(solution_record, new_line)}
+    #Logger.info "Data: #{inspect new_line}"
+    {nil, update_solution(solution_record, new_line)}
   end
 
-  def update_solution(solution_record, "% time elapsed: "<> rest) do
+  def update_solution(solution_record, "% time elapsed: " <> rest) do
     solution_rec(solution_record, time_elapsed: rest)
   end
 
@@ -76,19 +81,20 @@ defmodule MinizincParser do
   end
 
   ## Closing of JSON
-  def update_solution(solution_rec(json_buffer: "{"<> jbuffer = buff) = solution_record, "}") do
+  def update_solution(solution_rec(json_buffer: "{" <> jbuffer = buff) = solution_record, "}") do
     {:ok, solution_data} = Jason.decode(
-        buff <> "}")
+      buff <> "}"
+    )
     solution_rec(solution_record, json_buffer: "", solution_data: solution_data)
   end
 
   ## Collecting JSON data
-  def update_solution(solution_rec(json_buffer: "{"<> jbuffer = buff) = solution_record, json_chunk) do
+  def update_solution(solution_rec(json_buffer: "{" <> jbuffer = buff) = solution_record, json_chunk) do
     solution_rec(solution_record, json_buffer: buff <> json_chunk)
   end
 
 
-  def update_solution(solution_record, "%%%mzn-stat-end "<> rest) do
+  def update_solution(solution_record, "%%%mzn-stat-end " <> rest) do
     solution_record
   end
 
@@ -102,9 +108,17 @@ defmodule MinizincParser do
   end
 
   def reset_solution(solution_record) do
-    solution_rec(solution_record, solution_data: %{}, time_elapsed: nil, misc: %{},
-                                      json_buffer: "")
+    solution_rec(
+      solution_record,
+      solution_data: %{},
+      time_elapsed: nil,
+      misc: %{},
+      json_buffer: ""
+    )
   end
 
+  def update_status(solution_record, status) do
+    solution_rec(solution_record, status: status)
+  end
 
 end

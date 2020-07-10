@@ -4,7 +4,7 @@ defmodule MinizincUtils do
   require Logger
 
 
-  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/1]
+  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/2]
 
   def prepare_solver_cmd(args) do
 
@@ -25,22 +25,39 @@ defmodule MinizincUtils do
 
 
   ## Default solution handler: prints the solution.
-  def default_solution_handler(solution) do
+  def default_solution_handler(:satisfied, solution) do
     Logger.info "Solution: #{inspect solution}"
+  end
+
+  def default_solution_handler(:incomplete, solution) do
+    Logger.error "Inomplete solution shouldn't be handled here!"
+    throw {:handle_incomplete_solution}
+  end
+
+  def default_solution_handler(status, _solution) do
+    Logger.info "Status: #{inspect status}"
   end
 
   def default_args, do: @default_args
 
   ## Merges list of dzn files and writes the result to a (temporary by default) target file.
   ## TODO: validate content?
+  def make_dzn(data, target \\ nil)
+
   def make_dzn([], _) do
     {:ok, ""}
+  end
+
+  def make_dzn(datafiles, nil) do
+    make_dzn(datafiles, String.trim(to_string(:os.cmd('mktemp'))))
   end
 
   def make_dzn(datafile, target) when is_binary(datafile) do
     make_dzn([datafile], target)
   end
-  def make_dzn(datafiles, target \\ String.trim(to_string(:os.cmd('mktemp'))) ) when is_list(datafiles) do
+
+
+  def make_dzn(datafiles, target) when is_list(datafiles) do
     target_file = String.replace_suffix(target, ".dzn", "") <> ".dzn"
     for f <- datafiles do
       {:ok, content} = File.read(f)
