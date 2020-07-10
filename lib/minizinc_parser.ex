@@ -10,11 +10,15 @@ defmodule MinizincParser do
                      json_buffer: ""
                    ]
 
-  @solution_separator "----------"
-  @optimal       "=========="
-  @unsatisfiable "=====UNSATISFIABLE====="
+  @solution_separator      "----------"
 
-  @solution_status_reg  ~r/^-{10}|={5}(ERROR|UNKNOWN|UNSATISFIABLE|UNSATorUNBOUNDED|UNBOUNDED|)?={5}/
+  @status_optimal          "=========="
+  @status_unsatisfiable    "=====UNSATISFIABLE====="
+  @status_unknown          "=====UNKNOWN====="
+  @status_error            "=====ERROR====="
+  @status_unsatOrUnbounded "=====UNSATorUNBOUNDED====="
+  @status_unbounded        "=====UNBOUNDED====="
+
 
 
   def read_solution(solution_record, @solution_separator) do
@@ -22,12 +26,28 @@ defmodule MinizincParser do
   end
 
   ## TODO: parsing/capturing status
-  def read_solution(solution_record, @optimal) do
+  def read_solution(solution_record, @status_optimal) do
     {:ok, solution_rec(solution_record, status: :optimal)}
   end
 
-  def read_solution(solution_record, @unsatisfiable) do
+  def read_solution(solution_record, @status_unsatisfiable) do
     {:ok, solution_rec(solution_record, status: :unsatisfiable)}
+  end
+
+  def read_solution(solution_record, @status_unknown) do
+    {:ok, solution_rec(solution_record, status: :unknown)}
+  end
+
+  def read_solution(solution_record, @status_error) do
+    {:ok, solution_rec(solution_record, status: :error)}
+  end
+
+  def read_solution(solution_record, @status_unsatOrUnbounded) do
+    {:ok, solution_rec(solution_record, status: :unsatOrUnbounded)}
+  end
+
+  def read_solution(solution_record, @status_unbounded) do
+    {:ok, solution_rec(solution_record, status: :ubounded)}
   end
 
   def read_solution(solution_record, new_line) do
@@ -85,4 +105,6 @@ defmodule MinizincParser do
     solution_rec(solution_record, solution_data: %{}, time_elapsed: nil, misc: %{},
                                       json_buffer: "")
   end
+
+
 end
