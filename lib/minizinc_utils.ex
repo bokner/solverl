@@ -8,8 +8,8 @@ defmodule MinizincUtils do
   @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/1]
 
   def prepare_solver_cmd(args) do
-
-    solver_str = "--solver #{args[:solver]}"
+    {:ok, solver} = MinizincSolver.lookup(args[:solver])
+    solver_str = "--solver #{solver["id"]}"
     time_limit_str = "--time-limit #{args[:time_limit]}"
     model_str = "#{args[:model]}"
     {:ok, dzn_str} = make_dzn(args[:dzn])

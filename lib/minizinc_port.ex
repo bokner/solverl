@@ -2,7 +2,7 @@ defmodule MinizincPort do
 
   use GenServer
   require Logger
-  import MinizincUtils
+
   import MinizincParser
 
   # GenServer API

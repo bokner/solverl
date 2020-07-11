@@ -121,7 +121,7 @@ defmodule MinizincParser do
   def update_status(nil, status) do
     solution_rec(status: status)
   end
-  
+
   def update_status(solution_record, status) do
     solution_rec(solution_record, status: status)
   end
