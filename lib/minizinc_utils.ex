@@ -3,8 +3,9 @@ defmodule MinizincUtils do
 
   require Logger
 
+  import MinizincParser
 
-  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/2]
+  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/1]
 
   def prepare_solver_cmd(args) do
 
@@ -25,18 +26,15 @@ defmodule MinizincUtils do
 
 
   ## Default solution handler: prints the solution.
-  def default_solution_handler(:satisfied, solution) do
-    Logger.info "Solution: #{inspect solution}"
-  end
-
-  def default_solution_handler(:incomplete, solution) do
-    Logger.error "Inomplete solution shouldn't be handled here!"
+  def default_solution_handler(solution_rec(status: nil) = _solution) do
+    Logger.error "Incomplete solution shouldn't be handled here!"
     throw {:handle_incomplete_solution}
   end
 
-  def default_solution_handler(status, _solution) do
-    Logger.info "Status: #{inspect status}"
+  def default_solution_handler(solution_rec(status: _status) = solution) do
+    Logger.info "Solution: #{inspect solution}"
   end
+
 
   def default_args, do: @default_args
 

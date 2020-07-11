@@ -26,9 +26,9 @@ defmodule MinizincPort do
       exit_status: nil} }
   end
 
-  def terminate(reason, %{port: port} = state) do
+  def terminate(reason, %{port: port} = _state) do
     Logger.info "** TERMINATE: #{inspect reason}"
-    Logger.info "in state: #{inspect state}"
+    #Logger.info "in state: #{inspect state}"
 
     port_info = Port.info(port)
     os_pid = port_info[:os_pid]
@@ -43,7 +43,7 @@ defmodule MinizincPort do
 
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
-  def handle_info({port, {:data, line}},
+  def handle_info({_port, {:data, line}},
         %{current_solution: solution,
           last_solution: last_solution,
           solution_handler: handlerFun} = state) do
@@ -55,20 +55,24 @@ defmodule MinizincPort do
       nil ->
         {:noreply, %{state | current_solution: solution}}
       :satisfied ->
-        handlerFun.(status, solution)
+        handlerFun.(solution)
         {:noreply, %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}}
       _terminal_status ->
         last_solution = MinizincParser.update_status(last_solution, status)
-        handlerFun.(status, last_solution)
         {:noreply, %{state | current_solution: solution, last_solution: last_solution}}
 
     end
   end
 
   # Handle process exits
-  def handle_info({port, {:exit_status, status}}, %{port: port} = state) do
+  def handle_info(
+      {port, {:exit_status, status}},
+        %{port: port,
+          current_solution: solution,
+          last_solution: last_solution,
+          solution_handler: handlerFun} = state) do
     Logger.info "Port exit: :exit_status: #{status}"
-
+    handlerFun.(MinizincParser.merge_solver_stats(last_solution, solution))
     new_state = %{state | exit_status: status}
 
     {:noreply, new_state}

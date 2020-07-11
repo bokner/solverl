@@ -81,7 +81,7 @@ defmodule MinizincParser do
   end
 
   ## Closing of JSON
-  def update_solution(solution_rec(json_buffer: "{" <> jbuffer = buff) = solution_record, "}") do
+  def update_solution(solution_rec(json_buffer: "{" <> _jbuffer = buff) = solution_record, "}") do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
@@ -89,12 +89,12 @@ defmodule MinizincParser do
   end
 
   ## Collecting JSON data
-  def update_solution(solution_rec(json_buffer: "{" <> jbuffer = buff) = solution_record, json_chunk) do
+  def update_solution(solution_rec(json_buffer: "{" <> _jbuffer = buff) = solution_record, json_chunk) do
     solution_rec(solution_record, json_buffer: buff <> json_chunk)
   end
 
 
-  def update_solution(solution_record, "%%%mzn-stat-end " <> rest) do
+  def update_solution(solution_record, "%%%mzn-stat-end " <> _rest) do
     solution_record
   end
 
@@ -110,6 +110,7 @@ defmodule MinizincParser do
   def reset_solution(solution_record) do
     solution_rec(
       solution_record,
+      status: nil,
       solution_data: %{},
       time_elapsed: nil,
       misc: %{},
@@ -119,6 +120,10 @@ defmodule MinizincParser do
 
   def update_status(solution_record, status) do
     solution_rec(solution_record, status: status)
+  end
+
+  def merge_solver_stats(solution_rec(solver_stats: stats1) = solution, solution_rec(solver_stats: stats2)) do
+    solution_rec(solution, solver_stats: Map.merge(stats1, stats2))
   end
 
 end
