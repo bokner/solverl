@@ -1,7 +1,7 @@
 defmodule MinizincParser do
   @moduledoc false
   require Logger
-  
+
   require Record
   Record.defrecord :solution_rec,
                    [

@@ -3,7 +3,7 @@ include "all_different.mzn";
 int: test_data1;
 int: test_data2;
 
-array[1..3, 1..3, 1..2] of int: test_arr;
+array[1..2, 1..3, 1..3] of int: test_arr;
 
 %array[1..4] of var 1..10: x;
 array[1..4] of var 1..6: y;
@@ -19,6 +19,6 @@ constraint y[1] > y[2];
 
 solve maximize y[1] + y[2];
 
-%output ["test data: \(test_data1), \(test_data2)\n"];
+output ["test data: \(test_arr)\n"];
 %output ["y = \(y)"];
 % ------------------------------

@@ -69,7 +69,7 @@ defmodule MinizincData do
       "array#{length(dims)}d(" <>
       Enum.reduce(dims, "",
         fn d, acc ->
-          "1..#{d}," <> acc
+          acc <> "1..#{d},"
         end)
       <>"[#{Enum.join(List.flatten(el), ",")}]" <> ")"
 
