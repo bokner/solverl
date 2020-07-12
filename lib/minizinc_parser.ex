@@ -1,8 +1,7 @@
 defmodule MinizincParser do
   @moduledoc false
   require Logger
-  import Jason
-
+  
   require Record
   Record.defrecord :solution_rec,
                    [
@@ -87,7 +86,7 @@ defmodule MinizincParser do
     )
     solution_rec(
       solution_record, json_buffer: "",
-      solution_data: MinizincUtils.output_to_elixir(solution_data))
+      solution_data: MinizincData.output_to_elixir(solution_data))
   end
 
   ## Collecting JSON data
