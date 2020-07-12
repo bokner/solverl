@@ -63,4 +63,17 @@ defmodule MinizincUtils do
     end
     {:ok, target_file}
   end
+
+  def output_to_elixir(data_dict) do
+    Enum.reduce(data_dict, %{}, fn({k, v}, acc) -> Map.put(acc, k, mzn_to_elixir(v)) end)
+  end
+
+  def mzn_to_elixir(el) when is_map(el) do
+    s = el["set"]
+    if s == [], do: MapSet.new(s), else: MapSet.new(hd(s))
+  end
+
+  def mzn_to_elixir(el) do
+    el
+  end
 end

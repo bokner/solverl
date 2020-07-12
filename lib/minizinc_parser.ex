@@ -85,7 +85,9 @@ defmodule MinizincParser do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
-    solution_rec(solution_record, json_buffer: "", solution_data: solution_data)
+    solution_rec(
+      solution_record, json_buffer: "",
+      solution_data: MinizincUtils.output_to_elixir(solution_data))
   end
 
   ## Collecting JSON data
