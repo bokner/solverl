@@ -72,14 +72,14 @@ defmodule MinizincUtils do
 
   # Dzn as dict/map
   def read_dzn(data) when is_map(data) do
-    {:ok, _dzn} = map_to_dzn(data)
+    {:ok, map_to_dzn(data)}
   end
 
   # Convert map to the list of strings in .dzn format
   def map_to_dzn(data) do
     Enum.reduce(data, "",
       fn({k, v}, acc) ->
-        "#{k} = #{elixir_to_dzn(v)};\n"
+        "#{k} = #{elixir_to_dzn(v)};\n" <> acc
       end)
   end
 
