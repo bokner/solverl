@@ -1,5 +1,8 @@
 defmodule MinizincData do
   @moduledoc false
+
+  @default_array_base 1
+
   ## Merges list of dzn files and/or maps and writes the result to a (temporary by default) target file.
   ## TODO: validate content?
   def make_dzn(data, target \\ nil)
@@ -62,24 +65,52 @@ defmodule MinizincData do
   end
 
   # Convert element to .dzn string
-  # TODO: Support 0-base for arrays
-  def elixir_to_dzn(el) when is_list(el) do
+  #
+  def elixir_to_dzn(array) when is_list(array) do
+    array_to_dzn(array, @default_array_base)
+  end
+
+  # Support optional list of index bases for array dimensions.
+  #
+  def elixir_to_dzn({base, array}) when is_list(array) do
+    array_to_dzn(array, base)
+  end
+
+  def elixir_to_dzn(el) do
+    el
+  end
+
+
+
+  def array_to_dzn(el, base)  do
     dims = dimensions(el)
     if dims do
-      "array#{length(dims)}d(" <>
-      Enum.reduce(dims, "",
-        fn d, acc ->
-          acc <> "1..#{d},"
-        end)
+      array_dimensions(dims, make_base_list(dims, base))
       <>"[#{Enum.join(List.flatten(el), ",")}]" <> ")"
-
     else
       throw {:irregular_array, el}
     end
   end
 
-  def elixir_to_dzn(el) do
-    el
+  def make_base_list(_dims, base) when is_list(base) do
+    base
+  end
+
+  def make_base_list(dims, base) when is_integer(base) do
+    List.duplicate(base, length(dims))
+  end
+
+  def array_dimensions(dims, bases) do
+    if length(dims) == length(bases) do
+      "array#{length(dims)}d(" <>
+      Enum.reduce(Enum.zip(dims, bases), "",
+        fn {d, b}, acc ->
+          acc <> "#{b}..#{d + b - 1},"  ## Shift upper bound to match dimension base
+        end)
+    else
+      throw {:base_list_mismatch, bases}
+    end
+
   end
 
   ## Dimensions of a nested list of lists.
