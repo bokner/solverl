@@ -11,7 +11,8 @@ defmodule MinizincParser do
                      solution_data: %{},
                      time_elapsed: nil,
                      misc: %{},
-                     json_buffer: ""
+                     json_buffer: "",
+                     unhandled_output: ""
                    ]
 
   @solution_separator      "----------"
@@ -95,12 +96,12 @@ defmodule MinizincParser do
   end
 
 
-  def update_solution(solution_record, "%%%mzn-stat-end " <> _rest) do
+  def update_solution(solution_record, "%%%mzn-stat-end" <> _rest) do
     solution_record
   end
 
-  def update_solution(solution_record, _unhandled) do
-    solution_record
+  def update_solution(solution_rec(unhandled_output: u) = solution, unhandled) do
+    solution_rec(solution, unhandled_output: u <> "\n" <> unhandled)
   end
 
   def process_stats(stats, key_value_txt) do
