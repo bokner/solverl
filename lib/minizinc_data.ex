@@ -65,8 +65,9 @@ defmodule MinizincData do
     el
   end
 
+  #############################################
   # Convert element to .dzn string
-  #
+  #############################################
   def elixir_to_dzn(array) when is_list(array) do
     array_to_dzn(array, @default_array_base)
   end
@@ -75,6 +76,13 @@ defmodule MinizincData do
   #
   def elixir_to_dzn({base, array}) when is_list(array) do
     array_to_dzn(array, base)
+  end
+
+  #
+  # Sets
+  #
+  def elixir_to_dzn(map) when is_map(map) do
+    "{" <> Enum.join(map, ",") <> "}"
   end
 
   def elixir_to_dzn(el) do
