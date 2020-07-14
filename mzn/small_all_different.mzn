@@ -10,6 +10,9 @@ array[0..1, 1..3, 0..2] of int: test_base_arr;
 %% Test sets
 set of int: test_set;
 
+%% Test enums
+enum test_enum;
+
 %array[1..4] of var 1..10: x;
 array[1..4] of var 1..6: y;
 var 1..3: z;

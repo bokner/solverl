@@ -1,3 +1,5 @@
 test_data2 = 10000;
 
 %test_set = {1,2,3};
+
+%test_enum = {red, blue, white, black};
