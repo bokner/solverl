@@ -2,6 +2,7 @@ defmodule MinizincData do
   @moduledoc false
 
   @default_array_base 1
+  @max_dimensions 6
 
   ## Merges list of dzn files and/or maps and writes the result to a (temporary by default) target file.
   ## TODO: validate content?
@@ -98,6 +99,10 @@ defmodule MinizincData do
 
   def make_base_list(dims, base) when is_integer(base) do
     List.duplicate(base, length(dims))
+  end
+
+  def array_dimensions(dims, _bases) when length(dims) > @max_dimensions do
+    throw {:too_many_dimensions, "#{length(dims)}"}
   end
 
   def array_dimensions(dims, bases) do
