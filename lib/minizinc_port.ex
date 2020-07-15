@@ -7,7 +7,7 @@ defmodule MinizincPort do
 
   # GenServer API
   def start_link(args \\ [], opts \\ []) do
-    defaults = MinizincUtils.default_args
+    defaults = MinizincSolver.default_args
     args = Keyword.merge(defaults, args)
     GenServer.start_link(__MODULE__, args, opts)
   end
@@ -15,7 +15,7 @@ defmodule MinizincPort do
   def init(args \\ []) do
     Process.flag(:trap_exit, true)
     # Locate minizinc executable and run it with args converted to CLI params.
-    command = "#{System.find_executable("minizinc")} #{MinizincUtils.prepare_solver_cmd(args)}"
+    command = MinizincSolver.prepare_solver_cmd(args)
     Logger.warn "Command: #{command}"
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
