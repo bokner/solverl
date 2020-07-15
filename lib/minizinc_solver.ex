@@ -29,7 +29,7 @@ defmodule MinizincSolver do
     {:ok, solver} = MinizincSolver.lookup(args[:solver])
     solver_str = "--solver #{solver["id"]}"
     time_limit_str = "--time-limit #{args[:time_limit]}"
-    model_str = "#{MinizincModel.make_model(args[:model])}"
+    {:ok, model_str} = MinizincModel.make_model(args[:model])
     {:ok, dzn_str} = MinizincData.make_dzn(args[:dzn])
     "#{System.find_executable("minizinc")}" <> " " <>
     String.trim(

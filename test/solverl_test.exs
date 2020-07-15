@@ -7,7 +7,7 @@ defmodule SolverlTest do
     good_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
     assert {:ok, _pid} = MinizincPort.start_link(
              [
-               model: "mzn/small_all_different.mzn",
+               model: "mzn/test1.mzn",
                dzn: [
                  %{
                  test_data1: 100,
@@ -20,12 +20,12 @@ defmodule SolverlTest do
 
   end
 
-  test "The same as above, but with model as a text" do
+  test "The same as above, but with multiple models either as a text or a file" do
     good_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
-    {:ok, test_model} = File.read("mzn/test1.mzn")
+    models = [{:text, "int: test_model = true;"}, "mzn/test1.mzn"]
     assert {:ok, _pid} = MinizincPort.start_link(
              [
-               model: {:text, test_model},
+               model: models,
                dzn: [
                  %{
                    test_data1: 100,
