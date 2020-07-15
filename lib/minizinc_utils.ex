@@ -11,19 +11,13 @@ defmodule MinizincUtils do
     {:ok, solver} = MinizincSolver.lookup(args[:solver])
     solver_str = "--solver #{solver["id"]}"
     time_limit_str = "--time-limit #{args[:time_limit]}"
-    model_str = "#{args[:model]}"
+    model_str = "#{make_model(args[:model])}"
     {:ok, dzn_str} = MinizincData.make_dzn(args[:dzn])
     String.trim(
     "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
     "#{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
     )
   end
-
-  # minizinc --solver org.minizinc.mip.cplex
-  # --allow-multiple-assignments --output-mode json --output-time --output-objective
-  # --output-output-item -s -a -p 1 --time-limit 10800000 --workmem 12 --mipfocus 1
-  # vrp-mip.mzn /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/mzn_data7jzlpy8s.json
-
 
   ## Default solution handler: prints the solution.
   def default_solution_handler(solution_rec(status: nil) = _solution) do
@@ -37,5 +31,17 @@ defmodule MinizincUtils do
 
 
   def default_args, do: @default_args
+
+  ## Model as text
+  def make_model({:text, model_text}) when is_binary(model_text) do
+    model_file = String.trim(to_string(:os.cmd('mktemp'))) <> ".mzn"
+    :ok = File.write(model_file, model_text <> "\n", [:append])
+    model_file
+  end
+
+  def make_model(model_file) when is_binary(model_file) do
+    model_file
+  end
+
 
 end
