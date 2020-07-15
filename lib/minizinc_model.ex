@@ -2,6 +2,8 @@ defmodule MinizincModel do
   @moduledoc false
   require Logger
 
+  @submodel_header "%%%%% START OF SUBMODEL %%%%%"
+  @submodel_footer "%%%%% END OF SUBMODEL %%%%%\n\n"
 
   def make_model(model, target \\ nil)
 
@@ -18,7 +20,9 @@ defmodule MinizincModel do
     target_file = String.replace_suffix(target, ".mzn", "") <> ".mzn"
     for m <- model do
       {:ok, content} = read_model(m)
+      File.write(target_file, @submodel_header <> "\n", [:append])
       File.write(target_file, content <> "\n", [:append])
+      File.write(target_file, @submodel_footer <> "\n", [:append])
     end
     {:ok, target_file}
   end
