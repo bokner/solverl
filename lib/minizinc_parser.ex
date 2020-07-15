@@ -12,7 +12,8 @@ defmodule MinizincParser do
                      time_elapsed: nil,
                      misc: %{},
                      json_buffer: "",
-                     unhandled_output: ""
+                     unhandled_output: "",
+                     timestamp: nil
                    ]
 
   @solution_separator      "----------"
@@ -27,7 +28,9 @@ defmodule MinizincParser do
 
 
   def read_solution(solution_record, @solution_separator) do
-    {:satisfied, solution_record}
+    {:satisfied,
+      solution_rec(solution_record,
+        timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond))}
   end
 
   ## TODO: parsing/capturing status
