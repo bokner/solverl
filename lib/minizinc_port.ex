@@ -84,7 +84,7 @@ defmodule MinizincPort do
   end
 
   def handle_info({:EXIT, _port, :normal}, state) do
-    Logger.info "handle_info: EXIT"
+    #Logger.info "handle_info: EXIT"
     {:stop, :normal, state}
   end
 

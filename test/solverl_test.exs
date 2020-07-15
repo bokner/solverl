@@ -22,7 +22,7 @@ defmodule SolverlTest do
 
   test "The same as above, but with model as a text" do
     good_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
-    {:ok, test_model} = File.read("mzn/small_all_different.mzn")
+    {:ok, test_model} = File.read("mzn/test1.mzn")
     assert {:ok, _pid} = MinizincPort.start_link(
              [
                model: {:text, test_model},
