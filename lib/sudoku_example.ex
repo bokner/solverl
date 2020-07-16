@@ -14,7 +14,7 @@ defmodule SudokuExample do
     {:ok, _pid} = MinizincPort.start_link(
       [
         model: "mzn/sudoku.mzn",
-        dzn: %{'S': 3, start: sudoku_array},
+        dzn: %{"S": 3, start: sudoku_array},
         solver: "gecode",
         time_limit: 1000,
         solution_handler: &SudokuExample.solution_handler/2])
