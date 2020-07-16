@@ -29,12 +29,14 @@ defmodule MinizincSolver do
     {:ok, solver} = MinizincSolver.lookup(args[:solver])
     solver_str = "--solver #{solver["id"]}"
     time_limit_str = "--time-limit #{args[:time_limit]}"
+    extra_flags = Keyword.get(args, :extra_flags, "")
     {:ok, model_str} = MinizincModel.make_model(args[:model])
     {:ok, dzn_str} = MinizincData.make_dzn(args[:dzn])
     "#{System.find_executable("minizinc")}" <> " " <>
     String.trim(
       "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
-      "#{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
+      extra_flags <>
+      " #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
     )
   end
 
