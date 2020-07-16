@@ -22,10 +22,17 @@ defmodule SudokuExample do
 
 
   ## Only handle a final solution
-  def solution_handler(true, solution_rec(status: status, solution_data: data) = _solution) when status in [:satisfied, :optimal] do
+  def solution_handler(true,
+        solution_rec(
+          status: status,
+          solution_count: count,
+          solution_data: data) = _solution
+      ) when status in [:satisfied, :optimal] do
     #Logger.info "Solution: #{inspect solution}"
     Logger.info "Sudoku solved!"
-    Logger.info print_grid(data["puzzle"])
+    Logger.info "Last solution: #{print_grid(data["puzzle"])}"
+    #Logger.info print_grid(data["puzzle"])
+    Logger.info "Solutions found: #{count}"
   end
 
   def solution_handler(false, _solution) do

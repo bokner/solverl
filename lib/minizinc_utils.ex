@@ -13,6 +13,7 @@ defmodule MinizincUtils do
                      misc: %{},
                      json_buffer: "",
                      unhandled_output: "",
-                     timestamp: nil
+                     timestamp: nil,
+                     solution_count: 0
                    ]
 end

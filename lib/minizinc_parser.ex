@@ -14,10 +14,12 @@ defmodule MinizincParser do
 
 
 
-  def read_solution(solution_record, @solution_separator) do
+  def read_solution(solution_rec(solution_count: sc) = solution_record, @solution_separator) do
     {:satisfied,
       solution_rec(solution_record,
-        timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond))}
+        timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
+        solution_count: sc + 1
+      )}
   end
 
   ## TODO: parsing/capturing status
