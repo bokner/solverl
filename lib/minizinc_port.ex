@@ -3,7 +3,7 @@ defmodule MinizincPort do
   use GenServer
   require Logger
 
-  import MinizincParser
+  import MinizincUtils
 
   # GenServer API
   def start_link(args \\ [], opts \\ []) do
@@ -27,7 +27,7 @@ defmodule MinizincPort do
   end
 
   def terminate(reason, %{port: port} = _state) do
-    Logger.info "** TERMINATE: #{inspect reason}"
+    Logger.debug "** TERMINATE: #{inspect reason}"
     #Logger.info "in state: #{inspect state}"
 
     port_info = Port.info(port)
@@ -55,7 +55,8 @@ defmodule MinizincPort do
       nil ->
         {:noreply, %{state | current_solution: solution}}
       :satisfied ->
-        handlerFun.(solution)
+        # 'false' signifies non-final solution
+        handlerFun.(false, solution)
         {:noreply, %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}}
       _terminal_status ->
         last_solution = MinizincParser.update_status(last_solution, status)
@@ -71,8 +72,8 @@ defmodule MinizincPort do
           current_solution: solution,
           last_solution: last_solution,
           solution_handler: handlerFun} = state) do
-    Logger.info "Port exit: :exit_status: #{status}"
-    handlerFun.(MinizincParser.merge_solver_stats(last_solution, solution))
+    Logger.debug "Port exit: :exit_status: #{status}"
+    handlerFun.(true, MinizincParser.merge_solver_stats(last_solution, solution))
     new_state = %{state | exit_status: status}
 
     {:noreply, new_state}

@@ -1,19 +1,19 @@
 defmodule MinizincSolver do
   @moduledoc false
 
-  import MinizincParser
+  import MinizincUtils
   require Logger
 
-  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/1]
+  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/2]
 
 
   ## Default solution handler: prints the solution.
-  def default_solution_handler(solution_rec(status: nil) = _solution) do
+  def default_solution_handler(_isFinal, solution_rec(status: nil) = _solution) do
     Logger.error "Incomplete solution shouldn't be handled here!"
     throw {:handle_incomplete_solution}
   end
 
-  def default_solution_handler(solution_rec(status: _status) = solution) do
+  def default_solution_handler(_isFinal, solution_rec(status: _status) = solution) do
     Logger.info "Solution: #{inspect solution}"
   end
 
