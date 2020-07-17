@@ -34,7 +34,6 @@ defmodule MinizincPort do
     os_pid = port_info[:os_pid]
 
     if os_pid do
-      Logger.warn "Orphaned OS process: #{os_pid}"
       Port.close(port)
     end
 
