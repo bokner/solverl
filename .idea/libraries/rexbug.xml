@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="rexbug" type="mix">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/rexbug/ebin" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/rexbug/lib" />
+    </SOURCES>
+  </library>
+</component>
