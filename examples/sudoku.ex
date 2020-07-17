@@ -1,4 +1,4 @@
-defmodule SudokuExample do
+defmodule Sudoku do
   @moduledoc false
 
   require Logger
@@ -17,7 +17,7 @@ defmodule SudokuExample do
         data: %{"S": 3, start: sudoku_array},
         solver: "gecode",
         time_limit: 1000,
-        solution_handler: &SudokuExample.solution_handler/2])
+        solution_handler: &Sudoku.solution_handler/2])
   end
 
 
