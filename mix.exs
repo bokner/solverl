@@ -7,8 +7,11 @@ defmodule Solverl.MixProject do
       version: "0.1.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
+      elixirc_paths: ["lib", "examples"],
       deps: deps(),
-      elixirc_paths: ["lib", "examples"]
+      description: description(),
+      package: package(),
+
     ]
   end
 
@@ -24,7 +27,21 @@ defmodule Solverl.MixProject do
     [
       {:rexbug, ">= 1.0.0"},
       {:jason, "~> 1.2"},
-      {:distillery, "~> 2.1"}
+      {:distillery, "~> 2.1"},
+      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+    ]
+  end
+
+  defp description() do
+    "Elixir/Erlang interface to Minizinc (https://www.minizinc.org/)."
+  end
+
+  defp package() do
+    [
+      # These are the default files included in the package
+      files: ~w(lib examples test .formatter.exs mix.exs README* ),
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/bokner/solverl"}
     ]
   end
 end
