@@ -5,3 +5,4 @@ By priority:
 2. LNS example.
 3. Synchronous solve (?)
 4. More test cases.
+5. Enable 'minizinc_executable' for cases it's not in the path.
