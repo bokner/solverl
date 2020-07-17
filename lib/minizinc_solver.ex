@@ -4,7 +4,12 @@ defmodule MinizincSolver do
   import MinizincInstance
   require Logger
 
-  @default_args [solver: "gecode", time_limit: 60*5*1000, data: [], solution_handler: &__MODULE__.default_solution_handler/2]
+  @default_args [
+    minizinc_executable: System.find_executable("minizinc"),
+    solver: "gecode",
+    time_limit: 60*5*1000,
+    data: [],
+    solution_handler: &__MODULE__.default_solution_handler/2]
 
 
   ## Default solution handler: prints the solution.
@@ -48,7 +53,7 @@ defmodule MinizincSolver do
     extra_flags = Keyword.get(args, :extra_flags, "")
     {:ok, model_str} = MinizincModel.make_model(args[:model])
     {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
-    "#{System.find_executable("minizinc")}" <> " " <>
+    args[:minizinc_executable] <> " " <>
     String.trim(
       "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
       extra_flags <>
@@ -58,7 +63,7 @@ defmodule MinizincSolver do
 
   ## Get list of registered solvers
   def get_solvers do
-    solvers_json = to_string(:os.cmd('#{System.find_executable("minizinc")} --solvers-json'))
+    solvers_json = to_string(:os.cmd('#{get_executable()} --solvers-json'))
     {:ok, solvers} = Jason.decode(solvers_json)
     solvers
   end
@@ -84,5 +89,10 @@ defmodule MinizincSolver do
         {:solver_id_ambiguous, (for solver <- solvers, do: solver["id"])}
     end
   end
+
+  def get_executable do
+    default_args()[:minizinc_executable]
+  end
+
 
 end
