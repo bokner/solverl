@@ -4,7 +4,7 @@ defmodule MinizincSolver do
   import MinizincUtils
   require Logger
 
-  @default_args [solver: "gecode", time_limit: 60*5*1000, dzn: [], solution_handler: &__MODULE__.default_solution_handler/2]
+  @default_args [solver: "gecode", time_limit: 60*5*1000, data: [], solution_handler: &__MODULE__.default_solution_handler/2]
 
 
   ## Default solution handler: prints the solution.
@@ -31,7 +31,7 @@ defmodule MinizincSolver do
     time_limit_str = "--time-limit #{args[:time_limit]}"
     extra_flags = Keyword.get(args, :extra_flags, "")
     {:ok, model_str} = MinizincModel.make_model(args[:model])
-    {:ok, dzn_str} = MinizincData.make_dzn(args[:dzn])
+    {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
     "#{System.find_executable("minizinc")}" <> " " <>
     String.trim(
       "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>

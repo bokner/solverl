@@ -8,7 +8,7 @@ defmodule SolverlTest do
     assert {:ok, _pid} = MinizincPort.start_link(
              [
                model: "mzn/test1.mzn",
-               dzn: [
+               data: [
                  %{
                  test_data1: 100,
                  test_arr: good_arr,
@@ -26,7 +26,7 @@ defmodule SolverlTest do
     assert {:ok, _pid} = MinizincPort.start_link(
              [
                model: models,
-               dzn: [
+               data: [
                  %{
                    test_data1: 100,
                    test_arr: good_arr,
