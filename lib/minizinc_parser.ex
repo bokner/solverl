@@ -24,7 +24,7 @@ defmodule MinizincParser do
 
   ## TODO: parsing/capturing status
   def handle_output(instance, @status_completed) do
-    {:completed, instance}
+    {:all_solutions, instance}
   end
 
   def handle_output(instance, @status_unsatisfiable) do
