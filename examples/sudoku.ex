@@ -16,7 +16,7 @@ defmodule Sudoku do
     Logger.info print_grid(sudoku_array)
 
     opts = [solver: "gecode", time_limit: 1000, solution_handler: &Sudoku.solution_handler/2]
-    :ok = MinizincSolver.solve(
+    {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array},
       opts)

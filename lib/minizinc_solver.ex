@@ -39,7 +39,6 @@ defmodule MinizincSolver do
   def solve(model, data, opts) do
     args = [model: model, data: data] ++ opts
     {:ok, _pid} = MinizincPort.start_link(args)
-    :ok
   end
 
   def prepare_solver_cmd(args) do
