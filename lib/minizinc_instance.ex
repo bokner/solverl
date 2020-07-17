@@ -84,8 +84,21 @@ defmodule MinizincInstance do
     instance_rec(instance, status: status)
   end
 
+  def get_status(instance_rec(status: :all_solutions) = instance) do
+      if MinizincModel.model_method(instance) == :satisfy do
+        :'ALL_SOLUTIONS'
+      else
+        :'OPTIMAL'
+      end
+  end
+
+  def get_status(instance_rec(status: status)) do
+    status |> Atom.to_string |> String.upcase |> String.to_atom
+  end
+
   def merge_solver_stats(instance_rec(solver_stats: stats1) = solution, instance_rec(solver_stats: stats2)) do
     instance_rec(solution, solver_stats: Map.merge(stats1, stats2))
   end
+
 
 end

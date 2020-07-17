@@ -15,6 +15,7 @@ defmodule MinizincSolver do
 
   def default_solution_handler(_isFinal, instance_rec(status: _status) = instance) do
     Logger.info "Model info: method = #{MinizincModel.model_method(instance)}"
+    Logger.info "Solution status: #{MinizincInstance.get_status(instance)}"
     Logger.info "Solution: #{inspect instance}"
   end
 
