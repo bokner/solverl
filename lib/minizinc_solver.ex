@@ -8,13 +8,14 @@ defmodule MinizincSolver do
 
 
   ## Default solution handler: prints the solution.
-  def default_solution_handler(_isFinal, instance_rec(status: nil) = _solution) do
-    Logger.error "Incomplete solution shouldn't be handled here!"
-    throw {:handle_incomplete_solution}
+  def default_solution_handler(_isFinal, instance_rec(status: nil) = _instance) do
+    Logger.error "Incomplete instance shouldn't be handled here!"
+    throw {:handle_incomplete_instance}
   end
 
-  def default_solution_handler(_isFinal, instance_rec(status: _status) = solution) do
-    Logger.info "Solution: #{inspect solution}"
+  def default_solution_handler(_isFinal, instance_rec(status: _status) = instance) do
+    Logger.info "Model info: method = #{MinizincModel.model_method(instance)}"
+    Logger.info "Solution: #{inspect instance}"
   end
 
 

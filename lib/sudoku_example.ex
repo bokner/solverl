@@ -28,7 +28,7 @@ defmodule SudokuExample do
           solution_count: count,
           solution_data: data
         ) = _solution
-      ) when status in [:satisfied, :optimal]
+      ) when status in [:satisfied, :completed]
     do
       print_solution(data, count)
       :ok
@@ -41,7 +41,7 @@ defmodule SudokuExample do
           solution_count: count,
           solution_data: data
         ) = _solution
-      ) when status in [:satisfied, :optimal]
+      ) when status in [:satisfied, :completed]
           and count == 3
     do
       print_solution(data, count)

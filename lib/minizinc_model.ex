@@ -2,6 +2,8 @@ defmodule MinizincModel do
   @moduledoc false
   require Logger
 
+  import MinizincUtils
+
   @submodel_header "%%%%% START OF SUBMODEL %%%%%"
   @submodel_footer "%%%%% END OF SUBMODEL %%%%%\n\n"
 
@@ -42,4 +44,10 @@ defmodule MinizincModel do
   def read_model(model_file) when is_binary(model_file) do
     {:ok, _model} = File.read(model_file)
   end
+
+  ## Model info
+  def model_method(instance_rec(solver_stats: stats)) do
+    String.to_atom(String.replace(stats["method"], "\"", ""))
+  end
+
 end
