@@ -3,7 +3,7 @@ defmodule MinizincPort do
   use GenServer
   require Logger
 
-  import MinizincUtils
+  import MinizincInstance
 
   # GenServer API
   def start_link(args \\ [], opts \\ []) do
@@ -49,14 +49,14 @@ defmodule MinizincPort do
     ##TODO: handle long lines
     {_eol, text_line} = line
     {status, instance} = MinizincParser.handle_output(instance, text_line)
-    instance = MinizincParser.update_status(instance, status)
+    instance = MinizincInstance.update_status(instance, status)
     case status do
       nil ->
         {:noreply, %{state | current_instance: instance}}
       :satisfied ->
         # 'false' signifies non-final solution
 
-        new_state = %{state | current_instance: MinizincParser.reset_instance(instance), completed_instance: instance}
+        new_state = %{state | current_instance: MinizincInstance.reset_instance(instance), completed_instance: instance}
         # Solution handler can force the termination of solver process
         case handlerFun.(false, instance) do
           :stop ->
@@ -65,7 +65,7 @@ defmodule MinizincPort do
            {:noreply, new_state}
         end
       _terminal_status ->
-        last_instance = MinizincParser.update_status(last_instance, status)
+        last_instance = MinizincInstance.update_status(last_instance, status)
         {:noreply, %{state | current_instance: instance, completed_instance: last_instance}}
 
     end
@@ -79,7 +79,7 @@ defmodule MinizincPort do
           completed_instance: last_instance,
           solution_handler: handlerFun} = state) do
     Logger.debug "Port exit: :exit_status: #{status}"
-    handlerFun.(true, MinizincParser.merge_solver_stats(last_instance, instance))
+    handlerFun.(true, MinizincInstance.merge_solver_stats(last_instance, instance))
     new_state = %{state | exit_status: status}
 
     {:noreply, new_state}

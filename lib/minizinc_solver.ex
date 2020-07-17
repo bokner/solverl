@@ -1,7 +1,7 @@
 defmodule MinizincSolver do
   @moduledoc false
 
-  import MinizincUtils
+  import MinizincInstance
   require Logger
 
   @default_args [solver: "gecode", time_limit: 60*5*1000, data: [], solution_handler: &__MODULE__.default_solution_handler/2]

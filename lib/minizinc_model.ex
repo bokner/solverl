@@ -2,7 +2,7 @@ defmodule MinizincModel do
   @moduledoc false
   require Logger
 
-  import MinizincUtils
+  import MinizincInstance
 
   @submodel_header "%%%%% START OF SUBMODEL %%%%%"
   @submodel_footer "%%%%% END OF SUBMODEL %%%%%\n\n"

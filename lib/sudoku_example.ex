@@ -2,7 +2,7 @@ defmodule SudokuExample do
   @moduledoc false
 
   require Logger
-  import MinizincUtils
+  import MinizincInstance
 
   # Sudoku puzzle is a string
   # with elements of the puzzle in row-major order, where a blank entry is represented by "."
