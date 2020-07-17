@@ -23,8 +23,23 @@ defmodule MinizincSolver do
   def default_args, do: @default_args
 
 
-  def solve(model, data, solver, timeout, solution_handler, opts) do
-    nil
+  ## Solve with model, data and options.
+  ##
+  ## Example:
+  ## MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
+  ##
+  def solve(model) do
+    solve(model, [], [])
+  end
+
+  def solve(model, data) do
+    solve(model, data, [])
+  end
+
+  def solve(model, data, opts) do
+    args = [model: model, data: data] ++ opts
+    {:ok, _pid} = MinizincPort.start_link(args)
+    :ok
   end
 
   def prepare_solver_cmd(args) do
