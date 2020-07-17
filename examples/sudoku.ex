@@ -4,6 +4,9 @@ defmodule Sudoku do
   require Logger
   import MinizincInstance
 
+  @sample_sudoku_1_solution  "85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4."
+  @sample_sudoku_5_solutions "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
+
   # Sudoku puzzle is a string
   # with elements of the puzzle in row-major order, where a blank entry is represented by "."
   def solve(puzzle) do
@@ -11,18 +14,17 @@ defmodule Sudoku do
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle:"
     Logger.info print_grid(sudoku_array)
-    {:ok, _pid} = MinizincPort.start_link(
-      [
-        model: "mzn/sudoku.mzn",
-        data: %{"S": 3, start: sudoku_array},
-        solver: "gecode",
-        time_limit: 1000,
-        solution_handler: &Sudoku.solution_handler/2])
+
+    opts = [solver: "gecode", time_limit: 1000, solution_handler: &Sudoku.solution_handler/2]
+    :ok = MinizincSolver.solve(
+      "mzn/sudoku.mzn",
+      %{"S": 3, start: sudoku_array},
+      opts)
   end
 
 
-  ## Only handle a final solution...
-  def solution_handler(true,
+
+  def solution_handler(isFinal,
         instance_rec(
           status: status,
           solution_count: count,
@@ -30,23 +32,13 @@ defmodule Sudoku do
         ) = _solution
       ) when status in [:satisfied, :all_solutions]
     do
-      print_solution(data, count)
-      :ok
+      ## Handle no more than 3 solutions, print the final one.
+      if isFinal or count == 3 do
+        print_solution(data, count)
+        :stop
+      end
   end
 
-  ## ...but stop after a 3rd solution.
-  def solution_handler(false,
-        instance_rec(
-          status: status,
-          solution_count: count,
-          solution_data: data
-        ) = _solution
-      ) when status in [:satisfied, :all_solutions]
-          and count == 3
-    do
-      print_solution(data, count)
-      :stop
-  end
 
   def solution_handler(false, _solution) do
     :noop
@@ -84,6 +76,13 @@ defmodule Sudoku do
 
   def print_cell(cell) do
     cell
+  end
+
+  def sudoku_samples() do
+    [
+      @sample_sudoku_1_solution,
+      @sample_sudoku_5_solutions
+    ]
   end
 
 end
