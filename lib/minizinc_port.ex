@@ -20,8 +20,8 @@ defmodule MinizincPort do
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, current_solution: solution_rec(),
-      last_solution: nil,
+    {:ok, %{port: port, current_instance: instance_rec(),
+      completed_instance: nil,
       solution_handler: args[:solution_handler],
       exit_status: nil} }
   end
@@ -43,30 +43,30 @@ defmodule MinizincPort do
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
   def handle_info({_port, {:data, line}},
-        %{current_solution: solution,
-          last_solution: last_solution,
+        %{current_instance: instance,
+          completed_instance: last_instance,
           solution_handler: handlerFun} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    {status, solution} = MinizincParser.read_solution(solution, text_line)
-    solution = MinizincParser.update_status(solution, status)
+    {status, instance} = MinizincParser.handle_output(instance, text_line)
+    instance = MinizincParser.update_status(instance, status)
     case status do
       nil ->
-        {:noreply, %{state | current_solution: solution}}
+        {:noreply, %{state | current_instance: instance}}
       :satisfied ->
         # 'false' signifies non-final solution
 
-        new_state = %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}
+        new_state = %{state | current_instance: MinizincParser.reset_instance(instance), completed_instance: instance}
         # Solution handler can force the termination of solver process
-        case handlerFun.(false, solution) do
+        case handlerFun.(false, instance) do
           :stop ->
             {:stop, :normal, new_state}
           _other ->
            {:noreply, new_state}
         end
       _terminal_status ->
-        last_solution = MinizincParser.update_status(last_solution, status)
-        {:noreply, %{state | current_solution: solution, last_solution: last_solution}}
+        last_instance = MinizincParser.update_status(last_instance, status)
+        {:noreply, %{state | current_instance: instance, completed_instance: last_instance}}
 
     end
   end
@@ -75,11 +75,11 @@ defmodule MinizincPort do
   def handle_info(
       {port, {:exit_status, status}},
         %{port: port,
-          current_solution: solution,
-          last_solution: last_solution,
+          current_instance: instance,
+          completed_instance: last_instance,
           solution_handler: handlerFun} = state) do
     Logger.debug "Port exit: :exit_status: #{status}"
-    handlerFun.(true, MinizincParser.merge_solver_stats(last_solution, solution))
+    handlerFun.(true, MinizincParser.merge_solver_stats(last_instance, instance))
     new_state = %{state | exit_status: status}
 
     {:noreply, new_state}

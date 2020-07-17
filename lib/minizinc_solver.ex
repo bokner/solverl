@@ -8,12 +8,12 @@ defmodule MinizincSolver do
 
 
   ## Default solution handler: prints the solution.
-  def default_solution_handler(_isFinal, solution_rec(status: nil) = _solution) do
+  def default_solution_handler(_isFinal, instance_rec(status: nil) = _solution) do
     Logger.error "Incomplete solution shouldn't be handled here!"
     throw {:handle_incomplete_solution}
   end
 
-  def default_solution_handler(_isFinal, solution_rec(status: _status) = solution) do
+  def default_solution_handler(_isFinal, instance_rec(status: _status) = solution) do
     Logger.info "Solution: #{inspect solution}"
   end
 

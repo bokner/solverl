@@ -3,7 +3,7 @@ defmodule MinizincUtils do
 
   require Logger
   require Record
-  Record.defrecord :solution_rec,
+  Record.defrecord :instance_rec,
                    [
                      status: nil,
                      solver_stats: %{},

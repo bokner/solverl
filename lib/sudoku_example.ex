@@ -23,7 +23,7 @@ defmodule SudokuExample do
 
   ## Only handle a final solution...
   def solution_handler(true,
-        solution_rec(
+        instance_rec(
           status: status,
           solution_count: count,
           solution_data: data
@@ -36,7 +36,7 @@ defmodule SudokuExample do
 
   ## ...but stop after a 3rd solution.
   def solution_handler(false,
-        solution_rec(
+        instance_rec(
           status: status,
           solution_count: count,
           solution_data: data
