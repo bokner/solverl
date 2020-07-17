@@ -64,7 +64,7 @@ defmodule SudokuExample do
   end
 
   def print_grid(grid) do
-    gridline = "--------+-------+-------\n"
+    gridline = "+-------+-------+-------+\n"
     gridcol = "| "
 
     ["\n" |
@@ -73,9 +73,9 @@ defmodule SudokuExample do
       (for j <- 0..8 do
         "#{if rem(j, 3) == 0, do: gridcol, else: ""}" <>
         "#{print_cell(Enum.at(Enum.at(grid, i), j))} "
-      end) ++ ["\n"]
+      end) ++ ["#{gridcol}\n"]
     end
-    ]
+    ] ++ [gridline]
   end
 
   def print_cell(0) do
