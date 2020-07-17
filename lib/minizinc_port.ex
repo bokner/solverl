@@ -34,7 +34,7 @@ defmodule MinizincPort do
     os_pid = port_info[:os_pid]
 
     if os_pid do
-      Port.close(port)
+      true = Port.close(port)
     end
 
     :normal
