@@ -56,8 +56,15 @@ defmodule MinizincPort do
         {:noreply, %{state | current_solution: solution}}
       :satisfied ->
         # 'false' signifies non-final solution
-        handlerFun.(false, solution)
-        {:noreply, %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}}
+
+        new_state = %{state | current_solution: MinizincParser.reset_solution(solution), last_solution: solution}
+        # Solution handler can force the termination of solver process
+        case handlerFun.(false, solution) do
+          :stop ->
+            {:stop, :normal, new_state}
+          _other ->
+           {:noreply, new_state}
+        end
       _terminal_status ->
         last_solution = MinizincParser.update_status(last_solution, status)
         {:noreply, %{state | current_solution: solution, last_solution: last_solution}}

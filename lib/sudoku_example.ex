@@ -21,18 +21,31 @@ defmodule SudokuExample do
   end
 
 
-  ## Only handle a final solution
+  ## Only handle a final solution...
   def solution_handler(true,
         solution_rec(
           status: status,
           solution_count: count,
-          solution_data: data) = _solution
-      ) when status in [:satisfied, :optimal] do
-    #Logger.info "Solution: #{inspect solution}"
-    Logger.info "Sudoku solved!"
-    Logger.info "Last solution: #{print_grid(data["puzzle"])}"
-    #Logger.info print_grid(data["puzzle"])
-    Logger.info "Solutions found: #{count}"
+          solution_data: data
+        ) = _solution
+      ) when status in [:satisfied, :optimal]
+    do
+      print_solution(data, count)
+      :ok
+  end
+
+  ## ...but stop after a 3rd solution.
+  def solution_handler(false,
+        solution_rec(
+          status: status,
+          solution_count: count,
+          solution_data: data
+        ) = _solution
+      ) when status in [:satisfied, :optimal]
+          and count == 3
+    do
+      print_solution(data, count)
+      :stop
   end
 
   def solution_handler(false, _solution) do
@@ -42,6 +55,12 @@ defmodule SudokuExample do
   def sudoku_string_to_grid(sudoku_str) do
     str0 = String.replace(sudoku_str, ".", "0")
     for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i-1)*9 + (j-1)))
+  end
+
+  def print_solution(data, count) do
+    Logger.info "Sudoku solved!"
+    Logger.info "Last solution: #{print_grid(data["puzzle"])}"
+    Logger.info "Solutions found: #{count}"
   end
 
   def print_grid(grid) do
