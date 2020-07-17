@@ -100,7 +100,16 @@ defmodule MinizincPort do
     {:noreply, state}
   end
 
+  ## Retrieve completed solver instance
+  def handle_call(:get_instance,  {from, _ref}, state) do
+    Logger.debug "#{:erlang.pid_to_list(from)} asks for the instance..."
+    {:reply, {:ok, state[:completed_instance]}, state}
+  end
 
+  ## Same as above, but stop the solver
+  def handle_call(:get_instance_and_stop,  _from, state) do
+    {:stop, :normal, {:ok, state[:completed_instance]}, state}
+  end
 
   ## Helpers
 

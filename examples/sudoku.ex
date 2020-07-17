@@ -29,12 +29,32 @@ defmodule Sudoku do
           status: status,
           solution_count: count,
           solution_data: data
-        ) = _solution
+        ) = _instance
       ) when status in [:satisfied, :all_solutions] and
             (isFinal or count == 3)
     do
         print_solution(data, count)
         :stop
+  end
+
+  def solution_handler(_,
+        instance_rec(
+          status: status,
+          solution_count: count
+        ) = _instance
+      ) when status in [:satisfied, :all_solutions] and
+             count == 1
+    do
+      ## Retrieve the completed instance of the solver process.
+      ## Solution handler runs inside solver process, hence we capture it's PID and spawn...
+      solver_pid = self()
+      Logger.info "Spawning process to call the solver..."
+      spawn fn ->
+        Logger.info "Getting the instance directly from the running solver process..."
+        {:ok, instance} = GenServer.call(solver_pid, :get_instance)
+        Logger.info "Instance successfully retrieved, solution count is #{instance_rec(instance, :solution_count)}"
+      end
+
   end
 
 
