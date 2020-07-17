@@ -23,20 +23,18 @@ defmodule Sudoku do
   end
 
 
-
+  ## Handle no more than 3 solutions, print the final one.
   def solution_handler(isFinal,
         instance_rec(
           status: status,
           solution_count: count,
           solution_data: data
         ) = _solution
-      ) when status in [:satisfied, :all_solutions]
+      ) when status in [:satisfied, :all_solutions] and
+            (isFinal or count == 3)
     do
-      ## Handle no more than 3 solutions, print the final one.
-      if isFinal or count == 3 do
         print_solution(data, count)
         :stop
-      end
   end
 
 
