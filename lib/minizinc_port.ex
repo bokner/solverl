@@ -6,9 +6,7 @@ defmodule MinizincPort do
   import MinizincInstance
 
   # GenServer API
-  def start_link(args \\ [], opts \\ []) do
-    defaults = MinizincSolver.default_args
-    args = Keyword.merge(defaults, args)
+  def start_link(args, opts \\ []) do
     GenServer.start_link(__MODULE__, args, opts)
   end
 

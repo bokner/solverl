@@ -42,8 +42,29 @@ defmodule MinizincSolver do
   end
 
   def solve(model, data, opts) do
-    args = [model: model, data: data] ++ opts
+    args = [model: model, data: data] ++
+           Keyword.merge(MinizincSolver.default_args, opts)
     {:ok, _pid} = MinizincPort.start_link(args)
+  end
+
+  ## Synchronous solve
+  def solve_sync(model, data, opts) do
+    solution_handler = opts[:solution_handler]
+    # Plug sync_handler to have solver send the instance back to us
+    caller = self()
+    sync_opts = Keyword.put(opts,
+      :solution_handler, sync_handler(caller))
+    {:ok, solver_pid} = solve(model, data, sync_opts)
+  end
+
+  def sync_handler(caller) do
+     Logger.debug("Synch handler")
+     fn(isFinal, instance) ->
+        send(caller,  [solver_instance: {isFinal, instance}, from: self()]) end
+  end
+
+  def f(x) do
+    fn(a) -> a + x end
   end
 
   def prepare_solver_cmd(args) do
