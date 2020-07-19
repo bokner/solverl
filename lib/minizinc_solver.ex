@@ -24,6 +24,9 @@ defmodule MinizincSolver do
     Logger.info "Solution: #{inspect instance}"
   end
 
+  def default_sync_handler(_isFinal, instance_rec(status: _status, solution_data: data) = _instance) do
+    {:ok, data}
+  end
 
   def default_args, do: @default_args
 
@@ -49,22 +52,45 @@ defmodule MinizincSolver do
 
   ## Synchronous solve
   def solve_sync(model, data, opts) do
-    solution_handler = opts[:solution_handler]
+    solution_handler = Keyword.get(opts, :solution_handler, &__MODULE__.default_sync_handler/2)
     # Plug sync_handler to have solver send the instance back to us
     caller = self()
     sync_opts = Keyword.put(opts,
       :solution_handler, sync_handler(caller))
     {:ok, solver_pid} = solve(model, data, sync_opts)
+    receive_solutions(solution_handler, solver_pid)
   end
 
   def sync_handler(caller) do
      Logger.debug("Synch handler")
      fn(isFinal, instance) ->
-        send(caller,  [solver_instance: {isFinal, instance}, from: self()]) end
+        send(caller,  %{solver_instance: {isFinal, instance}, from: self()}) end
   end
 
-  def f(x) do
-    fn(a) -> a + x end
+  def receive_solutions(solution_handler, solver_pid) do
+    receive_solutions(solution_handler, solver_pid, [])
+  end
+
+  def receive_solutions(solution_handler, solver_pid, acc) do
+    receive do
+      %{from: pid, solver_instance: {isFinal, instance}} when pid == solver_pid ->
+        handler_res = solution_handler.(isFinal, instance)
+        case handler_res do
+          {:ok, data} when isFinal ->
+            [data | acc]
+          {:ok, data} ->
+            receive_solutions(solution_handler, pid, [data | acc])
+          {:stop, data} ->
+            stop_solver(pid)
+            [data | acc]
+        end
+      unexpected ->
+        Logger.error("Unexpected message while receiving solutions: #{inspect unexpected}")
+    end
+  end
+
+  def stop_solver(pid) do
+    :todo
   end
 
   def prepare_solver_cmd(args) do
