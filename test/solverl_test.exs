@@ -36,6 +36,25 @@ defmodule SolverlTest do
   end
 
 
+  test "Unsatisfiable sync/async" do
+    :todo
+  end
+
+  test "Solving with timeout sync/async" do
+    :todo
+  end
+
+  test "Solution handlers for sync/async" do
+    :todo
+  end
+
+  test "Solution handlers which interrupt the solver within (async)" do
+    :todo
+  end
+
+  test "Solution handlers which interrupt the solver from outside (sync)" do
+    :todo
+  end
 
   test "Checks dimensions of a regular array " do
     good_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
