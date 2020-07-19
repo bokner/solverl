@@ -22,6 +22,23 @@ defmodule Sudoku do
       opts)
   end
 
+  ## Solve synchronously
+  ## Example (prints all solutions):
+  ##
+  ## Enum.each(Sudoku.solve_sync(
+  ##    "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"),
+  ##    fn sol -> Logger.info Sudoku.print_grid(sol["puzzle"]) end)
+  ##
+  ##
+  def solve_sync(puzzle) do
+    # Turn a string into 9x9 grid
+    sudoku_array = sudoku_string_to_grid(puzzle)
+    Logger.info "Sudoku puzzle (solved synchronously)"
+    Logger.info print_grid(sudoku_array)
+    MinizincSolver.solve_sync("mzn/sudoku.mzn",
+      %{"S": 3, start: sudoku_array}, [])
+  end
+
 
   ## Handle no more than 3 solutions, print the final one.
   def solution_handler(isFinal,
