@@ -110,6 +110,12 @@ defmodule MinizincPort do
   end
 
   ## Helpers
+  get_instance(pid) do
+    GenServer.call(pid, :get_instance)
+  end
 
+  get_instance_and_stop(pid) do
+    GenServer.call(pid, :get_instance_and_stop)
+  end
 
 end

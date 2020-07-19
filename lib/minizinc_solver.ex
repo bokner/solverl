@@ -90,7 +90,7 @@ defmodule MinizincSolver do
   end
 
   def stop_solver(pid) do
-    :todo
+    {:ok, instance} = MinizincPort.get_instance_and_stop(pid)
   end
 
   def prepare_solver_cmd(args) do
