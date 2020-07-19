@@ -15,41 +15,40 @@ defmodule MinizincParser do
 
 
   def handle_output(instance_rec(solution_count: sc) = instance, @solution_separator) do
-    {:satisfied,
-      instance_rec(instance,
+    MinizincInstance.update_status(
+        instance_rec(instance,
         timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
         solution_count: sc + 1
-      )}
+      ), :satisfied)
   end
 
   ## TODO: parsing/capturing status
   def handle_output(instance, @status_completed) do
-    {:all_solutions, instance}
+      MinizincInstance.update_status(instance, :all_solutions)
   end
 
   def handle_output(instance, @status_unsatisfiable) do
-    {:unsatisfiable, instance}
+    MinizincInstance.update_status(instance, :unsatisfiable)
   end
 
   def handle_output(instance, @status_unknown) do
-    {:unknown, instance}
+    MinizincInstance.update_status(instance, :unknown)
   end
 
   def handle_output(instance, @status_error) do
-    {:error, instance}
+    MinizincInstance.update_status(instance, :error)
   end
 
   def handle_output(instance, @status_unsatOrUnbounded) do
-    {:unsatOrUnbounded, instance}
+    MinizincInstance.update_status(instance, :unsatOrUnbounded)
   end
 
   def handle_output(instance, @status_unbounded) do
-    {:ubounded, instance}
+    MinizincInstance.update_status(instance, :ubounded)
   end
 
   def handle_output(instance, new_line) do
-    #Logger.info "Data: #{inspect new_line}"
-    {nil, MinizincInstance.update_instance(instance, new_line)}
+    MinizincInstance.update_instance(instance, new_line)
   end
 
 

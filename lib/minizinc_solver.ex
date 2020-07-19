@@ -12,20 +12,18 @@ defmodule MinizincSolver do
     solution_handler: &__MODULE__.default_solution_handler/2]
 
 
-  ## Default solution handler: prints the solution.
-  def default_solution_handler(_isFinal, instance_rec(status: nil) = _instance) do
-    Logger.error "Incomplete instance shouldn't be handled here!"
-    throw {:handle_incomplete_instance}
-  end
-
   def default_solution_handler(_isFinal, instance_rec(status: _status) = instance) do
     Logger.info "Model info: method = #{MinizincModel.model_method(instance)}"
     Logger.info "Solution status: #{MinizincInstance.get_status(instance)}"
     Logger.info "Solution: #{inspect instance}"
   end
 
-  def default_sync_handler(_isFinal, instance_rec(status: _status, solution_data: data) = _instance) do
-    {:ok, data}
+  def default_sync_handler(false, instance_rec(status: _status, solution_data: data) = _instance) do
+    {:solution, data}
+  end
+
+  def default_sync_handler(true, instance_rec(status: _status, solver_stats: stats) = _instance) do
+    {:solver_stats, stats}
   end
 
   def default_args, do: @default_args
@@ -76,13 +74,13 @@ defmodule MinizincSolver do
       %{from: pid, solver_instance: {isFinal, instance}} when pid == solver_pid ->
         handler_res = solution_handler.(isFinal, instance)
         case handler_res do
-          {:ok, data} when isFinal ->
-            [data | acc]
-          {:ok, data} ->
-            receive_solutions(solution_handler, pid, [data | acc])
           {:stop, data} ->
             stop_solver(pid)
             [data | acc]
+          _res when isFinal ->
+            [handler_res | acc]
+          _res ->
+            receive_solutions(solution_handler, pid, [handler_res | acc])
         end
       unexpected ->
         Logger.error("Unexpected message while receiving solutions: #{inspect unexpected}")
@@ -90,7 +88,7 @@ defmodule MinizincSolver do
   end
 
   def stop_solver(pid) do
-    {:ok, instance} = MinizincPort.get_instance_and_stop(pid)
+    {:ok, _instance} = MinizincPort.get_instance_and_stop(pid)
   end
 
   def prepare_solver_cmd(args) do

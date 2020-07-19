@@ -19,7 +19,6 @@ defmodule MinizincPort do
     Port.monitor(port)
 
     {:ok, %{port: port, current_instance: instance_rec(),
-      completed_instance: nil,
       solution_handler: args[:solution_handler],
       exit_status: nil} }
   end
@@ -41,30 +40,26 @@ defmodule MinizincPort do
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
   def handle_info({_port, {:data, line}},
-        %{current_instance: instance,
-          completed_instance: last_instance,
+        %{current_instance: current_instance,
           solution_handler: handlerFun} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    {status, instance} = MinizincParser.handle_output(instance, text_line)
-    instance = MinizincInstance.update_status(instance, status)
-    case status do
+    new_instance = MinizincParser.handle_output(current_instance, text_line)
+    case instance_rec(new_instance, :status) do
       nil ->
-        {:noreply, %{state | current_instance: instance}}
+        {:noreply, %{state | current_instance: new_instance}}
       :satisfied ->
         # 'false' signifies non-final solution
-
-        new_state = %{state | current_instance: MinizincInstance.reset_instance(instance), completed_instance: instance}
+        new_state = %{state | current_instance: MinizincInstance.reset_instance(new_instance)}
         # Solution handler can force the termination of solver process
-        case handlerFun.(false, instance) do
+        case handlerFun.(false, new_instance) do
           :stop ->
             {:stop, :normal, new_state}
           _other ->
            {:noreply, new_state}
         end
       _terminal_status ->
-        last_instance = MinizincInstance.update_status(last_instance, status)
-        {:noreply, %{state | current_instance: instance, completed_instance: last_instance}}
+        {:noreply, %{state | current_instance: new_instance} }
 
     end
   end
@@ -73,11 +68,12 @@ defmodule MinizincPort do
   def handle_info(
       {port, {:exit_status, status}},
         %{port: port,
-          current_instance: instance,
-          completed_instance: last_instance,
+          current_instance: current_instance,
           solution_handler: handlerFun} = state) do
     Logger.debug "Port exit: :exit_status: #{status}"
-    handlerFun.(true, MinizincInstance.merge_solver_stats(last_instance, instance))
+    handlerFun.(true, current_instance
+               #MinizincInstance.merge_solver_stats(current_instance, instance)
+               )
     new_state = %{state | exit_status: status}
 
     {:noreply, new_state}
@@ -98,23 +94,23 @@ defmodule MinizincPort do
     {:noreply, state}
   end
 
-  ## Retrieve completed solver instance
+  ## Retrieve current solver instance
   def handle_call(:get_instance,  {from, _ref}, state) do
     Logger.debug "#{:erlang.pid_to_list(from)} asks for the instance..."
-    {:reply, {:ok, state[:completed_instance]}, state}
+    {:reply, {:ok, state[:current_instance]}, state}
   end
 
   ## Same as above, but stop the solver
   def handle_call(:get_instance_and_stop,  _from, state) do
-    {:stop, :normal, {:ok, state[:completed_instance]}, state}
+    {:stop, :normal, {:ok, state[:current_instance]}, state}
   end
 
   ## Helpers
-  get_instance(pid) do
+  def get_instance(pid) do
     GenServer.call(pid, :get_instance)
   end
 
-  get_instance_and_stop(pid) do
+  def get_instance_and_stop(pid) do
     GenServer.call(pid, :get_instance_and_stop)
   end
 
