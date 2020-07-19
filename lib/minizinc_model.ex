@@ -46,8 +46,9 @@ defmodule MinizincModel do
   end
 
   ## Model info
-  def model_method(instance_rec(solver_stats: stats)) do
-    String.to_atom(String.replace(stats["method"], "\"", ""))
+  def model_method(instance_rec(fzn_stats: stats)) do
+    method = Map.get(stats, "method", "undefined")
+    String.to_atom(String.replace(method, "\"", ""))
   end
 
 end

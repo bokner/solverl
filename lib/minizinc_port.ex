@@ -66,15 +66,23 @@ defmodule MinizincPort do
 
   # Handle process exits
   def handle_info(
-      {port, {:exit_status, status}},
+      {port, {:exit_status, port_status}},
         %{port: port,
           current_instance: current_instance,
           solution_handler: handlerFun} = state) do
-    Logger.debug "Port exit: :exit_status: #{status}"
-    handlerFun.(true, current_instance
+    Logger.debug "Port exit: :exit_status: #{port_status}"
+
+    ## Adjust final solution status.
+    ## Normally, the solver output has a terminating line (see MinizincParser.@terminating_separators),
+    ## which forces line parser to set up appropriate solution status.
+    ## However, when the solver terminates by a timeout, parser has no way to update the status (no terminating line
+    ## comes from Minizinc. The easiest way then to set status to SATISFIED in case there were any solutions.
+    instance = MinizincInstance.adjust_status(current_instance)
+
+    handlerFun.(true, instance
                #MinizincInstance.merge_solver_stats(current_instance, instance)
                )
-    new_state = %{state | exit_status: status}
+    new_state = %{state | exit_status: port_status, current_instance: instance}
 
     {:noreply, new_state}
   end

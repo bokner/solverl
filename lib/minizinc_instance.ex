@@ -5,6 +5,7 @@ defmodule MinizincInstance do
   Record.defrecord :instance_rec,
                    [
                      status: nil,
+                     fzn_stats: %{},
                      solver_stats: %{},
                      mzn_stats: %{},
                      solution_data: %{},
@@ -13,7 +14,9 @@ defmodule MinizincInstance do
                      json_buffer: "",
                      unhandled_output: "",
                      timestamp: nil,
-                     solution_count: 0
+                     solution_count: 0,
+                     final_stats_flag: false # Flags first occurrence of "%%%mzn-stat-end".
+                                             # which triggers parsing of final block of "%%%mzn-stat:" as solver stats.
                    ]
 
   def update_instance(instance, "% time elapsed: " <> rest) do
@@ -25,10 +28,17 @@ defmodule MinizincInstance do
     instance_rec(instance, mzn_stats: process_stats(stats, rest))
   end
 
-  # fzn and/or solver stats
+
+  # FlatZinc stats
+  def update_instance(instance_rec(fzn_stats: stats, final_stats_flag: false) = instance, "%%%mzn-stat: " <> rest) do
+    instance_rec(instance, fzn_stats: process_stats(stats, rest))
+  end
+
+  # Solver stats (occurs only after solver outputs it's last solution.
   def update_instance(instance_rec(solver_stats: stats) = instance, "%%%mzn-stat: " <> rest) do
     instance_rec(instance, solver_stats: process_stats(stats, rest))
   end
+
 
   # JSON-formatted solution data
   ## Opening of JSON
@@ -53,7 +63,7 @@ defmodule MinizincInstance do
 
 
   def update_instance(instance, "%%%mzn-stat-end" <> _rest) do
-    instance
+    instance_rec(instance, final_stats_flag: true)
   end
 
   def update_instance(instance_rec(unhandled_output: u) = solution, unhandled) do
@@ -96,9 +106,16 @@ defmodule MinizincInstance do
     status |> Atom.to_string |> String.upcase |> String.to_atom
   end
 
-  def merge_solver_stats(instance_rec(solver_stats: stats1) = solution, instance_rec(solver_stats: stats2)) do
-    instance_rec(solution, solver_stats: Map.merge(stats1, stats2))
+  def adjust_status(instance_rec(status: nil, solution_count: count) = instance) when count > 0 do
+     instance_rec(instance, status: :satisfied)
   end
 
+  def adjust_status(instance_rec(status: nil, solution_count: count) = instance) when count == 0 do
+    instance_rec(instance, status: :unsatisfiable)
+  end
+
+  def adjust_status(instance) do
+    instance
+  end
 
 end

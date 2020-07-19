@@ -12,7 +12,11 @@ defmodule MinizincParser do
   @status_unsatOrUnbounded "=====UNSATorUNBOUNDED====="
   @status_unbounded        "=====UNBOUNDED====="
 
-
+  @terminating_separators [
+    @status_completed, @status_unsatisfiable,
+    @status_unknown, @status_error,
+    @status_unsatOrUnbounded, @status_unbounded
+  ]
 
   def handle_output(instance_rec(solution_count: sc) = instance, @solution_separator) do
     MinizincInstance.update_status(
