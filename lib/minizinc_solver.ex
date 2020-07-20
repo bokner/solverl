@@ -3,7 +3,7 @@ defmodule MinizincSolver do
     Minizinc solver API.
   """
 
-  import MinizincInstance
+  import MinizincResults
   require Logger
 
   @type solver_opt() :: {:minizinc_executable, binary()} |
@@ -25,20 +25,20 @@ defmodule MinizincSolver do
   @doc """
   Default solution handler for solve/2,3
   """
-  def default_async_handler(_isFinal, instance_rec(status: _status) = instance) do
-    Logger.info "Model info: method = #{MinizincModel.model_method(instance)}"
-    Logger.info "Solution status: #{MinizincInstance.get_status(instance)}"
-    Logger.info "Solution: #{inspect instance}"
+  def default_async_handler(_isFinal, results_rec(status: _status) = results) do
+    Logger.info "Model info: method = #{MinizincModel.model_method(results)}"
+    Logger.info "Solution status: #{MinizincResults.get_status(results)}"
+    Logger.info "Solution: #{inspect results}"
   end
 
   @doc """
   Default solution handler for solve_sync/2,3
   """
-  def default_sync_handler(false, instance_rec(status: _status, solution_data: data) = _instance) do
+  def default_sync_handler(false, results_rec(status: _status, solution_data: data) = _results) do
     {:solution, data}
   end
 
-  def default_sync_handler(true, instance_rec(status: _status, solver_stats: stats) = _instance) do
+  def default_sync_handler(true, results_rec(status: _status, solver_stats: stats) = _results) do
     {:solver_stats, stats}
   end
 
@@ -90,7 +90,7 @@ defmodule MinizincSolver do
   """
   def solve_sync(model, data, opts \\ []) do
     solution_handler = Keyword.get(opts, :solution_handler, &__MODULE__.default_sync_handler/2)
-    # Plug sync_handler to have solver send the instance back to us
+    # Plug sync_handler to have solver send the results back to us
     caller = self()
     sync_opts = Keyword.put(opts,
       :solution_handler, sync_handler(caller))
@@ -103,8 +103,8 @@ defmodule MinizincSolver do
   ####################################################
   defp sync_handler(caller) do
      Logger.debug("Synch handler")
-     fn(isFinal, instance) ->
-        send(caller,  %{solver_instance: {isFinal, instance}, from: self()}) end
+     fn(isFinal, results) ->
+        send(caller,  %{solver_results: {isFinal, results}, from: self()}) end
   end
 
   defp receive_solutions(solution_handler, solver_pid) do
@@ -113,8 +113,8 @@ defmodule MinizincSolver do
 
   defp receive_solutions(solution_handler, solver_pid, acc) do
     receive do
-      %{from: pid, solver_instance: {isFinal, instance}} when pid == solver_pid ->
-        handler_res = solution_handler.(isFinal, instance)
+      %{from: pid, solver_results: {isFinal, results}} when pid == solver_pid ->
+        handler_res = solution_handler.(isFinal, results)
         case handler_res do
           {:stop, data} ->
             stop_solver(pid)
@@ -134,7 +134,7 @@ defmodule MinizincSolver do
   Stop solver process.
   """
   def stop_solver(pid) do
-    {:ok, _instance} = MinizincPort.get_instance_and_stop(pid)
+    {:ok, _results} = MinizincPort.get_results_and_stop(pid)
   end
 
   def prepare_solver_cmd(args) do
@@ -170,7 +170,7 @@ defmodule MinizincSolver do
 
   @doc """
   Lookup a solver by (possibly partial) id;
-  for instance, it could be 'cplex' or 'org.minizinc.mip.cplex'
+  for results, it could be 'cplex' or 'org.minizinc.mip.cplex'
   """
 
   def lookup(solver_id) do

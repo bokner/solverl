@@ -4,7 +4,7 @@ defmodule MinizincModel do
   """
   require Logger
 
-  import MinizincInstance
+  import MinizincResults
 
 
   @type model_chunk :: binary() | {:text, binary()}
@@ -53,7 +53,7 @@ defmodule MinizincModel do
   end
 
   ## Model info
-  def model_method(instance_rec(fzn_stats: stats)) do
+  def model_method(results_rec(fzn_stats: stats)) do
     method = Map.get(stats, "method", "undefined")
     String.to_atom(String.replace(method, "\"", ""))
   end

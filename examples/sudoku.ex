@@ -4,7 +4,7 @@ defmodule Sudoku do
   """
 
   require Logger
-  import MinizincInstance
+  import MinizincResults
 
   @sample_sudoku_1_solution  "85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4."
   @sample_sudoku_5_solutions "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
@@ -44,11 +44,11 @@ defmodule Sudoku do
 
   ## Handle no more than 3 solutions, print the final one.
   defp solution_handler(false,
-        instance_rec(
+        results_rec(
           status: status,
           solution_count: count,
           solution_data: data
-        ) = _instance
+        ) = _results
       ) when status in [:satisfied, :all_solutions] and
             count <= 3
     do
@@ -57,9 +57,9 @@ defmodule Sudoku do
   end
 
   defp solution_handler(true,
-        instance_rec(
+        results_rec(
           solver_stats: stats
-        ) = _instance
+        ) = _results
       )
     do
       Logger.info "Solver stats:\n #{inspect stats}"

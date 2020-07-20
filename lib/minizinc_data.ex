@@ -133,7 +133,7 @@ defmodule MinizincData do
 
   ## Dimensions of a nested list of lists.
   ## The lengths of sublists within a dimension have to be the same,
-  ## for instance, think of a proper matrix, where each row has the same number of columns etc.
+  ## for results, think of a proper matrix, where each row has the same number of columns etc.
 
 
   def dimensions(array) when is_list(array) do

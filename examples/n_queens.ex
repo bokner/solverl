@@ -3,7 +3,7 @@ defmodule NQueens do
     Example: N-queens solver.
   """
 
-  import MinizincInstance
+  import MinizincResults
   require Logger
 
   @nqueens_model "mzn/nqueens.mzn"
@@ -27,20 +27,20 @@ defmodule NQueens do
 
   ## Printing solver stats
   defp print_solutions(true,
-        instance_rec(
+        results_rec(
           solver_stats: stats
-        ) = instance
+        ) = results
       )
     do
-    Logger.info "Solution status: #{MinizincInstance.get_status(instance)}"
+    Logger.info "Solution status: #{MinizincResults.get_status(results)}"
     Logger.info "Solver stats:\n #{inspect stats}"
   end
 
   ## Printing solutions
-  defp print_solutions(false, instance_rec(
+  defp print_solutions(false, results_rec(
               status: _status,
               solution_count: _count,
-              solution_data: data) = _instance) do
+              solution_data: data) = _results) do
     Logger.info print_board(data["q"]) <> "\n-----------------------"
   end
 

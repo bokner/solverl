@@ -5,7 +5,7 @@ defmodule MinizincPort do
   use GenServer
   require Logger
 
-  import MinizincInstance
+  import MinizincResults
 
   # GenServer API
   def start_link(args, opts \\ []) do
@@ -20,7 +20,7 @@ defmodule MinizincPort do
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, current_instance: instance_rec(),
+    {:ok, %{port: port, current_results: results_rec(),
       solution_handler: args[:solution_handler],
       exit_status: nil} }
   end
@@ -42,26 +42,26 @@ defmodule MinizincPort do
   # Handle incoming stream from the command's STDOUT
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
   def handle_info({_port, {:data, line}},
-        %{current_instance: current_instance,
+        %{current_results: current_results,
           solution_handler: handlerFun} = state) do
     ##TODO: handle long lines
     {_eol, text_line} = line
-    new_instance = MinizincParser.handle_output(current_instance, text_line)
-    case instance_rec(new_instance, :status) do
+    new_results = MinizincParser.handle_output(current_results, text_line)
+    case results_rec(new_results, :status) do
       nil ->
-        {:noreply, %{state | current_instance: new_instance}}
+        {:noreply, %{state | current_results: new_results}}
       :satisfied ->
         # 'false' signifies non-final solution
-        new_state = %{state | current_instance: MinizincInstance.reset_instance(new_instance)}
+        new_state = %{state | current_results: MinizincResults.reset_results(new_results)}
         # Solution handler can force the termination of solver process
-        case handlerFun.(false, new_instance) do
+        case handlerFun.(false, new_results) do
           :stop ->
             {:stop, :normal, new_state}
           _other ->
            {:noreply, new_state}
         end
       _terminal_status ->
-        {:noreply, %{state | current_instance: new_instance} }
+        {:noreply, %{state | current_results: new_results} }
 
     end
   end
@@ -70,7 +70,7 @@ defmodule MinizincPort do
   def handle_info(
       {port, {:exit_status, port_status}},
         %{port: port,
-          current_instance: current_instance,
+          current_results: current_results,
           solution_handler: handlerFun} = state) do
     Logger.debug "Port exit: :exit_status: #{port_status}"
 
@@ -79,12 +79,12 @@ defmodule MinizincPort do
     ## which forces line parser to set up appropriate solution status.
     ## However, when the solver terminates by a timeout, parser has no way to update the status (no terminating line
     ## comes from Minizinc. The easiest way then to set status to SATISFIED in case there were any solutions.
-    instance = MinizincInstance.adjust_status(current_instance)
+    results = MinizincResults.adjust_status(current_results)
 
-    handlerFun.(true, instance
-               #MinizincInstance.merge_solver_stats(current_instance, instance)
+    handlerFun.(true, results
+               #MinizincResults.merge_solver_stats(current_results, results)
                )
-    new_state = %{state | exit_status: port_status, current_instance: instance}
+    new_state = %{state | exit_status: port_status, current_results: results}
 
     {:noreply, new_state}
   end
@@ -104,24 +104,24 @@ defmodule MinizincPort do
     {:noreply, state}
   end
 
-  ## Retrieve current solver instance
-  def handle_call(:get_instance,  {from, _ref}, state) do
-    Logger.debug "#{:erlang.pid_to_list(from)} asks for the instance..."
-    {:reply, {:ok, state[:current_instance]}, state}
+  ## Retrieve current solver results
+  def handle_call(:get_results,  {from, _ref}, state) do
+    Logger.debug "#{:erlang.pid_to_list(from)} asks for the results..."
+    {:reply, {:ok, state[:current_results]}, state}
   end
 
   ## Same as above, but stop the solver
-  def handle_call(:get_instance_and_stop,  _from, state) do
-    {:stop, :normal, {:ok, state[:current_instance]}, state}
+  def handle_call(:get_results_and_stop,  _from, state) do
+    {:stop, :normal, {:ok, state[:current_results]}, state}
   end
 
   ## Helpers
-  def get_instance(pid) do
-    GenServer.call(pid, :get_instance)
+  def get_results(pid) do
+    GenServer.call(pid, :get_results)
   end
 
-  def get_instance_and_stop(pid) do
-    GenServer.call(pid, :get_instance_and_stop)
+  def get_results_and_stop(pid) do
+    GenServer.call(pid, :get_results_and_stop)
   end
 
 end
