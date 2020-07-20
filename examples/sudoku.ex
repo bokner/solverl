@@ -60,7 +60,7 @@ defmodule Sudoku do
         ) = _instance
       )
     do
-      Logger.info "Solver stats: #{inspect stats}"
+      Logger.info "Solver stats:\n #{inspect stats}"
   end
 
 
