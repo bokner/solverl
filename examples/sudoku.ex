@@ -9,13 +9,13 @@ defmodule Sudoku do
 
   # Sudoku puzzle is a string
   # with elements of the puzzle in row-major order, where a blank entry is represented by "."
-  def solve(puzzle) do
+  def solve(puzzle, args \\ [])  do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle:"
     Logger.info print_grid(sudoku_array)
 
-    opts = [solver: "gecode", time_limit: 1000, solution_handler: &Sudoku.solution_handler/2]
+    opts = Keyword.put(args, :solution_handler, &Sudoku.solution_handler/2)
     {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array},
