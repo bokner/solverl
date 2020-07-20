@@ -76,6 +76,23 @@ iex(14)>
 20:07:06.101 [debug] ** TERMINATE: :normal
 ```
 ## Usage
+```elixir
+# Asynchronous solving.
+# Creates a solver process. 
+# Handling of solutions is done by the pluggable solution handler (explained in Configuration section). 
+{:ok, solver_pid} = Minizinc.solve(model, data, opts)
+
+# Synchronous solving.
+# Starts the solver and gets the results (solutions and/or solver stats) once the solver finishes.
+# The solution handler can customize the results, such as format/filter/limit the number of solutions, conditionally interrupt solver process etc.
+solver_results = Minizinc.solve_sync(model, data, opts)
+
+```
+, where 
+```model``` is a specification of the Minizinc model,
+```data``` - specification of data passed to ```model```,
+```opts``` - various solver options, such as ```solver id```, ```time limit```, ```compilation flags```, ```solution handler```.
+
 TODO:
 ```
   Explain solver arguments;
