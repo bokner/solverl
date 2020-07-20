@@ -54,7 +54,7 @@ defmodule MinizincPort do
         # 'false' signifies non-final solution
         new_state = %{state | current_results: MinizincResults.reset_results(new_results)}
         # Solution handler can force the termination of solver process
-        case handlerFun.(false, new_results) do
+        case handlerFun.(:solution, new_results) do
           :stop ->
             {:stop, :normal, new_state}
           _other ->
@@ -81,7 +81,7 @@ defmodule MinizincPort do
     ## comes from Minizinc. The easiest way then to set status to SATISFIED in case there were any solutions.
     results = MinizincResults.adjust_status(current_results)
 
-    handlerFun.(true, results
+    handlerFun.(:final, results
                #MinizincResults.merge_solver_stats(current_results, results)
                )
     new_state = %{state | exit_status: port_status, current_results: results}

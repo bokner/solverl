@@ -26,7 +26,7 @@ defmodule NQueens do
   end
 
   ## Printing solver stats
-  defp print_solutions(true,
+  defp print_solutions(:final,
         results_rec(
           solver_stats: stats
         ) = results
@@ -37,7 +37,7 @@ defmodule NQueens do
   end
 
   ## Printing solutions
-  defp print_solutions(false, results_rec(
+  defp print_solutions(:solution, results_rec(
               status: _status,
               solution_count: _count,
               solution_data: data) = _results) do

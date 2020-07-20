@@ -25,7 +25,7 @@ defmodule MinizincSolver do
   @doc """
   Default solution handler for solve/2,3
   """
-  def default_async_handler(_isFinal, results_rec(status: _status) = results) do
+  def default_async_handler(_event, results_rec(status: _status) = results) do
     Logger.info "Model info: method = #{MinizincModel.model_method(results)}"
     Logger.info "Solution status: #{MinizincResults.get_status(results)}"
     Logger.info "Solution: #{inspect results}"
@@ -34,11 +34,11 @@ defmodule MinizincSolver do
   @doc """
   Default solution handler for solve_sync/2,3
   """
-  def default_sync_handler(false, results_rec(status: _status, solution_data: data) = _results) do
+  def default_sync_handler(:solution, results_rec(status: _status, solution_data: data) = _results) do
     {:solution, data}
   end
 
-  def default_sync_handler(true, results_rec(status: _status, solver_stats: stats) = _results) do
+  def default_sync_handler(:final, results_rec(status: _status, solver_stats: stats) = _results) do
     {:solver_stats, stats}
   end
 
@@ -103,8 +103,8 @@ defmodule MinizincSolver do
   ####################################################
   defp sync_handler(caller) do
      Logger.debug("Synch handler")
-     fn(isFinal, results) ->
-        send(caller,  %{solver_results: {isFinal, results}, from: self()}) end
+     fn(event, results) ->
+        send(caller,  %{solver_results: {event, results}, from: self()}) end
   end
 
   defp receive_solutions(solution_handler, solver_pid) do
@@ -113,13 +113,13 @@ defmodule MinizincSolver do
 
   defp receive_solutions(solution_handler, solver_pid, acc) do
     receive do
-      %{from: pid, solver_results: {isFinal, results}} when pid == solver_pid ->
-        handler_res = solution_handler.(isFinal, results)
+      %{from: pid, solver_results: {event, results}} when pid == solver_pid ->
+        handler_res = solution_handler.(event, results)
         case handler_res do
           {:stop, data} ->
             stop_solver(pid)
             [data | acc]
-          _res when isFinal ->
+          _res when event == :final ->
             [handler_res | acc]
           _res ->
             receive_solutions(solution_handler, pid, [handler_res | acc])

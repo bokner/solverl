@@ -43,7 +43,7 @@ defmodule Sudoku do
 
 
   ## Handle no more than 3 solutions, print the final one.
-  defp solution_handler(false,
+  defp solution_handler(:solution,
         results_rec(
           status: status,
           solution_count: count,
@@ -56,7 +56,7 @@ defmodule Sudoku do
         if count == 3, do: :stop
   end
 
-  defp solution_handler(true,
+  defp solution_handler(:final,
         results_rec(
           solver_stats: stats
         ) = _results
@@ -66,7 +66,7 @@ defmodule Sudoku do
   end
 
 
-  defp solution_handler(false, _solution) do
+  defp solution_handler(_event, _solution) do
     :noop
   end
 
