@@ -30,14 +30,6 @@ defmodule MinizincSolver do
 
   def default_args, do: @default_args
 
-  @doc """
-
-  Solve with model, data and options.
-
-  ## Example:
-
-      MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
-  """
   def solve(model) do
     solve(model, [], [])
   end
@@ -46,13 +38,32 @@ defmodule MinizincSolver do
     solve(model, data, [])
   end
 
+  @doc """
+
+  Solve (asynchronously) with model, data and options.
+
+  ## Example:
+
+      MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
+  """
+
   def solve(model, data, opts) do
     args = [model: model, data: data] ++
            Keyword.merge(MinizincSolver.default_args, opts)
     {:ok, _pid} = MinizincPort.start_link(args)
   end
 
-  ## Synchronous solve
+  @doc """
+
+  Solve (synchronously) with model, data and options.
+
+  ## Example:
+
+      # Solves N-queens puzzle with n = 4
+      # Check out `examples/n_queens.ex` for more details on handling solutions.
+      results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4})
+
+  """
   def solve_sync(model, data, opts \\ []) do
     solution_handler = Keyword.get(opts, :solution_handler, &__MODULE__.default_sync_handler/2)
     # Plug sync_handler to have solver send the instance back to us
@@ -63,7 +74,10 @@ defmodule MinizincSolver do
     receive_solutions(solution_handler, solver_pid)
   end
 
-  def sync_handler(caller) do
+  ####################################################
+  # Support for synchronous handling of results.
+  ####################################################
+  defp sync_handler(caller) do
      Logger.debug("Synch handler")
      fn(isFinal, instance) ->
         send(caller,  %{solver_instance: {isFinal, instance}, from: self()}) end
@@ -90,6 +104,7 @@ defmodule MinizincSolver do
         Logger.error("Unexpected message while receiving solutions: #{inspect unexpected}")
     end
   end
+  ####################################################
 
   def stop_solver(pid) do
     {:ok, _instance} = MinizincPort.get_instance_and_stop(pid)
