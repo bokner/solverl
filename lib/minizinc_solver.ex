@@ -49,7 +49,7 @@ defmodule MinizincSolver do
   end
 
   ## Synchronous solve
-  def solve_sync(model, data, opts) do
+  def solve_sync(model, data, opts \\ []) do
     solution_handler = Keyword.get(opts, :solution_handler, &__MODULE__.default_sync_handler/2)
     # Plug sync_handler to have solver send the instance back to us
     caller = self()

@@ -4,11 +4,23 @@ defmodule NQueens do
   import MinizincInstance
   require Logger
 
+  @nqueens_model "mzn/nqueens.mzn"
   @queen_symbol "Q"
 
   # N queens puzzle
+  # Async solving
   def solve(n) do
-    MinizincSolver.solve("mzn/nqueens.mzn", %{n: n}, [solution_handler: &NQueens.print_solutions/2])
+    MinizincSolver.solve(@nqueens_model, %{n: n}, [solution_handler: &NQueens.print_solutions/2])
+  end
+
+  def solve_sync(n) do
+    results = MinizincSolver.solve_sync(@nqueens_model, %{n: n})
+    Enum.each(results,
+      fn {:solver_stats, stats} ->
+            Logger.info "Solver stats:\n #{inspect stats}"
+        {:solution, solution} ->
+            Logger.info print_board(solution["q"]) <> "\n-----------------------"
+      end)
   end
 
   ## Printing solver stats
@@ -41,4 +53,5 @@ defmodule NQueens do
       end, " ")
     end, "\n")
   end
+
 end
