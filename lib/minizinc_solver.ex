@@ -6,20 +6,34 @@ defmodule MinizincSolver do
   import MinizincInstance
   require Logger
 
+  @type solver_opt() :: {:minizinc_executable, binary()} |
+                        {:solver, binary()} |
+                        {:time_limit, integer()} |
+                        {:solution_handler, function()} |
+                        {:extra_flags, binary()} |
+                        {:model, MinizincModel.mzn_model()} |
+                        {:data, MinizincData.mzn_data()}
+
+  @type solver_opts() :: list(solver_opt() )
+
   @default_args [
     minizinc_executable: System.find_executable("minizinc"),
     solver: "gecode",
     time_limit: 60*5*1000,
-    data: [],
     solution_handler: &__MODULE__.default_async_handler/2]
 
-
+  @doc """
+  Default solution handler for solve/2,3
+  """
   def default_async_handler(_isFinal, instance_rec(status: _status) = instance) do
     Logger.info "Model info: method = #{MinizincModel.model_method(instance)}"
     Logger.info "Solution status: #{MinizincInstance.get_status(instance)}"
     Logger.info "Solution: #{inspect instance}"
   end
 
+  @doc """
+  Default solution handler for solve_sync/2,3
+  """
   def default_sync_handler(false, instance_rec(status: _status, solution_data: data) = _instance) do
     {:solution, data}
   end
@@ -28,8 +42,14 @@ defmodule MinizincSolver do
     {:solver_stats, stats}
   end
 
+  @doc """
+  Default solver arguments.
+  """
   def default_args, do: @default_args
 
+  @doc """
+  Shortcut for solve/2.
+  """
   def solve(model) do
     solve(model, [])
   end
@@ -37,7 +57,6 @@ defmodule MinizincSolver do
 
 
   @doc """
-
   Solve (asynchronously) with model, data and options.
 
   ## Example:
@@ -51,6 +70,9 @@ defmodule MinizincSolver do
     {:ok, _pid} = MinizincPort.start_link(args)
   end
 
+  @doc """
+  Shortcut for solve_sync/2.
+  """
   def solve_sync(model) do
     solve_sync(model, [])
   end
@@ -62,7 +84,7 @@ defmodule MinizincSolver do
   ## Example:
 
       # Solves N-queens puzzle with n = 4
-      # Check out `examples/n_queens.ex` for more details on handling solutions.
+      # Check out examples/n_queens.ex for more details on handling solutions.
       results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4})
 
   """
@@ -108,6 +130,9 @@ defmodule MinizincSolver do
   end
   ####################################################
 
+  @doc """
+  Stop solver process.
+  """
   def stop_solver(pid) do
     {:ok, _instance} = MinizincPort.get_instance_and_stop(pid)
   end
@@ -127,19 +152,27 @@ defmodule MinizincSolver do
     )
   end
 
-  ## Get list of registered solvers
+  @doc """
+  Get list of descriptions for solvers available to Minizinc.
+  """
   def get_solvers do
     solvers_json = to_string(:os.cmd('#{get_executable()} --solvers-json'))
     {:ok, solvers} = Jason.decode(solvers_json)
     solvers
   end
 
+  @doc """
+  Get list of solver ids for solvers available to Minizinc.
+  """
   def get_solverids do
     for solver <- get_solvers(), do: solver["id"]
   end
 
-  ## Lookup a solver by (possibly partial) id;
-  ## for instance, it could be 'cplex' or 'org.minizinc.mip.cplex'
+  @doc """
+  Lookup a solver by (possibly partial) id;
+  for instance, it could be 'cplex' or 'org.minizinc.mip.cplex'
+  """
+
   def lookup(solver_id) do
     solvers = Enum.filter(get_solvers(),
       fn s ->
@@ -156,6 +189,9 @@ defmodule MinizincSolver do
     end
   end
 
+  @doc """
+  Default Minizinc executable.
+  """
   def get_executable do
     default_args()[:minizinc_executable]
   end

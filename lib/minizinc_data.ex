@@ -3,6 +3,9 @@ defmodule MinizincData do
     Functions for converting data between Minizinc and Elixir.
   """
 
+  @type data_chunk() :: binary() | map()
+  @type mzn_data()    :: data_chunk() | list(data_chunk)
+
   @default_array_base 1
   @max_dimensions 6
 
@@ -34,17 +37,17 @@ defmodule MinizincData do
 
 
   # Dzn as filename
-  def read_dzn(data) when is_binary(data) do
+  defp read_dzn(data) when is_binary(data) do
     {:ok, _dzn} = File.read(data)
   end
 
   # Dzn as dict/map
-  def read_dzn(data) when is_map(data) do
+  defp read_dzn(data) when is_map(data) do
     {:ok, map_to_dzn(data)}
   end
 
   # Convert map to the list of strings in .dzn format
-  def map_to_dzn(data) do
+  defp map_to_dzn(data) do
     Enum.reduce(data, "",
       fn({k, v}, acc) ->
         "#{k} = #{elixir_to_dzn(v)};\n" <> acc
@@ -58,12 +61,12 @@ defmodule MinizincData do
       end)
   end
 
-  def mzn_to_elixir(el) when is_map(el) do
+  defp mzn_to_elixir(el) when is_map(el) do
     s = el["set"]
     if s == [], do: MapSet.new(s), else: MapSet.new(hd(s))
   end
 
-  def mzn_to_elixir(el) do
+  defp mzn_to_elixir(el) do
     el
   end
 
@@ -93,7 +96,7 @@ defmodule MinizincData do
 
 
 
-  def array_to_dzn(el, base)  do
+  defp array_to_dzn(el, base)  do
     dims = dimensions(el)
     if dims do
       array_dimensions(dims, make_base_list(dims, base))
@@ -103,19 +106,19 @@ defmodule MinizincData do
     end
   end
 
-  def make_base_list(_dims, base) when is_list(base) do
+  defp make_base_list(_dims, base) when is_list(base) do
     base
   end
 
-  def make_base_list(dims, base) when is_integer(base) do
+  defp make_base_list(dims, base) when is_integer(base) do
     List.duplicate(base, length(dims))
   end
 
-  def array_dimensions(dims, _bases) when length(dims) > @max_dimensions do
+  defp array_dimensions(dims, _bases) when length(dims) > @max_dimensions do
     throw {:too_many_dimensions, "#{length(dims)}"}
   end
 
-  def array_dimensions(dims, bases) do
+  defp array_dimensions(dims, bases) do
     if length(dims) == length(bases) do
       "array#{length(dims)}d(" <>
       Enum.reduce(Enum.zip(dims, bases), "",

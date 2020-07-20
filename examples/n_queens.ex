@@ -12,7 +12,7 @@ defmodule NQueens do
   # N queens puzzle
   # Async solving
   def solve(n) do
-    MinizincSolver.solve(@nqueens_model, %{n: n}, [solution_handler: &NQueens.print_solutions/2])
+    MinizincSolver.solve(@nqueens_model, %{n: n}, [solution_handler: &print_solutions/2])
   end
 
   def solve_sync(n) do
@@ -26,7 +26,7 @@ defmodule NQueens do
   end
 
   ## Printing solver stats
-  def print_solutions(true,
+  defp print_solutions(true,
         instance_rec(
           solver_stats: stats
         ) = instance
@@ -37,7 +37,7 @@ defmodule NQueens do
   end
 
   ## Printing solutions
-  def print_solutions(false, instance_rec(
+  defp print_solutions(false, instance_rec(
               status: _status,
               solution_count: _count,
               solution_data: data) = _instance) do

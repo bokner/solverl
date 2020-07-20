@@ -17,7 +17,7 @@ defmodule Sudoku do
     Logger.info "Sudoku puzzle:"
     Logger.info print_grid(sudoku_array)
 
-    opts = Keyword.put(args, :solution_handler, &Sudoku.solution_handler/2)
+    opts = Keyword.put(args, :solution_handler, &solution_handler/2)
     {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array},
@@ -43,7 +43,7 @@ defmodule Sudoku do
 
 
   ## Handle no more than 3 solutions, print the final one.
-  def solution_handler(false,
+  defp solution_handler(false,
         instance_rec(
           status: status,
           solution_count: count,
@@ -56,7 +56,7 @@ defmodule Sudoku do
         if count == 3, do: :stop
   end
 
-  def solution_handler(true,
+  defp solution_handler(true,
         instance_rec(
           solver_stats: stats
         ) = _instance
@@ -66,11 +66,11 @@ defmodule Sudoku do
   end
 
 
-  def solution_handler(false, _solution) do
+  defp solution_handler(false, _solution) do
     :noop
   end
 
-  def sudoku_string_to_grid(sudoku_str) do
+  defp sudoku_string_to_grid(sudoku_str) do
     str0 = String.replace(sudoku_str, ".", "0")
     for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i-1)*9 + (j-1)))
   end
@@ -97,11 +97,11 @@ defmodule Sudoku do
     ] ++ [gridline]
   end
 
-  def print_cell(0) do
+  defp print_cell(0) do
     "."
   end
 
-  def print_cell(cell) do
+  defp print_cell(cell) do
     cell
   end
 

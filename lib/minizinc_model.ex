@@ -6,6 +6,11 @@ defmodule MinizincModel do
 
   import MinizincInstance
 
+
+  @type model_chunk :: binary() | {:text, binary()}
+  @type mzn_model    :: model_chunk() | list(model_chunk())
+
+
   @submodel_header "%%%%% START OF SUBMODEL %%%%%"
   @submodel_footer "%%%%% END OF SUBMODEL %%%%%\n\n"
 
