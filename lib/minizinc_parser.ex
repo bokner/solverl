@@ -1,5 +1,7 @@
 defmodule MinizincParser do
-  @moduledoc false
+  @moduledoc """
+    Functions for parsing a stream of text produced by Minizinc process.
+  """
   require Logger
   import MinizincInstance
 

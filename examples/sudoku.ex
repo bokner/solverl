@@ -1,5 +1,7 @@
 defmodule Sudoku do
-  @moduledoc false
+  @moduledoc """
+    Example: Sudoku solver.
+  """
 
   require Logger
   import MinizincInstance

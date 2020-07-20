@@ -1,5 +1,7 @@
 defmodule NQueens do
-  @moduledoc false
+  @moduledoc """
+    Example: N-queens solver.
+  """
 
   import MinizincInstance
   require Logger

@@ -1,5 +1,7 @@
 defmodule MinizincPort do
-
+  @moduledoc """
+    Port server for Minizinc solver executable.
+  """
   use GenServer
   require Logger
 

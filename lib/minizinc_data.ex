@@ -1,5 +1,7 @@
 defmodule MinizincData do
-  @moduledoc false
+  @moduledoc """
+    Functions for converting data between Minizinc and Elixir.
+  """
 
   @default_array_base 1
   @max_dimensions 6

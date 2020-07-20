@@ -1,5 +1,7 @@
 defmodule MinizincSolver do
-  @moduledoc false
+  @moduledoc """
+    Minizinc solver API.
+  """
 
   import MinizincInstance
   require Logger
@@ -28,12 +30,14 @@ defmodule MinizincSolver do
 
   def default_args, do: @default_args
 
+  @doc """
 
-  ## Solve with model, data and options.
-  ##
+  Solve with model, data and options.
+
   ## Example:
-  ## MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
-  ##
+
+      MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
+  """
   def solve(model) do
     solve(model, [], [])
   end
@@ -65,11 +69,11 @@ defmodule MinizincSolver do
         send(caller,  %{solver_instance: {isFinal, instance}, from: self()}) end
   end
 
-  def receive_solutions(solution_handler, solver_pid) do
+  defp receive_solutions(solution_handler, solver_pid) do
     receive_solutions(solution_handler, solver_pid, [])
   end
 
-  def receive_solutions(solution_handler, solver_pid, acc) do
+  defp receive_solutions(solution_handler, solver_pid, acc) do
     receive do
       %{from: pid, solver_instance: {isFinal, instance}} when pid == solver_pid ->
         handler_res = solution_handler.(isFinal, instance)

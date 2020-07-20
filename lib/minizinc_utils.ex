@@ -1,5 +1,7 @@
 defmodule MinizincUtils do
-  @moduledoc false
+  @moduledoc """
+    Helpers
+  """
 
   require Logger
 

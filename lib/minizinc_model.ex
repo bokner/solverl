@@ -1,5 +1,7 @@
 defmodule MinizincModel do
-  @moduledoc false
+  @moduledoc """
+    Functions to construct and access Minizinc model.
+  """
   require Logger
 
   import MinizincInstance

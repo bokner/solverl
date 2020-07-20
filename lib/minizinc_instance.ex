@@ -1,5 +1,7 @@
 defmodule MinizincInstance do
-  @moduledoc false
+  @moduledoc """
+    Functions and data structures for working with data produced by Minizinc during runtime.
+  """
 
   require Record
   Record.defrecord :instance_rec,
