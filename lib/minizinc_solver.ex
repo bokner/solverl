@@ -11,10 +11,10 @@ defmodule MinizincSolver do
     solver: "gecode",
     time_limit: 60*5*1000,
     data: [],
-    solution_handler: &__MODULE__.default_solution_handler/2]
+    solution_handler: &__MODULE__.default_async_handler/2]
 
 
-  def default_solution_handler(_isFinal, instance_rec(status: _status) = instance) do
+  def default_async_handler(_isFinal, instance_rec(status: _status) = instance) do
     Logger.info "Model info: method = #{MinizincModel.model_method(instance)}"
     Logger.info "Solution status: #{MinizincInstance.get_status(instance)}"
     Logger.info "Solution: #{inspect instance}"
@@ -31,12 +31,10 @@ defmodule MinizincSolver do
   def default_args, do: @default_args
 
   def solve(model) do
-    solve(model, [], [])
+    solve(model, [])
   end
 
-  def solve(model, data) do
-    solve(model, data, [])
-  end
+
 
   @doc """
 
@@ -47,10 +45,14 @@ defmodule MinizincSolver do
       MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
   """
 
-  def solve(model, data, opts) do
+  def solve(model, data, opts \\ []) do
     args = [model: model, data: data] ++
            Keyword.merge(MinizincSolver.default_args, opts)
     {:ok, _pid} = MinizincPort.start_link(args)
+  end
+
+  def solve_sync(model) do
+    solve_sync(model, [])
   end
 
   @doc """
