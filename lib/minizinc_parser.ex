@@ -3,7 +3,6 @@ defmodule MinizincParser do
     Functions for parsing a stream of text produced by Minizinc process.
   """
   require Logger
-  import MinizincResults
 
   @solution_separator      "----------"
 
@@ -20,42 +19,69 @@ defmodule MinizincParser do
     @status_unsatOrUnbounded, @status_unbounded
   ]
 
-  def handle_output(results_rec(solution_count: sc) = results, @solution_separator) do
-    MinizincResults.update_status(
-        results_rec(results,
-        timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
-        solution_count: sc + 1
-      ), :satisfied)
+
+  ## Status events
+  def parse_output(@solution_separator) do
+    {:status, :satisfied}
   end
 
   ## TODO: parsing/capturing status
-  def handle_output(results, @status_completed) do
-      MinizincResults.update_status(results, :all_solutions)
+  def parse_output(@status_completed) do
+    {:status, :all_solutions}
   end
 
-  def handle_output(results, @status_unsatisfiable) do
-    MinizincResults.update_status(results, :unsatisfiable)
+  def parse_output(@status_unsatisfiable) do
+    {:status, :unsatisfiable}
   end
 
-  def handle_output(results, @status_unknown) do
-    MinizincResults.update_status(results, :unknown)
+  def parse_output( @status_unknown) do
+    {:status, :unknown}
   end
 
-  def handle_output(results, @status_error) do
-    MinizincResults.update_status(results, :error)
+  def parse_output( @status_error) do
+    {:status, :error}
   end
 
-  def handle_output(results, @status_unsatOrUnbounded) do
-    MinizincResults.update_status(results, :unsatOrUnbounded)
+  def parse_output( @status_unsatOrUnbounded) do
+    {:status, :unsatOrUnbounded}
   end
 
-  def handle_output(results, @status_unbounded) do
-    MinizincResults.update_status(results, :ubounded)
+  def parse_output( @status_unbounded) do
+    {:status, :ubounded}
   end
 
-  def handle_output(results, new_line) do
-    MinizincResults.update_results(results, new_line)
+  ## Solution body events
+  def parse_output("{") do
+    :solution_json_start
+  end
+
+  def parse_output("}") do
+    :solution_json_end
+  end
+
+  ## Time elapsed
+  def parse_output("% time elapsed: " <> rest) do
+    {:time_elapsed, rest}
+  end
+
+  ## Solution stat record
+  def parse_output("%%%mzn-stat " <> rest) do
+    [stats_key, stats_value] = String.split(rest, "=")
+    {:solution_stats, {stats_key, stats_value}}
+  end
+
+  ## Solver (fzn or post-solving) stat record
+  def parse_output("%%%mzn-stat: " <> rest) do
+    [stats_key, stats_value] = String.split(rest, "=")
+    {:solver_stats, {stats_key, stats_value}}
   end
 
 
+  def parse_output("%%%mzn-stat-end" <> _rest) do
+    :stats_end
+  end
+
+  def parse_output(new_line) do
+    new_line
+  end
 end

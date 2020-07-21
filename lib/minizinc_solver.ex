@@ -10,9 +10,7 @@ defmodule MinizincSolver do
                         {:solver, binary()} |
                         {:time_limit, integer()} |
                         {:solution_handler, function()} |
-                        {:extra_flags, binary()} |
-                        {:model, MinizincModel.mzn_model()} |
-                        {:data, MinizincData.mzn_data()}
+                        {:extra_flags, binary()}
 
   @type solver_opts() :: list(solver_opt() )
 

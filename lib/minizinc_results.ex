@@ -13,45 +13,68 @@ defmodule MinizincResults do
                      mzn_stats: %{},
                      solution_data: %{},
                      time_elapsed: nil,
-                     misc: %{},
-                     json_buffer: "",
                      minizinc_output: "",
                      timestamp: nil,
                      solution_count: 0,
+                     json_buffer: "",
                      final_stats_flag: false # Flags first occurrence of "%%%mzn-stat-end".
                                              # which triggers parsing of final block of "%%%mzn-stat:"
                                              # as solver stats.
                    ]
 
-  def update_results(results, "% time elapsed: " <> rest) do
-    results_rec(results, time_elapsed: rest)
+  @doc """
+    Update solver process results with the line produced by Minizinc port.
+  """
+
+  ## Status update
+  def update_results(results_rec(solution_count: sc) =  results, {:status, :satisfied}) do
+    results_rec(results,
+      status: :satisfied,
+      timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
+      solution_count: sc + 1
+    )
   end
 
-  # solution stats
-  def update_results(results_rec(mzn_stats: stats) = results, "%%%mzn-stat " <> rest) do
-    results_rec(results, mzn_stats: process_stats(stats, rest))
+  def update_results(results, {:status, status}) do
+    results_rec(results, status: status)
   end
 
+  # Solution status update
+  def update_results(results_rec(mzn_stats: stats) = results,
+        {:solution_stats, {key, val} }) do
+    results_rec(results, mzn_stats: Map.put(stats, key, val))
+  end
 
+  ## Time elapsed
+  def update_results(results, {:time_elapsed, time}) do
+    results_rec(results, time_elapsed: time)
+  end
+  ## Statistics
+  ##
   # FlatZinc stats
-  def update_results(results_rec(fzn_stats: stats, final_stats_flag: false) = results, "%%%mzn-stat: " <> rest) do
-    results_rec(results, fzn_stats: process_stats(stats, rest))
+  def update_results(results_rec(fzn_stats: stats, final_stats_flag: false) = results,
+        {:solver_stats, {key, val} }) do
+    results_rec(results, fzn_stats: Map.put(stats, key, val))
   end
 
-  # Solver stats (occurs only after solver outputs it's last solution.
-  def update_results(results_rec(solver_stats: stats) = results, "%%%mzn-stat: " <> rest) do
-    results_rec(results, solver_stats: process_stats(stats, rest))
+  # Solver stats (occurs only after solver outputs its last solution).
+  def update_results(results_rec(solver_stats: stats) = results,
+        {:solver_stats, {key, val} }) do
+    results_rec(results, solver_stats: Map.put(stats, key, val))
   end
 
+  def update_results(results, :stats_end) do
+    results_rec(results, final_stats_flag: true)
+  end
 
   # JSON-formatted solution data
   ## Opening of JSON
-  def update_results(results, "{") do
-    results_rec(results, json_buffer: "{")
+  def update_results(results, :solution_json_start) do
+    results_rec(results, json_buffer: "{", solution_data: nil)
   end
 
   ## Closing of JSON
-  def update_results(results_rec(json_buffer: "{" <> _jbuffer = buff) = results, "}") do
+  def update_results(results_rec(json_buffer: "{" <> _jbuffer = buff) = results, :solution_json_end) do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
@@ -61,13 +84,9 @@ defmodule MinizincResults do
   end
 
   ## Collecting JSON data
-  def update_results(results_rec(json_buffer: "{" <> _jbuffer = buff) = results, json_chunk) do
+  def update_results(
+        results_rec(json_buffer: "{" <> _jbuffer = buff) = results, json_chunk) when is_binary(json_chunk) do
     results_rec(results, json_buffer: buff <> json_chunk)
-  end
-
-
-  def update_results(results, "%%%mzn-stat-end" <> _rest) do
-    results_rec(results, final_stats_flag: true)
   end
 
   # Drop empty lines
@@ -75,25 +94,11 @@ defmodule MinizincResults do
     results
   end
 
-  def update_results(results_rec(minizinc_output: u) = solution, unhandled) do
-    results_rec(solution, minizinc_output: u <> "\n" <> unhandled)
+  ## Unclassified, likely Minizinc stderr.
+  def update_results(results_rec(minizinc_output: u) = solution, new_line) when is_binary(new_line) do
+    results_rec(solution, minizinc_output: u <> "\n" <> new_line)
   end
 
-  def process_stats(stats, key_value_txt) do
-    [stats_key, stats_value] = String.split(key_value_txt, "=")
-    Map.put(stats, stats_key, stats_value)
-  end
-
-  def reset_results(results) do
-    results_rec(
-      results,
-      status: nil,
-      solution_data: %{},
-      time_elapsed: nil,
-      misc: %{},
-      json_buffer: ""
-    )
-  end
 
   def update_status(nil, status) do
     results_rec(status: status)

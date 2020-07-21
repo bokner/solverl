@@ -47,22 +47,23 @@ defmodule MinizincPort do
 
     ##TODO: handle long lines
     {_eol, text_line} = line
-    new_results = MinizincParser.handle_output(current_results, text_line)
-    case results_rec(new_results, :status) do
-      nil ->
-        {:noreply, Map.put(state , :current_results, new_results)}
-      :satisfied ->
+    parser_event = MinizincParser.parse_output(text_line)
+    updated_results =
+      MinizincResults.update_results(current_results, parser_event)
+    updated_state = Map.put(state, :current_results, updated_results)
+    case parser_event do
+      {:status, :satisfied} ->
         # 'false' signifies non-final solution
-        new_state = Map.put(state, :current_results, MinizincResults.reset_results(new_results))
+
         # Solution handler can force the termination of solver process
-        case handlerFun.(:solution, new_results) do
+        case handlerFun.(:solution, updated_results) do
           :stop ->
-            {:stop, :normal, new_state}
+            {:stop, :normal, updated_state}
           _other ->
-           {:noreply, new_state}
+           {:noreply, updated_state}
         end
-      _terminal_status ->
-        {:noreply, Map.put(state,  :current_results, new_results) }
+      _event ->
+        {:noreply, updated_state}
 
     end
   end
