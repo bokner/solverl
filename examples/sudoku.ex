@@ -75,9 +75,8 @@ defmodule Sudoku do
     for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i-1)*9 + (j-1)))
   end
 
-  def print_solution(data, count) do
-    Logger.info "Sudoku solved!"
-    Logger.info "Last solution: #{print_grid(data["puzzle"])}"
+  defp print_solution(data, count) do
+    Logger.info "#{print_grid(data["puzzle"])}"
     #Logger.info "Grid: #{data["puzzle"]}"
     Logger.info "Solutions found: #{count}"
   end
