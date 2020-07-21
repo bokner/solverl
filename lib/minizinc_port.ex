@@ -44,15 +44,16 @@ defmodule MinizincPort do
   def handle_info({_port, {:data, line}},
         %{current_results: current_results,
           solution_handler: handlerFun} = state) do
+
     ##TODO: handle long lines
     {_eol, text_line} = line
     new_results = MinizincParser.handle_output(current_results, text_line)
     case results_rec(new_results, :status) do
       nil ->
-        {:noreply, %{state | current_results: new_results}}
+        {:noreply, Map.put(state , :current_results, new_results)}
       :satisfied ->
         # 'false' signifies non-final solution
-        new_state = %{state | current_results: MinizincResults.reset_results(new_results)}
+        new_state = Map.put(state, :current_results, MinizincResults.reset_results(new_results))
         # Solution handler can force the termination of solver process
         case handlerFun.(:solution, new_results) do
           :stop ->
@@ -61,35 +62,46 @@ defmodule MinizincPort do
            {:noreply, new_state}
         end
       _terminal_status ->
-        {:noreply, %{state | current_results: new_results} }
+        {:noreply, Map.put(state,  :current_results, new_results) }
 
     end
   end
 
   # Handle process exits
+  #
+  ## Normal exit
   def handle_info(
-      {port, {:exit_status, port_status}},
+      {port, {:exit_status, 0}},
         %{port: port,
           current_results: current_results,
           solution_handler: handlerFun} = state) do
-    Logger.debug "Port exit: :exit_status: #{port_status}"
+    #Logger.debug "Port exit: :exit_status: #{port_status}"
 
     ## Adjust final solution status.
     ## Normally, the solver output has a terminating line (see MinizincParser.@terminating_separators),
     ## which forces line parser to set up appropriate solution status.
     ## However, when the solver terminates by a timeout, parser has no way to update the status (no terminating line
     ## comes from Minizinc. The easiest way then to set status to SATISFIED in case there were any solutions.
-    results = MinizincResults.adjust_status(current_results)
+    results = MinizincResults.adjust_final_status(current_results)
 
-    handlerFun.(:final, results
-               #MinizincResults.merge_solver_stats(current_results, results)
-               )
-    new_state = %{state | exit_status: port_status, current_results: results}
+    handlerFun.(:final, results)
+    new_state = state |> Map.put(:exit_status, 0) |> Map.put(:current_results, results)
 
     {:noreply, new_state}
   end
 
-  def handle_info({:DOWN, _ref, :port, port, :normal}, state) do
+  def handle_info(
+        {port, {:exit_status, abnormal_exit}},
+        %{port: port,
+          current_results: results,
+          solution_handler: handlerFun} = state) do
+    Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
+    handlerFun.(:minizinc_error, MinizincResults.update_status(results, :minizinc_error))
+    new_state = Map.put(state, :exit_status, abnormal_exit)
+    {:noreply, new_state}
+  end
+
+    def handle_info({:DOWN, _ref, :port, port, :normal}, state) do
     Logger.info ":DOWN message from port: #{inspect port}"
     {:stop, :normal, state}
   end
@@ -105,8 +117,7 @@ defmodule MinizincPort do
   end
 
   ## Retrieve current solver results
-  def handle_call(:get_results,  {from, _ref}, state) do
-    Logger.debug "#{:erlang.pid_to_list(from)} asks for the results..."
+  def handle_call(:get_results,  _from, state) do
     {:reply, {:ok, state[:current_results]}, state}
   end
 

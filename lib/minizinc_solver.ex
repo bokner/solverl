@@ -38,8 +38,12 @@ defmodule MinizincSolver do
     {:solution, data}
   end
 
-  def default_sync_handler(:final, results_rec(status: _status, solver_stats: stats) = _results) do
-    {:solver_stats, stats}
+  def default_sync_handler(:final, results_rec(status: status, solver_stats: solver_stats) = _results) do
+    {:solver_stats, {status, solver_stats}}
+  end
+
+  def default_sync_handler(:minizinc_error, results_rec(minizinc_output: minizinc_output) = _results) do
+    {:error, minizinc_output}
   end
 
   @doc """
@@ -61,7 +65,12 @@ defmodule MinizincSolver do
 
   ## Example:
 
+      # Solve Sudoku puzzle with "mzn/sudoku.mzn" model, "mzn/sudoku.dzn" data,
+      # and custom solution handler Sudoku.solution_handler/2.
+      #
       MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
+
+    Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
 
   def solve(model, data, opts \\ []) do
@@ -83,9 +92,12 @@ defmodule MinizincSolver do
 
   ## Example:
 
-      # Solves N-queens puzzle with n = 4
-      # Check out examples/n_queens.ex for more details on handling solutions.
-      results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4})
+      # Solve N-queens puzzle with n = 4.
+      # Use Gecode solver, solve within 1000 ms.
+      #
+      results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000])
+
+    Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
   """
   def solve_sync(model, data, opts \\ []) do
@@ -102,7 +114,6 @@ defmodule MinizincSolver do
   # Support for synchronous handling of results.
   ####################################################
   defp sync_handler(caller) do
-     Logger.debug("Synch handler")
      fn(event, results) ->
         send(caller,  %{solver_results: {event, results}, from: self()}) end
   end
@@ -119,7 +130,7 @@ defmodule MinizincSolver do
           {:stop, data} ->
             stop_solver(pid)
             [data | acc]
-          _res when event == :final ->
+          _res when event in [:final, :minizinc_error] ->
             [handler_res | acc]
           _res ->
             receive_solutions(solution_handler, pid, [handler_res | acc])

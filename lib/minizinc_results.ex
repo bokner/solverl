@@ -3,6 +3,7 @@ defmodule MinizincResults do
     Functions and data structures for working with data produced by Minizinc during runtime.
   """
 
+  require Logger
   require Record
   Record.defrecord :results_rec,
                    [
@@ -14,11 +15,12 @@ defmodule MinizincResults do
                      time_elapsed: nil,
                      misc: %{},
                      json_buffer: "",
-                     unhandled_output: "",
+                     minizinc_output: "",
                      timestamp: nil,
                      solution_count: 0,
                      final_stats_flag: false # Flags first occurrence of "%%%mzn-stat-end".
-                                             # which triggers parsing of final block of "%%%mzn-stat:" as solver stats.
+                                             # which triggers parsing of final block of "%%%mzn-stat:"
+                                             # as solver stats.
                    ]
 
   def update_results(results, "% time elapsed: " <> rest) do
@@ -68,8 +70,13 @@ defmodule MinizincResults do
     results_rec(results, final_stats_flag: true)
   end
 
-  def update_results(results_rec(unhandled_output: u) = solution, unhandled) do
-    results_rec(solution, unhandled_output: u <> "\n" <> unhandled)
+  # Drop empty lines
+  def update_results(results, "") do
+    results
+  end
+
+  def update_results(results_rec(minizinc_output: u) = solution, unhandled) do
+    results_rec(solution, minizinc_output: u <> "\n" <> unhandled)
   end
 
   def process_stats(stats, key_value_txt) do
@@ -108,15 +115,15 @@ defmodule MinizincResults do
     status |> Atom.to_string |> String.upcase |> String.to_atom
   end
 
-  def adjust_status(results_rec(status: nil, solution_count: count) = results) when count > 0 do
+  def adjust_final_status(results_rec(status: nil, solution_count: count) = results) when count > 0 do
      results_rec(results, status: :satisfied)
   end
 
-  def adjust_status(results_rec(status: nil, solution_count: count) = results) when count == 0 do
+  def adjust_final_status(results_rec(status: nil, solution_count: count) = results) when count == 0 do
     results_rec(results, status: :unsatisfiable)
   end
 
-  def adjust_status(results) do
+  def adjust_final_status(results) do
     results
   end
 
