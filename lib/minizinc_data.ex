@@ -144,17 +144,17 @@ defmodule MinizincData do
     []
   end
 
-  def dimensions([], _acc) do
+  defp dimensions([], _acc) do
     []
   end
 
-  def dimensions(array, acc) when is_list(array) do
+  defp dimensions(array, acc) when is_list(array) do
     [head | tail] = array
     Enum.all?(tail, fn t -> dimensions(t) == dimensions(head) end) and
     dimensions(head, [length(array) | acc])
   end
 
-  def dimensions(_el, acc) do
+  defp dimensions(_el, acc) do
     Enum.reverse(acc)
   end
 

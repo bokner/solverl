@@ -120,16 +120,4 @@ defmodule MinizincResults do
     status |> Atom.to_string |> String.upcase |> String.to_atom
   end
 
-  def adjust_final_status(results_rec(status: nil, solution_count: count) = results) when count > 0 do
-     results_rec(results, status: :satisfied)
-  end
-
-  def adjust_final_status(results_rec(status: nil, solution_count: count) = results) when count == 0 do
-    results_rec(results, status: :unsatisfiable)
-  end
-
-  def adjust_final_status(results) do
-    results
-  end
-
 end

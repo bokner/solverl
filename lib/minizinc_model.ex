@@ -43,12 +43,12 @@ defmodule MinizincModel do
 
 
   ## Model as text
-  def read_model({:text, model_text}) when is_binary(model_text) do
+  defp read_model({:text, model_text}) when is_binary(model_text) do
     {:ok, model_text}
   end
 
   ## Model as file
-  def read_model(model_file) when is_binary(model_file) do
+  defp read_model(model_file) when is_binary(model_file) do
     {:ok, _model} = File.read(model_file)
   end
 
