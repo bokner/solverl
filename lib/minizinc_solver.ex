@@ -4,6 +4,7 @@ defmodule MinizincSolver do
   """
 
   import MinizincResults
+
   require Logger
 
   @type solver_opt() :: {:minizinc_executable, binary()} |
@@ -71,6 +72,8 @@ defmodule MinizincSolver do
     Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
 
+  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts()) :: {:ok, pid()}
+
   def solve(model, data, opts \\ []) do
     args = [model: model, data: data] ++
            Keyword.merge(MinizincSolver.default_args, opts)
@@ -80,6 +83,7 @@ defmodule MinizincSolver do
   @doc """
   Shortcut for solve_sync/2.
   """
+
   def solve_sync(model) do
     solve_sync(model, [])
   end
@@ -98,6 +102,8 @@ defmodule MinizincSolver do
     Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
   """
+  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts()) :: [any()]
+
   def solve_sync(model, data, opts \\ []) do
     solution_handler = Keyword.get(opts, :solution_handler, &__MODULE__.default_sync_handler/2)
     # Plug sync_handler to have solver send the results back to us
@@ -146,20 +152,6 @@ defmodule MinizincSolver do
     {:ok, _results} = MinizincPort.get_results_and_stop(pid)
   end
 
-  def prepare_solver_cmd(args) do
-    {:ok, solver} = MinizincSolver.lookup(args[:solver])
-    solver_str = "--solver #{solver["id"]}"
-    time_limit_str = "--time-limit #{args[:time_limit]}"
-    extra_flags = Keyword.get(args, :extra_flags, "")
-    {:ok, model_str} = MinizincModel.make_model(args[:model])
-    {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
-    args[:minizinc_executable] <> " " <>
-    String.trim(
-      "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
-      extra_flags <>
-      " #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
-    )
-  end
 
   @doc """
   Get list of descriptions for solvers available to Minizinc.

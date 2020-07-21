@@ -3,7 +3,7 @@ defmodule MinizincData do
     Functions for converting data between Minizinc and Elixir.
   """
 
-  @type data_chunk() :: binary() | map()
+  @type data_chunk() :: Path.t() | map()
   @type mzn_data()    :: data_chunk() | list(data_chunk)
 
   @default_array_base 1

@@ -15,7 +15,7 @@ defmodule MinizincPort do
   def init(args \\ []) do
     Process.flag(:trap_exit, true)
     # Locate minizinc executable and run it with args converted to CLI params.
-    command = MinizincSolver.prepare_solver_cmd(args)
+    command = prepare_solver_cmd(args)
     Logger.warn "Command: #{command}"
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
@@ -134,6 +134,21 @@ defmodule MinizincPort do
 
   def get_results_and_stop(pid) do
     GenServer.call(pid, :get_results_and_stop)
+  end
+
+  defp prepare_solver_cmd(args) do
+    {:ok, solver} = MinizincSolver.lookup(args[:solver])
+    solver_str = "--solver #{solver["id"]}"
+    time_limit_str = "--time-limit #{args[:time_limit]}"
+    extra_flags = Keyword.get(args, :extra_flags, "")
+    {:ok, model_str} = MinizincModel.make_model(args[:model])
+    {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
+    args[:minizinc_executable] <> " " <>
+                                  String.trim(
+                                    "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
+                                    extra_flags <>
+                                    " #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
+                                  )
   end
 
 end

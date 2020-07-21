@@ -7,7 +7,7 @@ defmodule MinizincModel do
   import MinizincResults
 
 
-  @type model_chunk :: binary() | {:text, binary()}
+  @type model_chunk :: Path.t() | {:text, binary()}
   @type mzn_model    :: model_chunk() | list(model_chunk())
 
 
