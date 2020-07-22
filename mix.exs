@@ -10,6 +10,7 @@ defmodule Solverl.MixProject do
       elixirc_paths: ["lib", "examples"],
       deps: deps(),
       description: description(),
+      docs: docs(),
       package: package(),
 
     ]
@@ -34,6 +35,16 @@ defmodule Solverl.MixProject do
 
   defp description() do
     "Elixir/Erlang interface to Minizinc (https://www.minizinc.org/)."
+  end
+
+  defp docs do
+    [
+      main: "readme",
+      formatter_opts: [gfm: true],
+      extras: [
+        "README.md"
+      ]
+    ]
   end
 
   defp package() do
