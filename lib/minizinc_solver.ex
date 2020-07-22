@@ -3,8 +3,6 @@ defmodule MinizincSolver do
     Minizinc solver API.
   """
 
-  import MinizincResults
-
   require Logger
 
   @type solver_opt() :: {:minizinc_executable, binary()} |
@@ -19,31 +17,8 @@ defmodule MinizincSolver do
     minizinc_executable: System.find_executable("minizinc"),
     solver: "gecode",
     time_limit: 60*5*1000,
-    solution_handler: &__MODULE__.default_async_handler/2]
+    solution_handler: MinizincHandler.DefaultAsync]
 
-  @doc """
-  Default solution handler for solve/2,3
-  """
-  def default_async_handler(_event, results_rec(status: _status) = results) do
-    Logger.info "Model info: method = #{MinizincModel.model_method(results)}"
-    Logger.info "Solution status: #{MinizincResults.get_status(results)}"
-    Logger.info "Solution: #{inspect results}"
-  end
-
-  @doc """
-  Default solution handler for solve_sync/2,3
-  """
-  def default_sync_handler(:solution, results_rec(status: _status, solution_data: data) = _results) do
-    {:solution, data}
-  end
-
-  def default_sync_handler(:final, results_rec(status: status, solver_stats: solver_stats) = _results) do
-    {:solver_stats, {status, solver_stats}}
-  end
-
-  def default_sync_handler(:minizinc_error, results_rec(minizinc_output: minizinc_output) = _results) do
-    {:error, minizinc_output}
-  end
 
   @doc """
   Default solver arguments.
@@ -105,7 +80,7 @@ defmodule MinizincSolver do
   @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts()) :: [any()]
 
   def solve_sync(model, data, opts \\ []) do
-    solution_handler = Keyword.get(opts, :solution_handler, &__MODULE__.default_sync_handler/2)
+    solution_handler = Keyword.get(opts, :solution_handler, MinizincHandler.DefaultSync)
     # Plug sync_handler to have solver send the results back to us
     caller = self()
     sync_opts = Keyword.put(opts,
@@ -129,7 +104,7 @@ defmodule MinizincSolver do
   defp receive_solutions(solution_handler, solver_pid, acc) do
     receive do
       %{from: pid, solver_results: {event, results}} when pid == solver_pid ->
-        handler_res = solution_handler.(event, results)
+        handler_res = MinizincHandler.handle_solver_event(event, results, solution_handler)
         case handler_res do
           {:stop, data} ->
             stop_solver(pid)
@@ -144,6 +119,8 @@ defmodule MinizincSolver do
     end
   end
   ####################################################
+
+
 
   @doc """
   Stop solver process.

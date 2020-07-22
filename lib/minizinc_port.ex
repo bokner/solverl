@@ -43,7 +43,7 @@ defmodule MinizincPort do
   # Note: the stream messages are split to lines by 'line: L' option in Port.open/2.
   def handle_info({_port, {:data, line}},
         %{current_results: current_results,
-          solution_handler: handlerFun} = state) do
+          solution_handler: solution_handler} = state) do
 
     ##TODO: handle long lines
     {_eol, text_line} = line
@@ -53,10 +53,11 @@ defmodule MinizincPort do
     updated_state = Map.put(state, :current_results, updated_results)
     case parser_event do
       {:status, :satisfied} ->
-        # 'false' signifies non-final solution
-
         # Solution handler can force the termination of solver process
-        case handlerFun.(:solution, updated_results) do
+
+        solution_res = MinizincHandler.handle_solver_event(:solution, updated_results, solution_handler)
+        ## Deciding if the solver is to be stopped...
+        case solution_res do
           :stop ->
             {:stop, :normal, updated_state}
           _other ->
@@ -75,9 +76,9 @@ defmodule MinizincPort do
       {port, {:exit_status, 0}},
         %{port: port,
           current_results: results,
-          solution_handler: handlerFun} = state) do
+          solution_handler: solution_handler} = state) do
     #Logger.debug "Port exit: :exit_status: #{port_status}"
-    handlerFun.(:final, results)
+    MinizincHandler.handle_solver_event(:final, results, solution_handler)
     new_state = state |> Map.put(:exit_status, 0)
 
     {:noreply, new_state}
@@ -87,9 +88,9 @@ defmodule MinizincPort do
         {port, {:exit_status, abnormal_exit}},
         %{port: port,
           current_results: results,
-          solution_handler: handlerFun} = state) do
+          solution_handler: solution_handler} = state) do
     Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
-    handlerFun.(:minizinc_error, MinizincResults.update_status(results, :minizinc_error))
+    MinizincHandler.handle_solver_event(:minizinc_error, results, solution_handler)
     new_state = Map.put(state, :exit_status, abnormal_exit)
     {:noreply, new_state}
   end

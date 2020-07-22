@@ -5,12 +5,11 @@ defmodule MinizincResults do
 
   require Logger
   require Record
-  Record.defrecord :results_rec,
-                   [
+  Record.defrecord(:results_rec,
                      status: nil,
-                     fzn_stats: %{},
-                     solver_stats: %{},
-                     mzn_stats: %{},
+                     fzn_stats: %{} ,
+                     solver_stats: %{} ,
+                     mzn_stats: %{} ,
                      solution_data: %{},
                      time_elapsed: nil,
                      minizinc_output: "",
@@ -20,7 +19,21 @@ defmodule MinizincResults do
                      final_stats_flag: false # Flags first occurrence of "%%%mzn-stat-end".
                                              # which triggers parsing of final block of "%%%mzn-stat:"
                                              # as solver stats.
-                   ]
+  )
+
+  @type results_rec :: record(:results_rec,
+                             status: atom(),
+                             fzn_stats: map(),
+                             solver_stats: map(),
+                             mzn_stats: map(),
+                             solution_data: map(),
+                             time_elapsed: any(),
+                             minizinc_output: binary(),
+                             timestamp: DateTime.t(),
+                             solution_count: integer(),
+                             json_buffer: binary(),
+                             final_stats_flag: boolean()
+                                         )
 
   @doc """
     Update solver process results with the line produced by Minizinc port.

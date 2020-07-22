@@ -15,7 +15,7 @@ defmodule NQueens do
     MinizincSolver.solve(@nqueens_model, %{n: n}, opts)
   end
 
-  def solve_sync(n, opts \\ [solution_handler: &solution_handler/2]) do
+  def solve_sync(n, opts \\ []) do
     results = MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
     Enum.each(results,
       fn {:solver_stats, stats} ->
