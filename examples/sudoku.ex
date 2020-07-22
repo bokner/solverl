@@ -1,6 +1,8 @@
 defmodule Sudoku do
   @moduledoc """
     Example: Sudoku solver.
+
+    Sudoku puzzle is a string with elements of the puzzle in row-major order, where a blank entry is represented by "."
   """
 
   require Logger
@@ -8,8 +10,9 @@ defmodule Sudoku do
   @sample_sudoku_1_solution  "85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4."
   @sample_sudoku_5_solutions "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
 
-  # Sudoku puzzle is a string
-  # with elements of the puzzle in row-major order, where a blank entry is represented by "."
+  @doc """
+    Solve asynchronously using Sudoku.AsyncHandler as a solution handler.
+  """
   def solve(puzzle, args \\ [])  do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
@@ -23,14 +26,18 @@ defmodule Sudoku do
       opts)
   end
 
-  ## Solve synchronously
-  ## Example (prints all solutions):
-  ##
-  ## Enum.each(Sudoku.solve_sync(
-  ##    "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"),
-  ##    fn sol -> Logger.info Sudoku.print_grid(sol["puzzle"]) end)
-  ##
-  ##
+  @doc """
+   ```elixir
+   # Solve synchronously.
+   # Example (prints all solutions):
+
+   Enum.each(Sudoku.solve_sync(
+      "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"),
+      fn ({:solution, sol}) -> Logger.info Sudoku.print_grid(sol["puzzle"])
+         (_) -> :ok
+      end)
+  ```
+  """
   def solve_sync(puzzle) do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
@@ -47,12 +54,14 @@ defmodule Sudoku do
     for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i-1)*9 + (j-1)))
   end
 
+  @doc false
   def print_solution(data, count) do
     Logger.info "#{print_grid(data["puzzle"])}"
     #Logger.info "Grid: #{data["puzzle"]}"
     Logger.info "Solutions found: #{count}"
   end
 
+  @doc false
   def print_grid(grid) do
     gridline = "+-------+-------+-------+\n"
     gridcol = "| "
@@ -87,18 +96,21 @@ end
 
 defmodule Sudoku.AsyncHandler do
   require Logger
+
   ## Handle no more than 3 solutions, print the final one.
+  @doc false
   def handle_solution(data, _stats, _timestamp, count) when count <= 3 do
     Sudoku.print_solution(data, count)
     if count < 3, do: :ok, else: :stop
   end
 
-
+  @doc false
   def handle_final(status, _last_solution, solver_stats, _fzn_stats) do
     Logger.info "Solver status: #{status}"
     Logger.info "Solver stats:\n #{inspect solver_stats}"
   end
 
+  @doc false
   def handle_minizinc_error(error) do
     Logger.info "Minizinc error: #{error}"
   end
@@ -107,17 +119,19 @@ end
 defmodule Sudoku.SyncHandler do
   require Logger
 
+  @doc false
   def handle_solution(data, _stats, _timestamp, _count)  do
     {:solution, data}
   end
 
-
+  @doc false
   def handle_final(status, last_solution, solver_stats, _fzn_stats) do
     {:final,
       %{status: status, last_solution: last_solution, solver_stats: solver_stats}
     }
   end
 
+  @doc false
   def handle_minizinc_error(error) do
     Logger.info "Minizinc error: #{error}"
     {:error, error}
