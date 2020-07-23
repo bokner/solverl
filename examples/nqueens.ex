@@ -15,14 +15,8 @@ defmodule NQueens do
     MinizincSolver.solve(@nqueens_model, %{n: n}, opts)
   end
 
-  def solve_sync(n, opts \\ []) do
-    results = MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
-    Enum.each(results,
-      fn {:solver_stats, stats} ->
-            Logger.info "Solver stats:\n #{inspect stats}"
-        {:solution, solution} ->
-            Logger.info print_board(solution["q"]) <> "\n-----------------------"
-      end)
+  def solve_sync(n, opts \\ [solution_handler: NQueens.SyncHandler]) do
+    MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
   end
 
   ## Printing solver stats
@@ -54,6 +48,30 @@ defmodule NQueens do
         if Enum.at(queens, i - 1) == j, do: @queen_symbol, else: "."
       end, " ")
     end, "\n")
+  end
+
+end
+
+defmodule NQueens.SyncHandler do
+  require Logger
+  import NQueens
+
+  @doc false
+  def handle_solution(solution, _stats, _timestamp, _count)  do
+    Logger.info print_board(solution["q"]) <> "\n-----------------------"
+    {:solution, solution}
+  end
+
+  @doc false
+  def handle_final(status, last_solution, solver_stats, fzn_stats) do
+    Logger.info "Solver stats:\n #{inspect solver_stats}"
+    MinizincHandler.DefaultSync.handle_final(status, last_solution, solver_stats, fzn_stats)
+  end
+
+  @doc false
+  def handle_minizinc_error(error) do
+    Logger.info "Minizinc error: #{error}"
+    {:error, error}
   end
 
 end
