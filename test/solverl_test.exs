@@ -35,17 +35,30 @@ defmodule SolverlTest do
                [solver: "gecode"])
   end
 
-
-  test "Unsatisfiable sync/async" do
-    :todo
+  test "Minizinc error" do
+    ## Improper data key - should be %{n: 2}
+    [error: _] = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
   end
 
-  test "Solving with timeout sync/async" do
-    :todo
+  test "Unsatisfiable sync" do
+    unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})
+    assert unsat_res[:final][:status] == :unsatisfiable
   end
 
-  test "Solution handlers for sync/async" do
-    :todo
+  test "Solving with timeout sync" do
+    ## Final record for sync solving results is in position 0.
+    final_data  = Enum.at(MinizincSolver.solve_sync(
+      "mzn/nqueens.mzn", %{n: 50}, [time_limit: 500]),
+      0)
+    assert {:final, %{status: :satisfied}} = final_data
+  end
+
+  test "Getting all solutions" do
+    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8})
+
+    assert {:final, %{status: :all_solutions}} = Enum.at(results, 0)
+    ## 92 results for the nqueens.mzn model plus the final record.
+    assert length(results) == 1 + 92
   end
 
   test "Solution handlers which interrupt the solver within (async)" do
