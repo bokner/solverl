@@ -21,8 +21,19 @@ defmodule MinizincHandler do
 
   @callback handle_minizinc_error(mzn_error :: any) :: any
 
+  ## Provide stubs for MinizincHandler behaviour
+  defmacro __using__(_) do
+    quote do
+      @behaviour MinizincHandler
+      def handle_solution(_sol, _stats, _ts, _count) do :ok end
+      def handle_final(_status, _last_sol, _solver_stats, _fzn_stats) do :ok end
+      def handle_minizinc_error(_error) do :ok end
+      defoverridable MinizincHandler
+    end
+  end
+
   @doc """
-    Helper to call handler callbacks.
+    Helper to call handler callbacks uniformly.
     The solution handler can be either a function, or a callback module.
   """
   ## Solution handler as a function
@@ -52,6 +63,7 @@ end
 
 defmodule MinizincHandler.DefaultAsync do
   require Logger
+  use MinizincHandler
 
   def handle_solution(data, _stats, _timestamp, count) do
     Logger.info "Solution # #{count}: #{inspect data}"
@@ -70,6 +82,7 @@ end
 
 defmodule MinizincHandler.DefaultSync do
   require Logger
+  use MinizincHandler
 
   def handle_solution(data, _stats, _timestamp, _count) do
     {:solution, data}
@@ -84,19 +97,3 @@ defmodule MinizincHandler.DefaultSync do
   end
 end
 
-
-
-'''
-
-  @doc """
-  Default solution handler for solve_sync/2,3
-  """
-  def default_sync_handler(:final, results_rec(status: status, solver_stats: solver_stats) = _results) do
-
-  end
-
-  def default_sync_handler(:minizinc_error, results_rec(minizinc_output: minizinc_output) = _results) do
-    {:error, minizinc_output}
-  end
-
-'''
