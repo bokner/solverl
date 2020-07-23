@@ -88,8 +88,8 @@ defmodule MinizincHandler.DefaultSync do
     {:solution, data}
   end
 
-  def handle_final(status, _last_solution, solver_stats, _fzn_stats) do
-    {:solver_stats, {status, solver_stats}}
+  def handle_final(status, last_solution, solver_stats, _fzn_stats) do
+    {:final, %{status: status, last_solution: last_solution, solver_stats: solver_stats}}
   end
 
   def handle_minizinc_error(error) do
