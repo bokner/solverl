@@ -85,6 +85,8 @@ defmodule MinizincSolver do
     caller = self()
     sync_opts = Keyword.put(opts,
       :solution_handler, sync_handler(caller))
+    ## Flush all residual messages
+    MinizincUtils.flush()
     {:ok, solver_pid} = solve(model, data, sync_opts)
     receive_solutions(solution_handler, solver_pid)
   end
@@ -98,7 +100,9 @@ defmodule MinizincSolver do
   end
 
   defp receive_solutions(solution_handler, solver_pid) do
-    receive_solutions(solution_handler, solver_pid, [])
+    results = receive_solutions(solution_handler, solver_pid, [])
+    stop_solver(solver_pid)
+    results
   end
 
   defp receive_solutions(solution_handler, solver_pid, acc) do
@@ -107,15 +111,16 @@ defmodule MinizincSolver do
         handler_res = MinizincHandler.handle_solver_event(event, results, solution_handler)
         case handler_res do
           {:stop, data} ->
-            stop_solver(pid)
             [data | acc]
+          :stop ->
+            acc
           _res when event in [:final, :minizinc_error] ->
             [handler_res | acc]
           _res ->
             receive_solutions(solution_handler, pid, [handler_res | acc])
         end
       unexpected ->
-        Logger.error("Unexpected message while receiving solutions: #{inspect unexpected}")
+        Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
     end
   end
   ####################################################
@@ -126,7 +131,8 @@ defmodule MinizincSolver do
   Stop solver process.
   """
   def stop_solver(pid) do
-    {:ok, _results} = MinizincPort.get_results_and_stop(pid)
+    MinizincPort.stop(pid)
+    MinizincUtils.flush()
   end
 
 

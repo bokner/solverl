@@ -120,8 +120,9 @@ defmodule Sudoku.SyncHandler do
   require Logger
 
   @doc false
-  def handle_solution(data, _stats, _timestamp, _count)  do
-    {:solution, data}
+  def handle_solution(data, _stats, _timestamp, count)  do
+    solution_rec = {:solution, data}
+    if count < 3, do: solution_rec, else: {:stop, solution_rec}
   end
 
   @doc false

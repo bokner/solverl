@@ -116,8 +116,9 @@ defmodule MinizincPort do
   end
 
   ## Same as above, but stop the solver
-  def handle_call(:get_results_and_stop,  _from, state) do
-    {:stop, :normal, {:ok, state[:current_results]}, state}
+  def handle_cast(:stop_solver, state) do
+    Logger.debug "Request to stop the solver..."
+    {:stop, :normal, state}
   end
 
   ## Helpers
@@ -125,8 +126,8 @@ defmodule MinizincPort do
     GenServer.call(pid, :get_results)
   end
 
-  def get_results_and_stop(pid) do
-    GenServer.call(pid, :get_results_and_stop)
+  def stop(pid) do
+    GenServer.cast(pid, :stop_solver)
   end
 
   defp prepare_solver_cmd(args) do
