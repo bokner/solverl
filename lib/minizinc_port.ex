@@ -78,7 +78,7 @@ defmodule MinizincPort do
           current_results: results,
           solution_handler: solution_handler} = state) do
     #Logger.debug "Port exit: :exit_status: #{port_status}"
-    MinizincHandler.handle_solver_event(:final, results, solution_handler)
+    MinizincHandler.handle_solver_event(:summary, results, solution_handler)
     new_state = state |> Map.put(:exit_status, 0)
 
     {:noreply, new_state}

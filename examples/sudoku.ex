@@ -48,7 +48,6 @@ defmodule Sudoku do
   end
 
 
-
   defp sudoku_string_to_grid(sudoku_str) do
     str0 = String.replace(sudoku_str, ".", "0")
     for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i-1)*9 + (j-1)))
@@ -85,6 +84,7 @@ defmodule Sudoku do
     cell
   end
 
+  @doc false
   def sudoku_samples() do
     [
       @sample_sudoku_1_solution,
@@ -99,15 +99,15 @@ defmodule Sudoku.AsyncHandler do
 
   ## Handle no more than 3 solutions, print the final one.
   @doc false
-  def handle_solution(data, _stats, _timestamp, count) when count <= 3 do
+  def handle_solution(%{index: count, data: data}) when count <= 3 do
     Sudoku.print_solution(data, count)
     if count < 3, do: :ok, else: :stop
   end
 
   @doc false
-  def handle_final(status, _last_solution, solver_stats, _fzn_stats) do
-    Logger.info "Solver status: #{status}"
-    Logger.info "Solver stats:\n #{inspect solver_stats}"
+  def handle_summary(summary) do
+    Logger.info "Solver status: #{summary[:status]}"
+    Logger.info "Solver stats:\n #{inspect summary[:solver_stats]}"
   end
 
   @doc false
@@ -120,16 +120,14 @@ defmodule Sudoku.SyncHandler do
   require Logger
 
   @doc false
-  def handle_solution(data, _stats, _timestamp, count)  do
+  def handle_solution(%{index: count, data: data})  do
     solution_rec = {:solution, data}
     if count < 3, do: solution_rec, else: {:stop, solution_rec}
   end
 
   @doc false
-  def handle_final(status, last_solution, solver_stats, _fzn_stats) do
-    {:final,
-      %{status: status, last_solution: last_solution, solver_stats: solver_stats}
-    }
+  def handle_summary(summary) do
+    {:summary, summary}
   end
 
   @doc false

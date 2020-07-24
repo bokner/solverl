@@ -3,30 +3,22 @@ defmodule MinizincHandler do
     Behaviour, default implementations and helpers for solution handlers.
   """
 
-  import MinizincResults
 
-  @callback handle_solution(
-              solution :: map,
-              statistics:: map,
-              timestamp :: DateTime.t(),
-              solution_count :: integer)
+  @callback handle_solution(MinizincResults.solution())
             :: {:ok, term} | :stop | {:stop, any()}
 
-  @callback handle_final(
-              status :: atom,
-              last_solution :: map,
-              solver_stats :: map,
-              fzn_stats :: map)
+  @callback handle_summary(summary :: MinizincResults.summary()
+              )
             :: :ok | {:ok, any()}
 
-  @callback handle_minizinc_error(mzn_error :: any) :: any
+  @callback handle_minizinc_error(mzn_error :: MinizincResults.minizinc_error()) :: any
 
   ## Provide stubs for MinizincHandler behaviour
   defmacro __using__(_) do
     quote do
       @behaviour MinizincHandler
-      def handle_solution(_sol, _stats, _ts, _count) do :ok end
-      def handle_final(_status, _last_sol, _solver_stats, _fzn_stats) do :ok end
+      def handle_solution(_solution) do :ok end
+      def handle_summary(_summary) do :ok end
       def handle_minizinc_error(_error) do :ok end
       defoverridable MinizincHandler
     end
@@ -43,19 +35,15 @@ defmodule MinizincHandler do
 
   ## Solution handler as a callback
   def handle_solver_event(:solution, results, solution_handler) do
-    results_rec(solution_data: data, mzn_stats: stats, timestamp: ts, solution_count: count) = results
-    solution_handler.handle_solution(data, stats, ts, count)
+    solution_handler.handle_solution(MinizincResults.solution(results))
   end
 
-  def handle_solver_event(:final, results, solution_handler) do
-    results_rec(
-      status: status, solution_data: last_solution,
-      solver_stats: solver_stats, fzn_stats: fzn_stats) = results
-    solution_handler.handle_final(status, last_solution, solver_stats, fzn_stats)
+  def handle_solver_event(:summary, results, solution_handler) do
+    solution_handler.handle_summary(MinizincResults.summary(results))
   end
 
   def handle_solver_event(:minizinc_error, results, solution_handler) do
-    solution_handler.handle_minizinc_error(results_rec(results, :minizinc_output))
+    solution_handler.handle_minizinc_error(MinizincResults.minizinc_error(results))
   end
 
 
@@ -65,34 +53,33 @@ defmodule MinizincHandler.DefaultAsync do
   require Logger
   use MinizincHandler
 
-  def handle_solution(data, _stats, _timestamp, count) do
-    Logger.info "Solution # #{count}: #{inspect data}"
+  def handle_solution(solution) do
+    Logger.info "Solution: #{inspect solution}"
   end
 
-  def handle_final(status, last_solution, solver_stats, _fzn_stats) do
-    Logger.info "Solution status: #{status}"
-    Logger.info "Last solution: #{inspect last_solution}"
-    Logger.info "Solver stats: #{inspect solver_stats}"
+  def handle_summary(summary) do
+    Logger.info "Summary: #{inspect summary}"
   end
 
   def handle_minizinc_error(error) do
-    Logger.info "Minizinc error: #{error}"
+    Logger.info "Minizinc error: #{inspect error}"
   end
 end
 
 defmodule MinizincHandler.DefaultSync do
   require Logger
+  require Record
   use MinizincHandler
 
-  def handle_solution(data, _stats, _timestamp, _count) do
-    {:solution, data}
+  def handle_solution(solution)  do
+    {:solution, solution}
   end
 
-  def handle_final(status, last_solution, solver_stats, _fzn_stats) do
-    {:final, %{status: status, last_solution: last_solution, solver_stats: solver_stats}}
+  def handle_summary(summary)  do
+    {:summary, summary}
   end
 
-  def handle_minizinc_error(error) do
+  def handle_minizinc_error(error)  do
     {:error, error}
   end
 end

@@ -20,7 +20,7 @@ defmodule NQueens do
   end
 
   ## Printing solver stats
-  def solution_handler(:final,
+  def solution_handler(:summary,
         results_rec(
           solver_stats: stats
         ) = results
@@ -57,15 +57,15 @@ defmodule NQueens.SyncHandler do
   import NQueens
 
   @doc false
-  def handle_solution(solution, _stats, _timestamp, _count)  do
-    Logger.info print_board(solution["q"]) <> "\n-----------------------"
+  def handle_solution(%{data: data} = solution)  do
+    Logger.info print_board(data["q"]) <> "\n-----------------------"
     {:solution, solution}
   end
 
   @doc false
-  def handle_final(status, last_solution, solver_stats, fzn_stats) do
+  def handle_summary(%{solver_stats: solver_stats} = summary) do
     Logger.info "Solver stats:\n #{inspect solver_stats}"
-    MinizincHandler.DefaultSync.handle_final(status, last_solution, solver_stats, fzn_stats)
+    MinizincHandler.DefaultSync.handle_summary(summary)
   end
 
   @doc false

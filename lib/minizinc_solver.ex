@@ -114,7 +114,7 @@ defmodule MinizincSolver do
             [data | acc]
           :stop ->
             acc
-          _res when event in [:final, :minizinc_error] ->
+          _res when event in [:summary, :minizinc_error] ->
             [handler_res | acc]
           _res ->
             receive_solutions(solution_handler, pid, [handler_res | acc])

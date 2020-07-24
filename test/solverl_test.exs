@@ -42,7 +42,7 @@ defmodule SolverlTest do
 
   test "Unsatisfiable sync" do
     unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})
-    assert unsat_res[:final][:status] == :unsatisfiable
+    assert unsat_res[:summary][:status] == :unsatisfiable
   end
 
   test "Solving with timeout sync" do
@@ -50,13 +50,13 @@ defmodule SolverlTest do
     final_data  = Enum.at(MinizincSolver.solve_sync(
       "mzn/nqueens.mzn", %{n: 50}, [time_limit: 500]),
       0)
-    assert {:final, %{status: :satisfied}} = final_data
+    assert {:summary, %{status: :satisfied}} = final_data
   end
 
   test "Getting all solutions" do
     results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8})
 
-    assert {:final, %{status: :all_solutions}} = Enum.at(results, 0)
+    assert {:summary, %{status: :all_solutions}} = Enum.at(results, 0)
     ## 92 results for the nqueens.mzn model plus the final record.
     assert length(results) == 1 + 92
   end

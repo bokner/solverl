@@ -21,6 +21,7 @@ defmodule MinizincResults do
                                              # as solver stats.
   )
 
+
   @type results_rec :: record(:results_rec,
                              status: atom(),
                              fzn_stats: map(),
@@ -132,5 +133,32 @@ defmodule MinizincResults do
   def get_status(results_rec(status: status)) do
     status |> Atom.to_string |> String.upcase |> String.to_atom
   end
+
+  def solution(results_rec(solution_data: data, timestamp: timestamp, mzn_stats: stats, solution_count: count)) do
+    %{data: data, timestamp: timestamp, index: count, stats: stats}
+  end
+
+  def summary(results_rec(
+    status: status, solution_count: solution_count,
+    solver_stats: solver_stats, fzn_stats: fzn_stats,
+    minizinc_output: minizinc_output, time_elapsed: time_elapsed
+  ) = results) do
+    %{status: status,
+      fzn_stats: fzn_stats,
+      solver_stats: solver_stats,
+      solution_count: solution_count,
+      last_solution: solution(results),
+      minizinc_output: minizinc_output,
+      time_elapsed: time_elapsed}
+  end
+
+  ## This function is not intended to be called explicitly.
+  ## Rather, it's being used by solution handlers.
+  ## For now, we just take the unclassified output as an error message.
+  ## TODO: actually parse in order to give more details on the error.
+  def minizinc_error(results_rec(minizinc_output: error)) do
+    %{error: error}
+  end
+
 
 end
