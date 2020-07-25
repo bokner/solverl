@@ -73,6 +73,8 @@ defmodule MinizincHandler do
 end
 
 defmodule MinizincHandler.DefaultAsync do
+  @moduledoc false
+
   require Logger
   use MinizincHandler
 
@@ -90,6 +92,8 @@ defmodule MinizincHandler.DefaultAsync do
 end
 
 defmodule MinizincHandler.DefaultSync do
+  @moduledoc false
+
   require Logger
   require Record
   use MinizincHandler

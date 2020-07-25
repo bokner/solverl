@@ -1,7 +1,5 @@
 defmodule Solverl do
-  @moduledoc """
-  Documentation for `Solverl`.
-  """
+  @moduledoc false
 
 
 

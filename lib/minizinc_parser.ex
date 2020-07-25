@@ -1,7 +1,7 @@
 defmodule MinizincParser do
-  @moduledoc """
-    Functions for parsing a stream of text produced by Minizinc process.
-  """
+  @moduledoc false
+
+  # Functions for parsing a stream of text produced by Minizinc process.
   require Logger
 
   @solution_separator      "----------"

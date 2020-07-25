@@ -1,7 +1,8 @@
 defmodule MinizincPort do
-  @moduledoc """
-    Port server for Minizinc solver executable.
-  """
+  @moduledoc false
+
+  # Port server for Minizinc solver executable.
+
   use GenServer
   require Logger
 
@@ -20,7 +21,7 @@ defmodule MinizincPort do
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
-    {:ok, %{port: port, current_results: results_rec(),
+    {:ok, %{port: port, current_results: parser_rec(),
       solution_handler: args[:solution_handler],
       exit_status: nil} }
   end

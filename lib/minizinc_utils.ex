@@ -1,8 +1,7 @@
 defmodule MinizincUtils do
-  @moduledoc """
-    Helpers
-  """
+  @moduledoc false
 
+  # Helpers
   require Logger
   def flush() do
     receive do

@@ -135,7 +135,7 @@ defmodule MinizincData do
   ## The lengths of sublists within a dimension have to be the same,
   ## for results, think of a proper matrix, where each row has the same number of columns etc.
 
-
+  @doc false
   def dimensions(array) when is_list(array) do
     dimensions(array, [])
   end
