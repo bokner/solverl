@@ -19,6 +19,10 @@ defmodule MinizincSolver do
     time_limit: 60*5*1000,
     solution_handler: MinizincHandler.DefaultAsync]
 
+  ## How long to wait after :stop_solver message had been sent to a solver port, and
+  ## nothing came from the port.
+
+  @stop_timeout 5000
 
   @doc false
   def default_args, do: @default_args
@@ -83,8 +87,6 @@ defmodule MinizincSolver do
     caller = self()
     sync_opts = Keyword.put(opts,
       :solution_handler, sync_handler(caller))
-    ## Flush all residual messages
-    MinizincUtils.flush()
     {:ok, solver_pid} = solve(model, data, sync_opts)
     receive_solutions(solution_handler, solver_pid)
   end
@@ -98,10 +100,39 @@ defmodule MinizincSolver do
   end
 
   defp receive_solutions(solution_handler, solver_pid) do
-    results = receive_solutions(solution_handler, solver_pid, [])
-    stop_solver(solver_pid)
-    results
+    receive_solutions(solution_handler, solver_pid, [])
+
   end
+
+
+
+  defp interrupt_solutions(solution_handler, solver_pid, acc) do
+    stop_solver(solver_pid)
+    final = completion_loop(solution_handler, solver_pid)
+    ## Clean up message mailbox, just in case.
+    MinizincUtils.flush()
+    if final do
+      [final | acc]
+    else
+      acc
+    end
+  end
+
+  defp completion_loop(solution_handler, solver_pid) do
+    receive do
+      %{from: pid, solver_results: {:solution, _results}} when pid == solver_pid ->
+        ## Ignore new solutions
+        completion_loop(solution_handler, solver_pid)
+      %{from: pid, solver_results: {event, results}} when pid == solver_pid
+           and event in [:summary, :minizinc_error] ->
+          MinizincHandler.handle_solver_event(event, results, solution_handler)
+    after @stop_timeout ->
+      Logger.debug "The solver has been silent after requesting a stop for #{@stop_timeout} msecs"
+      nil
+    end
+
+  end
+
 
   defp receive_solutions(solution_handler, solver_pid, acc) do
     receive do
@@ -109,9 +140,9 @@ defmodule MinizincSolver do
         handler_res = MinizincHandler.handle_solver_event(event, results, solution_handler)
         case handler_res do
           {:stop, data} ->
-            [data | acc]
+            interrupt_solutions(solution_handler, pid, [data | acc])
           :stop ->
-            acc
+            interrupt_solutions(solution_handler, pid, acc)
           _res when event in [:summary, :minizinc_error] ->
             [handler_res | acc]
           _res ->
@@ -130,7 +161,6 @@ defmodule MinizincSolver do
   """
   def stop_solver(pid) do
     MinizincPort.stop(pid)
-    MinizincUtils.flush()
   end
 
 

@@ -56,11 +56,14 @@ defmodule MinizincPort do
       {:status, :satisfied} ->
         # Solution handler can force the termination of solver process
 
-        solution_res = MinizincHandler.handle_solution(
-          MinizincResults.solution(updated_results), solution_handler)
+        solution_res = handle_solution(solution_handler, updated_results)
         ## Deciding if the solver is to be stopped...
         case solution_res do
           :stop ->
+            handle_summary(solution_handler, updated_results)
+            {:stop, :normal, updated_state}
+          {:stop, _data} ->
+            handle_summary(solution_handler, updated_results)
             {:stop, :normal, updated_state}
           _other ->
            {:noreply, updated_state}
@@ -80,8 +83,7 @@ defmodule MinizincPort do
           current_results: results,
           solution_handler: solution_handler} = state) do
     #Logger.debug "Port exit: :exit_status: #{port_status}"
-    MinizincHandler.handle_summary(
-      MinizincResults.summary(results), solution_handler)
+    handle_summary(solution_handler, results)
     new_state = state |> Map.put(:exit_status, 0)
 
     {:noreply, new_state}
@@ -93,8 +95,7 @@ defmodule MinizincPort do
           current_results: results,
           solution_handler: solution_handler} = state) do
     Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
-    MinizincHandler.handle_minizinc_error(
-      MinizincResults.minizinc_error(results), solution_handler)
+    handle_minizinc_error(solution_handler, results)
     new_state = Map.put(state, :exit_status, abnormal_exit)
     {:noreply, new_state}
   end
@@ -120,8 +121,11 @@ defmodule MinizincPort do
   end
 
   ## Same as above, but stop the solver
-  def handle_cast(:stop_solver, state) do
+  def handle_cast(:stop_solver,
+          %{current_results: results,
+            solution_handler: solution_handler} = state) do
     Logger.debug "Request to stop the solver..."
+    handle_summary(solution_handler, results)
     {:stop, :normal, state}
   end
 
@@ -142,11 +146,26 @@ defmodule MinizincPort do
     {:ok, model_str} = MinizincModel.make_model(args[:model])
     {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
     args[:minizinc_executable] <> " " <>
-                                  String.trim(
-                                    "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
-                                    extra_flags <>
-                                    " #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
-                                  )
+      String.trim(
+        "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
+        extra_flags <>
+        " #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
+      )
+  end
+
+  defp handle_solution(solution_handler, results) do
+    MinizincHandler.handle_solution(
+      MinizincResults.solution(results), solution_handler)
+  end
+
+  defp handle_summary(solution_handler, results) do
+    MinizincHandler.handle_summary(
+      MinizincResults.summary(results), solution_handler)
+  end
+
+  defp handle_minizinc_error(solution_handler, results) do
+    MinizincHandler.handle_minizinc_error(
+      MinizincResults.minizinc_error(results), solution_handler)
   end
 
 end
