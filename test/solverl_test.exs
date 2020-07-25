@@ -61,12 +61,12 @@ defmodule SolverlTest do
     assert length(results) == 1 + 92
   end
 
-  test "Solution handlers which interrupt the solver within (async)" do
-    :todo
-  end
-
-  test "Solution handlers which interrupt the solver from outside (sync)" do
-    :todo
+  test "Sync solving: solution handler that interrupts the solver after 100 solutions found" do
+    final_data  = Enum.at(MinizincSolver.solve_sync(
+      "mzn/nqueens.mzn", %{n: 50}, [solution_handler: NQueens.LimitSolutionsSync]),
+      0)
+    {:summary, summary} = final_data
+    assert %{status: :satisfied} = summary
   end
 
   test "Checks dimensions of a regular array " do
@@ -75,3 +75,21 @@ defmodule SolverlTest do
   end
 
 end
+
+defmodule NQueens.LimitSolutionsSync do
+  use MinizincHandler
+
+  @doc false
+  def handle_solution(%{index: count, data: data})  do
+    solution_rec = {:solution, data}
+    if count < 100, do: solution_rec, else: {:stop, solution_rec}
+  end
+
+  @doc false
+  def handle_summary(summary) do
+    {:summary, summary}
+  end
+
+end
+
+
