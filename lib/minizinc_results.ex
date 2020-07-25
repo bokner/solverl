@@ -5,6 +5,7 @@ defmodule MinizincResults do
 
   require Logger
   require Record
+  @doc false
   Record.defrecord(:parser_rec,
                      status: nil,
                      fzn_stats: %{} ,
@@ -21,7 +22,6 @@ defmodule MinizincResults do
                                              # as solver stats.
   )
 
-
   @type parser_rec :: record(:parser_rec,
                              status: atom(),
                              fzn_stats: map(),
@@ -36,11 +36,10 @@ defmodule MinizincResults do
                              final_stats_flag: boolean()
                                          )
 
-  @doc """
-    Update solver process results with the line produced by Minizinc port.
-  """
 
-  ## Status update
+
+  @doc false
+  # Update parser with the line produced by Minizinc port.
   def update_results(parser_rec(solution_count: sc) =  results, {:status, :satisfied}) do
     parser_rec(results,
       status: :satisfied,
@@ -114,15 +113,7 @@ defmodule MinizincResults do
   end
 
 
-  def update_status(nil, status) do
-    parser_rec(status: status)
-  end
-
-  def update_status(results, status) do
-    parser_rec(results, status: status)
-  end
-
-  def get_status(%{status: :all_solutions} = summary) do
+  defp get_status(%{status: :all_solutions} = summary) do
       if MinizincModel.model_method(summary) == :satisfy do
         :all_solutions
       else
@@ -130,7 +121,7 @@ defmodule MinizincResults do
       end
   end
 
-  def get_status(%{status: status} = _summary) do
+  defp get_status(%{status: status} = _summary) do
     status |> Atom.to_string |> String.to_atom
   end
 
