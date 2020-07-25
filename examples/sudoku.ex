@@ -96,6 +96,7 @@ end
 
 
 defmodule Sudoku.AsyncHandler do
+  @behaviour MinizincHandler
   @moduledoc false
   require Logger
 
@@ -120,6 +121,7 @@ end
 
 
 defmodule Sudoku.SyncHandler do
+  @behaviour MinizincHandler
   @moduledoc false
   require Logger
 

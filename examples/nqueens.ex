@@ -53,6 +53,7 @@ end
 
 
 defmodule NQueens.SyncHandler do
+  @behaviour MinizincHandler
   @moduledoc false
   require Logger
   import NQueens
