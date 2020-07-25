@@ -16,9 +16,15 @@ defmodule MinizincHandler do
   defmacro __using__(_) do
     quote do
       @behaviour MinizincHandler
-      def handle_solution(_solution) do :ok end
-      def handle_summary(_summary) do :ok end
-      def handle_minizinc_error(_error) do :ok end
+      def handle_solution(solution) do
+        MinizincHandler.DefaultAsync.handle_solution(solution)
+      end
+      def handle_summary(summary) do
+        MinizincHandler.DefaultAsync.handle_summary(summary)
+      end
+      def handle_minizinc_error(error) do
+        MinizincHandler.DefaultAsync.handle_minizinc_error(error)
+      end
       defoverridable MinizincHandler
     end
   end
@@ -92,11 +98,11 @@ defmodule MinizincHandler.DefaultAsync do
 end
 
 defmodule MinizincHandler.DefaultSync do
+  @behaviour MinizincHandler
   @moduledoc false
 
   require Logger
   require Record
-  use MinizincHandler
 
   def handle_solution(solution)  do
     {:solution, solution}
