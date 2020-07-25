@@ -67,13 +67,13 @@ defmodule MinizincParser do
   ## Solution stat record
   def parse_output("%%%mzn-stat " <> rest) do
     [stats_key, stats_value] = String.split(rest, "=")
-    {:solution_stats, {stats_key, stats_value}}
+    {:solution_stats, key_value(stats_key, stats_value)}
   end
 
   ## Solver (fzn or post-solving) stat record
   def parse_output("%%%mzn-stat: " <> rest) do
     [stats_key, stats_value] = String.split(rest, "=")
-    {:solver_stats, {stats_key, stats_value}}
+    {:solver_stats, key_value(stats_key, stats_value)}
   end
 
 
@@ -84,4 +84,23 @@ defmodule MinizincParser do
   def parse_output(new_line) do
     new_line
   end
+
+  ## Helpers
+  defp key_value(key, value) do
+    {String.to_atom(key), parse_value(value)}
+  end
+
+  @doc false
+  def parse_value(value) do
+    case Integer.parse(value) do
+      :error -> ## Must be a string
+        String.replace(value, "\"", "")
+      {int_value, ""} ->
+        int_value
+      {_rounded, _tail} -> ## Not integer, try float
+        {float_value, ""} = Float.parse(value)
+        float_value
+    end
+  end
+
 end
