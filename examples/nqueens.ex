@@ -3,7 +3,6 @@ defmodule NQueens do
     Example: N-queens solver.
   """
 
-  import MinizincResults
   require Logger
 
   @nqueens_model "mzn/nqueens.mzn"
@@ -19,25 +18,24 @@ defmodule NQueens do
     MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
   end
 
+  @doc false
   ## Printing solver stats
   def solution_handler(:summary,
-        results_rec(
-          solver_stats: stats
-        ) = results
+          %{solver_stats: stats, status: status} = _summary
       )
     do
-    Logger.info "Solution status: #{MinizincResults.get_status(results)}"
+    Logger.info "Solution status: #{status}"
     Logger.info "Solver stats:\n #{inspect stats}"
   end
 
   ## Printing solutions
-  def solution_handler(:solution, results_rec(
-              status: _status,
-              solution_count: _count,
-              solution_data: data) = _results) do
+  def solution_handler(:solution, %{
+              index: _count,
+              data: data} = _results) do
     Logger.info print_board(data["q"]) <> "\n-----------------------"
   end
 
+  @doc false
   ## quuens[i] = j <=> row i has a queen in position j.
   def print_board(queens) do
     n = length(queens)
@@ -52,7 +50,10 @@ defmodule NQueens do
 
 end
 
+
+
 defmodule NQueens.SyncHandler do
+  @moduledoc false
   require Logger
   import NQueens
 

@@ -55,7 +55,8 @@ defmodule MinizincPort do
       {:status, :satisfied} ->
         # Solution handler can force the termination of solver process
 
-        solution_res = MinizincHandler.handle_solver_event(:solution, updated_results, solution_handler)
+        solution_res = MinizincHandler.handle_solution(
+          MinizincResults.solution(updated_results), solution_handler)
         ## Deciding if the solver is to be stopped...
         case solution_res do
           :stop ->
@@ -78,7 +79,8 @@ defmodule MinizincPort do
           current_results: results,
           solution_handler: solution_handler} = state) do
     #Logger.debug "Port exit: :exit_status: #{port_status}"
-    MinizincHandler.handle_solver_event(:summary, results, solution_handler)
+    MinizincHandler.handle_summary(
+      MinizincResults.summary(results), solution_handler)
     new_state = state |> Map.put(:exit_status, 0)
 
     {:noreply, new_state}
@@ -90,7 +92,8 @@ defmodule MinizincPort do
           current_results: results,
           solution_handler: solution_handler} = state) do
     Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
-    MinizincHandler.handle_solver_event(:minizinc_error, results, solution_handler)
+    MinizincHandler.handle_minizinc_error(
+      MinizincResults.minizinc_error(results), solution_handler)
     new_state = Map.put(state, :exit_status, abnormal_exit)
     {:noreply, new_state}
   end

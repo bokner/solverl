@@ -94,7 +94,9 @@ defmodule Sudoku do
 
 end
 
+
 defmodule Sudoku.AsyncHandler do
+  @moduledoc false
   require Logger
 
   ## Handle no more than 3 solutions, print the final one.
@@ -116,7 +118,9 @@ defmodule Sudoku.AsyncHandler do
   end
 end
 
+
 defmodule Sudoku.SyncHandler do
+  @moduledoc false
   require Logger
 
   @doc false

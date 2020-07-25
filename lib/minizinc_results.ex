@@ -130,7 +130,7 @@ defmodule MinizincResults do
       end
   end
 
-  def get_status(results_rec(status: status)) do
+  def get_status(%{status: status} = _summary) do
     status |> Atom.to_string |> String.upcase |> String.to_atom
   end
 

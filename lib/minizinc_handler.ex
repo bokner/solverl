@@ -4,14 +4,13 @@ defmodule MinizincHandler do
   """
 
 
-  @callback handle_solution(MinizincResults.solution())
+  @callback handle_solution(solution :: map())
             :: {:ok, term} | :stop | {:stop, any()}
 
-  @callback handle_summary(summary :: MinizincResults.summary()
-              )
+  @callback handle_summary(summary :: map())
             :: :ok | {:ok, any()}
 
-  @callback handle_minizinc_error(mzn_error :: MinizincResults.minizinc_error()) :: any
+  @callback handle_minizinc_error(mzn_error :: map()) :: any
 
   ## Provide stubs for MinizincHandler behaviour
   defmacro __using__(_) do
@@ -24,26 +23,50 @@ defmodule MinizincHandler do
     end
   end
 
-  @doc """
-    Helper to call handler callbacks uniformly.
-    The solution handler can be either a function, or a callback module.
-  """
-  ## Solution handler as a function
-  def handle_solver_event(event, results, solution_handler) when is_function(solution_handler) do
-    solution_handler.(event, results)
+  @doc false
+
+  # Helpers to call handler callbacks uniformly.
+
+  def handle_solver_event(:solution, solution, solution_handler) do
+    handle_solution(solution, solution_handler)
   end
 
-  ## Solution handler as a callback
-  def handle_solver_event(:solution, results, solution_handler) do
-    solution_handler.handle_solution(MinizincResults.solution(results))
+  def handle_solver_event(:summary, summary, solution_handler) do
+    handle_summary(summary, solution_handler)
   end
 
-  def handle_solver_event(:summary, results, solution_handler) do
-    solution_handler.handle_summary(MinizincResults.summary(results))
+  def handle_solver_event(:minizinc_error, error, solution_handler) do
+    handle_minizinc_error(error, solution_handler)
   end
 
-  def handle_solver_event(:minizinc_error, results, solution_handler) do
-    solution_handler.handle_minizinc_error(MinizincResults.minizinc_error(results))
+  # The solution handler can be either a function, or a callback module.
+  #
+  @doc false
+
+  def handle_solution(solution, solution_handler) when is_function(solution_handler) do
+    solution_handler.(:solution, solution)
+  end
+
+  def handle_solution(solution, solution_handler) do
+    solution_handler.handle_solution(solution)
+  end
+
+  @doc false
+  def handle_summary(summary, solution_handler) when is_function(solution_handler) do
+    solution_handler.(:summary, summary)
+  end
+
+  def handle_summary(summary, solution_handler) do
+    solution_handler.handle_summary(summary)
+  end
+
+  @doc false
+  def handle_minizinc_error(error, solution_handler) when is_function(solution_handler) do
+    solution_handler.(:minizinc_error, error)
+  end
+
+  def handle_minizinc_error(error, solution_handler) do
+    solution_handler.handle_minizinc_error(error)
   end
 
 

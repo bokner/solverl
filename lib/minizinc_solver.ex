@@ -20,9 +20,7 @@ defmodule MinizincSolver do
     solution_handler: MinizincHandler.DefaultAsync]
 
 
-  @doc """
-  Default solver arguments.
-  """
+  @doc false
   def default_args, do: @default_args
 
   @doc """
