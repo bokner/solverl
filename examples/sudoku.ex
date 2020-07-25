@@ -108,8 +108,8 @@ defmodule Sudoku.AsyncHandler do
 
   @doc false
   def handle_summary(summary) do
-    Logger.info "Solver status: #{summary[:status]}"
-    Logger.info "Solver stats:\n #{inspect summary[:solver_stats]}"
+    Logger.info "Status: #{summary[:status]}"
+    Logger.info "Solver statistics:\n #{inspect summary[:solver_stats]}"
   end
 
   @doc false

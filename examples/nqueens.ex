@@ -66,6 +66,7 @@ defmodule NQueens.SyncHandler do
   @doc false
   def handle_summary(%{solver_stats: solver_stats} = summary) do
     Logger.info "Solver stats:\n #{inspect solver_stats}"
+    Logger.info "Model method: #{MinizincModel.model_method(summary)}"
     MinizincHandler.DefaultSync.handle_summary(summary)
   end
 

@@ -53,8 +53,7 @@ defmodule MinizincModel do
 
   ## Model info
   def model_method(%{fzn_stats: stats} = _summary) do
-    method = Map.get(stats, "method", "undefined")
-    String.to_atom(String.replace(method, "\"", ""))
+    Map.get(stats, :method, "undefined") |> String.to_atom()
   end
 
 end

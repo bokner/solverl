@@ -122,16 +122,16 @@ defmodule MinizincResults do
     results_rec(results, status: status)
   end
 
-  def get_status(results_rec(status: :all_solutions) = results) do
-      if MinizincModel.model_method(results) == :satisfy do
-        :'ALL_SOLUTIONS'
+  def get_status(%{status: :all_solutions} = summary) do
+      if MinizincModel.model_method(summary) == :satisfy do
+        :all_solutions
       else
-        :'OPTIMAL'
+        :optimal
       end
   end
 
   def get_status(%{status: status} = _summary) do
-    status |> Atom.to_string |> String.upcase |> String.to_atom
+    status |> Atom.to_string |> String.to_atom
   end
 
   def solution(results_rec(solution_data: data, timestamp: timestamp, mzn_stats: stats, solution_count: count)) do
@@ -143,13 +143,15 @@ defmodule MinizincResults do
     solver_stats: solver_stats, fzn_stats: fzn_stats,
     minizinc_output: minizinc_output, time_elapsed: time_elapsed
   ) = results) do
-    %{status: status,
+    raw_summary = %{status: status,
       fzn_stats: fzn_stats,
       solver_stats: solver_stats,
       solution_count: solution_count,
       last_solution: solution(results),
       minizinc_output: minizinc_output,
       time_elapsed: time_elapsed}
+    ## Update status
+    Map.put(raw_summary, :status, get_status(raw_summary))
   end
 
   ## This function is not intended to be called explicitly.
