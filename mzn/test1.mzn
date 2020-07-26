@@ -23,7 +23,7 @@ constraint all_different(y);
 
 constraint y[1] > y[2];
 
-constraint y[1] + y[2] <= 0;
+%constraint y[1] + y[2] <= 0;
 
 solve maximize y[1] + y[2];
 

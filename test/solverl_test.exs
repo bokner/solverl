@@ -74,6 +74,28 @@ defmodule SolverlTest do
     assert MinizincData.dimensions(good_arr) == [2, 3, 3]
   end
 
+  test "Model with boolean vars" do
+    conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
+    results = MinizincSolver.solve_sync({:text, conjunction_model})
+    assert results[:solution][:data]["x"] and results[:solution][:data]["x"] == true
+  end
+
+  test "Model with 2d array of vars" do
+    results = MinizincSolver.solve_sync("mzn/test_array.mzn")
+    MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [5, 5]
+  end
+
+  test "Model with set vars" do
+    set_model = """
+      var set of 0..5: var_set;
+      constraint 1 in var_set;
+      constraint 2 in var_set;
+      constraint card(var_set) == 2;
+    """
+    results = MinizincSolver.solve_sync({:text, set_model})
+    assert results[:solution][:data]["var_set"] == MapSet.new([1,2])
+  end
+
 end
 
 defmodule NQueens.LimitSolutionsSync do
