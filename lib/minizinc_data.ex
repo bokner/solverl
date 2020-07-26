@@ -80,8 +80,8 @@ defmodule MinizincData do
 
   # Support optional list of index bases for array dimensions.
   #
-  def elixir_to_dzn({base, array}) when is_list(array) do
-    array_to_dzn(array, base)
+  def elixir_to_dzn({bases, array}) when is_list(array) do
+    array_to_dzn(array, bases)
   end
 
   #
@@ -97,10 +97,10 @@ defmodule MinizincData do
 
 
 
-  defp array_to_dzn(el, base)  do
+  defp array_to_dzn(el, bases)  do
     dims = dimensions(el)
     if dims do
-      array_dimensions(dims, make_base_list(dims, base))
+      array_dimensions(dims, make_base_list(dims, bases))
       <>"[#{Enum.join(List.flatten(el), ",")}]" <> ")"
     else
       throw {:irregular_array, el}
