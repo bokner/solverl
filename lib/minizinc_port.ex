@@ -147,9 +147,9 @@ defmodule MinizincPort do
     {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
     args[:minizinc_executable] <> " " <>
       String.trim(
-        "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a " <>
-        extra_flags <>
-        " #{solver_str} #{time_limit_str} #{model_str} #{dzn_str}"
+        "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a "
+         <>
+        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
       )
   end
 
