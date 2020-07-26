@@ -62,8 +62,9 @@ defmodule MinizincData do
   end
 
   defp mzn_to_elixir(el) when is_map(el) do
-    s = el["set"]
-    if s == [], do: MapSet.new(s), else: MapSet.new(hd(s))
+    #s = el["set"]
+    #if s == [], do: MapSet.new(s), else: MapSet.new(hd(s))
+    MapSet.new(List.flatten(el["set"]))
   end
 
   defp mzn_to_elixir(el) do
