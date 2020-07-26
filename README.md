@@ -1,10 +1,18 @@
 # Solverl
 
 Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
+Disclaimer: The code has neither been extensively tested, nor used in production. Use on your own risk.
 
 ## Installation
 
-Installation of [Minizinc](https://www.minizinc.org) is required on your system. Please refer to https://www.minizinc.org/software.html for details.
+You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
+
+Note: 
+The code is known to run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3 only.
+
+Note:
+`minizinc` executable is expected to be in its default location, or in a folder in the $PATH `env` variable.
+Otherwise, you can use `minizinc_executable` option (see [Solver Options](#solver-options)). 
 
 The package can be installed by adding `solverl` to your list of dependencies in `mix.exs`:
 
@@ -18,7 +26,52 @@ end
 
 The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl).
 
-## N-Queens example
+## Features
+TODO
+
+## Usage
+```elixir
+# Asynchronous solving.
+# Creates a solver process. 
+{:ok, solver_pid} = Minizinc.solve(model, data, opts)
+
+# Synchronous solving.
+# Starts the solver and gets the results (solutions and/or solver stats) once the solver finishes.
+solver_results = Minizinc.solve_sync(model, data, opts)
+
+```
+, where: 
+- ```model``` - [specification of the Minizinc model](#model-specification);
+- ```data```  - [specification of data](#data-specification) passed to ```model```;
+- ```opts``` - [solver options](#solver-options).
+
+### Model specification
+
+TODO
+
+### Data specification
+
+TODO
+
+### Solver options
+
+  - `solver`: Solver id supported by your Minizinc configuration. Default: "gecode".
+  - `time_limit`: Time in msecs given to Minizinc to find a solution. Default: 30000.
+  - `minizinc_executable`: Full path to Minizinc executable (you'd need it if executable cannot be located by your system).
+  - `solution_handler`: Module or function that controls processing of solutions and/or metadata. Check out `Solution handlers` for more details. 
+  - `extra_flags`: A string of command line flags supported by the solver. 
+  
+
+### Solution handlers
+
+  Handling of solutions is done by the pluggable solution handler, specificied by ```solution_handler``` solver option. 
+  The solution handler customizes the results and/or controls execution of the solver.
+
+## Examples
+ - [N-Queens](#n-queens)
+ - [Sudoku](#sudoku)
+ 
+### N-Queens
 
    The following code uses Minizinc model `mzn/nqueens.mzn` to solve [N-queens](https://developers.google.com/optimization/cp/queens) puzzle for N = 4:
    
@@ -27,33 +80,33 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
    ```
    Output: 
    ``` 
-   iex(4)> 
-   23:30:21.094 [warn]  Command: /Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a  --solver org.gecode.gecode --time-limit 300000 /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.7NABDxEp.mzn /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.JEV4UXP5.dzn
-   {:ok, #PID<0.2115.0>}
-   iex(73)> 
-   23:30:21.216 [info]  
-   . . ♕ .
-   ♕ . . .
-   . . . ♕
-   . ♕ . .
-   -----------------------
-    
-   23:30:21.216 [info]  
-   . ♕ . .
-   . . . ♕
-   ♕ . . .
-   . . ♕ .
-   -----------------------
-    
-   23:30:21.221 [info]  Solution status: ALL_SOLUTIONS
-    
-   23:30:21.221 [info]  Solver stats:
-    %{"failures" => "4", "initTime" => "0.010053", "nSolutions" => "2", "nodes" => "11", "peakDepth" => "2", "propagations" => "163", "propagators" => "11", "restarts" => "0", "solutions" => "2", "solveTime" => "0.002834", "variables" => "12"}
-    
-   23:30:21.221 [debug] ** TERMINATE: :normal
+17:16:53.073 [warn]  Command: /Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a  --solver org.gecode.gecode --time-limit 300000 /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.vFlJER37.mzn /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.rxTZq96j.dzn
+{:ok, #PID<0.766.0>}
+iex(75)> 
+17:16:53.174 [info]  
+. . ♕ .
+♕ . . .
+. . . ♕
+. ♕ . .
+-----------------------
+ 
+17:16:53.174 [info]  
+. ♕ . .
+. . . ♕
+♕ . . .
+. . ♕ .
+-----------------------
+ 
+17:16:53.179 [info]  Solution status: all_solutions
+ 
+17:16:53.179 [info]  Solver stats:
+ %{failures: 4, initTime: 0.007719, nSolutions: 2, nodes: 11, peakDepth: 2, propagations: 163, propagators: 11, restarts: 0, solutions: 2, solveTime: 0.002778, variables: 12}
+
+17:16:53.179 [debug] ** TERMINATE: :normal
+ 
    ```
 
-## Sudoku example
+### Sudoku
 
 ```elixir
 
@@ -64,9 +117,9 @@ Sudoku.solve("85...24..72......9..4.........1.7..23.5...9...4...........8..7..17
 ```
 The output:
 ```
-23:54:34.018 [info]  Sudoku puzzle:
+17:19:28.109 [info]  Sudoku puzzle:
  
-23:54:34.018 [info]  
+17:19:28.109 [info]  
 +-------+-------+-------+
 | 8 5 . | . . 2 | 4 . . | 
 | 7 2 . | . . . | . . 9 | 
@@ -82,10 +135,10 @@ The output:
 +-------+-------+-------+
 
  
-23:54:34.067 [warn]  Command: /Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a  --solver org.gecode.gecode --time-limit 300000 /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.ntx0ThIr.mzn /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.yUorqedH.dzn
-{:ok, #PID<0.2146.0>}
+17:19:28.154 [warn]  Command: /Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a  --solver org.gecode.gecode --time-limit 300000 /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.uSF45sHN.mzn /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.KjyUqmEa.dzn
+{:ok, #PID<0.776.0>}
 iex(79)> 
-23:54:34.124 [info]  
+17:19:28.219 [info]  
 +-------+-------+-------+
 | 8 5 9 | 6 1 2 | 4 3 7 | 
 | 7 2 3 | 8 5 4 | 1 6 9 | 
@@ -101,43 +154,24 @@ iex(79)>
 +-------+-------+-------+
 
  
-23:54:34.124 [info]  Solutions found: 1
+17:19:28.219 [info]  Solutions found: 1
  
-23:54:34.129 [info]  Solver stats:
- %{"failures" => "11", "initTime" => "0.000879", "nSolutions" => "1", "nodes" => "23", "peakDepth" => "5", "propagations" => "685", "propagators" => "27", "restarts" => "0", "solutions" => "1", "solveTime" => "0.000605", "variables" => "147"}
+17:19:28.224 [info]  Status: all_solutions
  
-23:54:34.129 [debug] ** TERMINATE: :normal
-```
-## Usage
-```elixir
-# Asynchronous solving.
-# Creates a solver process. 
-# Handling of solutions is done by the pluggable solution handler (explained in Configuration section). 
-{:ok, solver_pid} = Minizinc.solve(model, data, opts)
+17:19:28.224 [info]  Solver statistics:
+ %{failures: 11, initTime: 0.001401, nSolutions: 1, nodes: 23, peakDepth: 5, propagations: 685, propagators: 27, restarts: 0, solutions: 1, solveTime: 0.001104, variables: 147}
 
-# Synchronous solving.
-# Starts the solver and gets the results (solutions and/or solver stats) once the solver finishes.
-# The solution handler can customize the results, such as format/filter/limit the number of solutions, conditionally interrupt solver process etc.
-solver_results = Minizinc.solve_sync(model, data, opts)
+17:19:28.224 [debug] ** TERMINATE: :normal
+```
 
-```
-, where 
-```model``` is a specification of the Minizinc model,
-```data``` - specification of data passed to ```model```,
-```opts``` - various solver options, such as ```solver id```, ```time limit```, ```compilation flags```, ```solution handler```.
-
-## Solver options
-```
-  TODO
-```  
-## Solution handlers
-```
-  TODO
-```
+## Under the hood
+TODO
 
 ## Roadmap
 TODO:
 ```
-  Support LNS
-  Support Branch-and-Bound
+  Support LNS;
+  Support Branch-and-Bound;
+  Provide API for peeking into a state of Minizinc process, such as time since last solution,
+  whether it's compiling or solving the model at the moment etc.
 ```  
