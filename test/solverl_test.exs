@@ -81,8 +81,17 @@ defmodule SolverlTest do
   end
 
   test "Model with 2d array of vars" do
-    results = MinizincSolver.solve_sync("mzn/test_array.mzn")
-    assert MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [5, 5]
+    array_model = """
+      array[1..4, 1..5] of var 0..1: arr;
+
+      constraint forall(i in 1..4)(
+      forall(j in 1..4)(
+        arr[i, j] != arr[i, j+1]
+        )
+    );
+  """
+    results = MinizincSolver.solve_sync({:text, array_model})
+    assert MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [4, 5]
   end
 
   test "Model with set vars" do
