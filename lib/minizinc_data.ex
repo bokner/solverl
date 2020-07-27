@@ -6,6 +6,7 @@ defmodule MinizincData do
   @type data_chunk() :: Path.t() | map()
   @type mzn_data()    :: data_chunk() | list(data_chunk)
 
+  @element_separator ", "
   @default_array_base 1
   @max_dimensions 6
 
@@ -57,23 +58,33 @@ defmodule MinizincData do
   def output_to_elixir(data_dict) do
     Enum.reduce(data_dict, %{},
       fn({k, v}, acc) ->
-        Map.put(acc, k, mzn_to_elixir(v))
+        Map.put(acc, k, dzn_to_elixir(v))
       end)
   end
 
-  defp mzn_to_elixir(el) when is_map(el) do
+  defp dzn_to_elixir(el) when is_map(el) do
     #s = el["set"]
     #if s == [], do: MapSet.new(s), else: MapSet.new(hd(s))
-    MapSet.new(List.flatten(el["set"]))
+    [map_type] = Map.keys(el)
+    case map_type do
+      "set" ->
+        MapSet.new(List.flatten(el["set"]))
+      "e"  ->
+        el["e"]
+      _unknown ->
+        throw {:unknown_map_type, map_type}
+    end
+
   end
 
-  defp mzn_to_elixir(el) do
+  defp dzn_to_elixir(el) do
     el
   end
 
   #############################################
   # Convert element to .dzn string
   #############################################
+
   def elixir_to_dzn(array) when is_list(array) do
     array_to_dzn(array, @default_array_base)
   end
@@ -88,7 +99,13 @@ defmodule MinizincData do
   # Sets
   #
   def elixir_to_dzn(map) when is_map(map) do
-    "{" <> Enum.join(map, ",") <> "}"
+    "{" <> Enum.join(map, @element_separator) <> "}"
+  end
+
+  def elixir_to_dzn(enum) when is_tuple(enum) do
+    enum_list = Tuple.to_list(enum)
+    "{" <> Enum.join(
+            Enum.map(enum_list, fn e -> "#{e}" end), @element_separator) <> "}"
   end
 
   def elixir_to_dzn(el) do
@@ -96,12 +113,11 @@ defmodule MinizincData do
   end
 
 
-
   defp array_to_dzn(el, bases)  do
     dims = dimensions(el)
     if dims do
       array_dimensions(dims, make_base_list(dims, bases))
-      <>"[#{Enum.join(List.flatten(el), ",")}]" <> ")"
+      <>"[#{Enum.join(List.flatten(el), @element_separator)}]" <> ")"
     else
       throw {:irregular_array, el}
     end

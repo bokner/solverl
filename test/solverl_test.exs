@@ -82,7 +82,7 @@ defmodule SolverlTest do
 
   test "Model with 2d array of vars" do
     results = MinizincSolver.solve_sync("mzn/test_array.mzn")
-    MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [5, 5]
+    assert MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [5, 5]
   end
 
   test "Model with set vars" do
@@ -94,6 +94,16 @@ defmodule SolverlTest do
     """
     results = MinizincSolver.solve_sync({:text, set_model})
     assert results[:solution][:data]["var_set"] == MapSet.new([1,2])
+  end
+
+  test "Using enums" do
+    enum_model = """
+      enum DAY;
+      var DAY: d;
+      constraint d = min(DAY);
+    """
+    results = MinizincSolver.solve_sync({:text, enum_model}, %{'DAY': {"Mo", "Tu", "We", "Th", "Fr"}})
+    assert results[:solution][:data]["d"] == "Mo"
   end
 
 end
