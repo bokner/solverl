@@ -5,12 +5,11 @@ defmodule MinizincHandler do
 
 
   @callback handle_solution(solution :: map())
-            :: {:ok, term} | :stop | {:stop, any()}
+            ::  :stop | {:stop, any()} | any()
 
-  @callback handle_summary(summary :: map())
-            :: :ok | {:ok, any()}
+  @callback handle_summary(summary :: map()) :: any()
 
-  @callback handle_minizinc_error(mzn_error :: map()) :: any
+  @callback handle_minizinc_error(mzn_error :: map()) :: any()
 
   ## Provide stubs for MinizincHandler behaviour
   defmacro __using__(_) do

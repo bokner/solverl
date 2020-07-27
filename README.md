@@ -10,14 +10,15 @@ Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
 
 You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
 
-**Note**:
+###### **Note**:
  
 The code is known to run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3 only.
 
-**Note**:
+###### **Note**:
 
 `minizinc` executable is expected to be in its default location, or in a folder in the $PATH `env` variable.
 Otherwise, you can use `minizinc_executable` option (see [Solver Options](#solver-options)). 
+
 
 The package can be installed by adding `solverl` to your list of dependencies in `mix.exs`:
 
@@ -62,11 +63,11 @@ Model could be either:
     
     **Example (model as a multiline string):** 
     ```elixir
-          """
-            array [1..5] of var 1..n: x;            
-            include "alldifferent.mzn";            
-            constraint alldifferent(x);
-          """
+  """
+    array [1..5] of var 1..n: x;            
+    include "alldifferent.mzn";            
+    constraint alldifferent(x);
+  """
     ```
 - or a (mixed) list of the above. The code will build a model by concatenating bodies of
     model files and model texts suffixed with EOL (\n).  
@@ -104,8 +105,9 @@ Data could be either:
     ```
 ### Support for Minizinc data types
 
-- Arrays
-    Minizinc `array` type corresponds to (nested) list.
+- #### Arrays
+
+    Minizinc `array` type corresponds to (nested) [List](https://hexdocs.pm/elixir/List.html).
     The code determines dimensions of the array based on its nested structure.
     
     By default, the indices of the dimensions are 1-based.
@@ -136,23 +138,116 @@ Data could be either:
      "array2d(0..4,1..5,[0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0])" 
      ```
       
-- Sets
+- #### Sets
+
+    Minizinc `set` type corresponds to [MapSet](https://hexdocs.pm/elixir/MapSet.html).
     
-- Enums        
+    Example:
+    ```elixir
+    MinizincData.elixir_to_dzn(MapSet.new([2, 1, 6]))
+    ```
+    Output:
+    ```elixir
+    "{1,2,6}"
+    ```
+- #### Enums
+
+     Minizinc `enum` type corresponds to [Tuple](https://hexdocs.pm/elixir/Tuple.html).
+     Tuple elements have to be either string, charlists or atoms.
+     
+     Example 1 (using strings, atoms and charlists for enum entries):
+     ```elixir
+     MinizincData.elixir_to_dzn({"blue", :BLACK, 'GREEN'})
+     ```
+     Output:
+     ```elixir
+     "{blue, BLACK, GREEN}"
+     ```
+  Example 2 (solving for `enum` variable):
+  ```elixir
+    enum_model = 
+  """
+    enum COLOR;
+    var COLOR: color;
+    constraint color = max(COLOR);
+  """
+  results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
+  results[:solution][:data]["color"]   
+  ```
+  Output:
+  ```elixir
+    "Green" 
+  ```
+     
 
 ### Solver options
 
   - `solver`: Solver id supported by your Minizinc configuration. Default: "gecode".
-  - `time_limit`: Time in msecs given to Minizinc to find a solution. Default: 30000.
+  - `time_limit`: Time in msecs given to Minizinc to find a solution. Default: 300000 (5 mins).
   - `minizinc_executable`: Full path to Minizinc executable (you'd need it if executable cannot be located by your system).
-  - `solution_handler`: Module or function that controls processing of solutions and/or metadata. Check out [Solution handlers](#solution-handlers) for more details. 
+  - `solution_handler`: Module or function that controls processing of solutions and/or metadata. Default: MinizincHandler.DefaultAsync.
+  
+    Check out [Solution handlers](#solution-handlers) for more details. 
   - `extra_flags`: A string of command line flags supported by the solver. 
+  
+  Example:
+  ```elixir
+  ## Solve "mzn/nqueens.mzn" for n = 4, using Gecode solver,
+  ## time limit of 1 sec, NQueens.SyncHandler as a solution handler.
+  ## Extra flags: -O4 --verbose-compilation  
+  MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000, solution_handler: NQueens.SyncHandler, extra_flags: "-O4 --verbose-compilation"])
+  ```
   
 
 ### Solution handlers
 
-  Handling of solutions and solver metadata is done by the pluggable solution handler, specificied by ```solution_handler``` solver option. 
-  The solution handler customizes the results and/or controls execution of the solver.
+  **Solution handler** is either a 
+  - a *function*, or
+  - a *module* that implements [MinizincHandler](MinizincHandler.html) behaviour.
+  
+  It represents a pluggable logic to customize processing of the solutions and metadata produced by Minizinc solver process.
+  **Solution handler** is specified by `solution_handler` [option](#solver_options).
+  
+  Solution handler code acts as a callback for the solver events emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
+  which is a wrapper process for Minizinc executable (see [Under the hood](#under-the-hood) for more details).
+  
+  Currently, there are following types of solver events:
+  
+  - `solution` - the new solution detected;
+  - `summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
+  - `minizinc_error` - the wrapper detected Minizinc runtime error.
+  
+  In case solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
+  being the event name(i.e., :solution, :summary, :minizinc_error), 2nd being the event-specific data of that event.
+  
+  In case solution handler is a module that implements [MinizincHandler](MinizincHandler.html) behaviour,
+  its functions `handle_solution/1`, `handle_summary/1`, `handle_minizinc_error/1` take an event-specific data.   
+  
+#### Event-specific data. 
+  
+  - `:solution` event 
+  ```elixir
+   %{data: data, timestamp: timestamp, index: index, stats: stats} 
+   ```
+  
+  , where
+  
+`data` is a map of values keyed with their variable names;
+
+`timestamp` is a timestamp of the moment solution was parsed;
+
+`index` is the sequential number of the solution;
+
+`stats` is a map of statistics values keyed with the field names.
+    
+  - `:summary` event: TODO
+  
+  - `:minizinc_error` event: TODO
+  
+#### Handling of solution handler callback results
+  
+  TODO  
+  
 
 ## Examples
  - [N-Queens](#n-queens)
@@ -254,6 +349,9 @@ iex(79)>
 
 17:19:28.224 [debug] ** TERMINATE: :normal
 ```
+
+## Erlang interface
+TODO
 
 ## Under the hood
 TODO
