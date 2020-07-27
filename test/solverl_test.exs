@@ -107,12 +107,12 @@ defmodule SolverlTest do
 
   test "Using enums" do
     enum_model = """
-      enum DAY;
-      var DAY: d;
-      constraint d = min(DAY);
+      enum COLOR;
+      var COLOR: color;
+      constraint color = max(COLOR);
     """
-    results = MinizincSolver.solve_sync({:text, enum_model}, %{'DAY': {"Mo", "Tu", "We", "Th", "Fr"}})
-    assert results[:solution][:data]["d"] == "Mo"
+    results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
+    assert results[:solution][:data]["color"] == "Green"
   end
 
 end
