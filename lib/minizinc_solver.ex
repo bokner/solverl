@@ -104,7 +104,7 @@ defmodule Minizinc do
     # Reverse list of solutions (as they are being added in revese order
     {nil, updated_results} = Map.get_and_update(results, :solutions,
       fn
-        nil -> {nil, nil};
+        nil -> {nil, []};
         solutions -> {nil, Enum.reverse(solutions)}
       end)
     updated_results
