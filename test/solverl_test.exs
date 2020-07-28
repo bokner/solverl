@@ -118,6 +118,16 @@ defmodule SolverlTest do
     assert Enum.at(results[:solutions], 0)[:data]["color"] == "Green"
   end
 
+  test "Get last solution from summary, drop other solutions" do
+    results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.SummaryOnlySync])
+    ## We dropped all solutions...
+    assert length(results[:solutions]) == 0
+    ## ... but the solution count is still correct...
+    assert results[:summary][:last_solution][:index] == 92
+    ## ... and the last solution is there
+    assert length(results[:summary][:last_solution][:data]["q"]) == 8
+  end
+
 end
 
 defmodule LimitSolutionsSync do
@@ -169,5 +179,21 @@ defmodule SolverTest.EveryOtherSync do
   end
 
 end
+
+defmodule SolverTest.SummaryOnlySync do
+  use MinizincHandler
+
+  @doc false
+  def handle_solution(_solution)  do
+    :skip
+  end
+
+  @doc false
+  def handle_summary(summary) do
+    summary
+  end
+
+end
+
 
 
