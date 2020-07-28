@@ -4,15 +4,14 @@ Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
 
 Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
-**Disclaimer**: This project has neither been used in production, nor extensively tested. Use on your own risk.
-
+**Disclaimer**: **Disclaimer**: This project is in very early stages, has neither been used in production, nor extensively tested. Use on your own risk.
 ## Installation
 
 You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
 
 ###### **Note**:
  
-The code is known to run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3 only.
+The code was tested and run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3 only.
 
 ###### **Note**:
 
@@ -33,9 +32,16 @@ end
 The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl).
 
 ## Features
-TODO
+
+- Synchronous and asynchronous solving
+- Pluggable solution handlers 
+- Support for basic Minizinc types, arrays, sets and enums
+
 
 ## Usage
+
+[Minizinc](Minizinc.html) module provides functions both for synchronous and asynchronous solving. 
+
 ```elixir
 # Asynchronous solving.
 # Creates a solver process. 
@@ -76,10 +82,7 @@ Model could be either:
     ```elixir 
     ["mzn/test1.mzn", {:text, "constraint y[1] + y[2] <= 0;"}]
     ```
-    
-    
-    
-
+            
 ### Data specification
 
 Data could be either:
@@ -256,10 +259,41 @@ Data could be either:
       }
   ```
   
-#### Handling of solution handler callback returns
+#### Tailoring results and controlling execution.
+ 
   
-  TODO  
+  Solution handlers can modify or ignore data passed by solver events, or interrupt the solver process early,
+  by constructing their returns in desired form.
   
+  The return of the solution handler callback could be one of:
+    
+- `:stop`
+   
+   Solution handler stops receiving solver events and asks solver to stop execution.
+
+- `{:stop, data}`
+   
+   Same as above, but in case of synchronous solving, `data` will be [added to solver results](#solver-results).
+
+- `:skip`
+   
+   The event will be ignored, i.e. in case of synchronous solving, the results will not be changed. 
+
+- `data :: any()`
+   
+   In case of synchronous solving, data will be [added to solver results](#solver-results).
+   
+#### Solver results
+
+    **Note: this is applicable only to a synchronous solving.**
+    
+   `Solver results` is a map with the following keys:
+   
+ - `:solutions` - list of data elements, accumulated by handling of `:solution` events
+ - `:summary`  -  data, produced by handling of `:summary` event
+ - `:minizinc_error` - data, produced by handling of `:minizinc_error` event
+
+Please refer to [Event-specific data]
 
 ## Examples
  - [N-Queens](#n-queens)
@@ -369,15 +403,16 @@ TODO
 
 Both Minizinc.solve/3 and Minizinc.solve_sync/3 use MinizincPort.start_link/3
 to start GenServer, which in turn spawns the external MiniZinc process, 
-and then parses its text output into solver events and makes appropriate callback functions as described [here](#solution-handlers)).
+and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers)).
 
 ## Roadmap
-TODO:
+
 ```
   Support LNS;
   Support Branch-and-Bound;
   Provide API for peeking into a state of Minizinc process, such as time since last solution,
   whether it's compiling or solving at the moment etc.
+  Match minizinc-python functionality.
 ```  
 ## Credits
 

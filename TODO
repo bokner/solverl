@@ -1,8 +1,30 @@
 By priority:
 
-0. Documentation.
-1. Branch-and-bound example.
-2. LNS example.
-3. Synchronous solve (?)
-4. More test cases.
-5. Enable 'minizinc_executable' for cases it's not in the path.
+Documentation.
+
+
+
+ Add :skip to solve_sync
+
+ Add functions to access solution data rather than through res[:solutions]
+
+ Examples: Add graph coloring.
+
+ More events/timestamps (compile time, time since last solution etc.)
+ Add model and data files to the solver state.
+ More test cases (data conversions).
+ Parameter for limiting number of solutions (?)
+ Erlang interface
+
+ Branch-and-bound example.
+ LNS example.
+
++ Make results of solve_sync into a map of :solutions, :summary, :minizinc_error
++ Rethink :stop behaviour; better residual msg cleanup after :stop.
++ Merge solution-related fields into a record
++ Parse key-values into {atom(), native_type()}
++ Handle minizinc start errors (such as improper model / missed data)
+
++	Synchronous solve (?)
+
++ Review for private functions.
