@@ -88,7 +88,7 @@ defmodule Minizinc do
     sync_opts = Keyword.put(opts,
       :solution_handler, sync_handler(caller))
     {:ok, solver_pid} = solve(model, data, sync_opts)
-    receive_solutions(solution_handler, solver_pid)
+    receive_events(solution_handler, solver_pid)
   end
 
   ####################################################
@@ -99,9 +99,15 @@ defmodule Minizinc do
         send(caller,  %{solver_results: {event, results}, from: self()}) end
   end
 
-  defp receive_solutions(solution_handler, solver_pid) do
-    receive_solutions(solution_handler, solver_pid, %{})
-
+  defp receive_events(solution_handler, solver_pid) do
+    results = receive_events(solution_handler, solver_pid, %{})
+    # Reverse list of solutions (as they are being added in revese order
+    {nil, updated_results} = Map.get_and_update(results, :solutions,
+      fn
+        nil -> {nil, nil};
+        solutions -> {nil, Enum.reverse(solutions)}
+      end)
+    updated_results
   end
 
 
@@ -135,7 +141,7 @@ defmodule Minizinc do
   end
 
 
-  defp receive_solutions(solution_handler, solver_pid, acc) do
+  defp receive_events(solution_handler, solver_pid, acc) do
     receive do
       %{from: pid, solver_results: {event, results}} when pid == solver_pid ->
         handler_res = MinizincHandler.handle_solver_event(event, results, solution_handler)
@@ -149,7 +155,7 @@ defmodule Minizinc do
           _res when event in [:summary, :minizinc_error] ->
             add_solver_event(event, handler_res, acc)
           _res ->
-            receive_solutions(solution_handler, pid, add_solver_event(event, handler_res, acc))
+            receive_events(solution_handler, pid, add_solver_event(event, handler_res, acc))
         end
       unexpected ->
         Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
