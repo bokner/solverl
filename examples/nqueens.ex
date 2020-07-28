@@ -21,18 +21,20 @@ defmodule NQueens do
   @doc false
   ## Printing solver stats
   def solution_handler(:summary,
-          %{solver_stats: stats, status: status} = _summary
+          %{solver_stats: stats, status: status} = summary
       )
     do
     Logger.info "Solution status: #{status}"
     Logger.info "Solver stats:\n #{inspect stats}"
+    summary
   end
 
   ## Printing solutions
   def solution_handler(:solution, %{
               index: _count,
-              data: data} = _results) do
+              data: data} = solution) do
     Logger.info print_board(data["q"]) <> "\n-----------------------"
+    solution
   end
 
   @doc false
