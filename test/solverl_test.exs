@@ -59,10 +59,16 @@ defmodule SolverlTest do
     assert length(results[:solutions]) == 92
   end
 
-  test "Sync solving: solution handler that interrupts the solver after 100 solutions found" do
-    final_data  = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 50}, [solution_handler: NQueens.LimitSolutionsSync])
+  test "Sync solving: solution handler that interrupts the solver after first 100 solutions have been found" do
+    final_data  = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 50}, [solution_handler: SolverTest.LimitSolutionsSync])
 
     assert final_data[:summary][:status] == :satisfied
+  end
+
+  test "Sync solving: solution handler that skips every other solution" do
+    results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.EveryOtherSync])
+    ## 92 results for the nqueens.mzn model, but we drop every other one...
+    assert length(results[:solutions]) == div(92, 2)
   end
 
   test "Checks dimensions of a regular array " do
@@ -102,7 +108,7 @@ defmodule SolverlTest do
     assert Enum.at(results[:solutions], 0)[:data]["var_set"] == MapSet.new([1,2])
   end
 
-  test "Using enums" do
+  test "Model with enums" do
     enum_model = """
       enum COLOR;
       var COLOR: color;
@@ -114,12 +120,47 @@ defmodule SolverlTest do
 
 end
 
-defmodule NQueens.LimitSolutionsSync do
+defmodule LimitSolutionsSync do
   use MinizincHandler
 
   @doc false
   def handle_solution(%{index: count, data: data})  do
     if count < 100, do: data, else: {:stop, data}
+  end
+
+  @doc false
+  def handle_summary(summary) do
+    summary
+  end
+
+end
+
+
+defmodule SolverTest.LimitSolutionsSync do
+  use MinizincHandler
+
+  @doc false
+  def handle_solution(%{index: count, data: data})  do
+    if count < 100, do: data, else: {:stop, data}
+  end
+
+  @doc false
+  def handle_summary(summary) do
+    summary
+  end
+
+end
+
+defmodule SolverTest.EveryOtherSync do
+  use MinizincHandler
+
+  @doc false
+  def handle_solution(%{index: count, data: data})  do
+    if rem(count, 2) == 0 do
+      :skip
+    else
+      data
+    end
   end
 
   @doc false
