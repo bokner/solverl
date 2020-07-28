@@ -37,7 +37,7 @@ defmodule SolverlTest do
 
   test "Minizinc error" do
     ## Improper data key - should be %{n: 2}
-    [error: _] = Minizinc.solve_sync("mzn/nqueens.mzn", %{m: 2})
+    %{minizinc_error: %{error: _error}} = res = Minizinc.solve_sync("mzn/nqueens.mzn", %{m: 2})
   end
 
   test "Unsatisfiable sync" do
@@ -47,26 +47,22 @@ defmodule SolverlTest do
 
   test "Solving with timeout sync" do
     ## Final record for sync solving results is in position 0.
-    final_data  = Enum.at(Minizinc.solve_sync(
-      "mzn/nqueens.mzn", %{n: 50}, [time_limit: 500]),
-      0)
-    assert {:summary, %{status: :satisfied}} = final_data
+    final_data  = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 50}, [time_limit: 500])
+    assert final_data[:summary][:status] == :satisfied
   end
 
   test "Getting all solutions" do
     results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 8})
 
-    assert {:summary, %{status: :all_solutions}} = Enum.at(results, 0)
-    ## 92 results for the nqueens.mzn model plus the final record.
-    assert length(results) == 1 + 92
+    assert results[:summary][:status] == :all_solutions
+    ## 92 results for the nqueens.mzn model.
+    assert length(results[:solutions]) == 92
   end
 
   test "Sync solving: solution handler that interrupts the solver after 100 solutions found" do
-    final_data  = Enum.at(Minizinc.solve_sync(
-      "mzn/nqueens.mzn", %{n: 50}, [solution_handler: NQueens.LimitSolutionsSync]),
-      0)
-    {:summary, summary} = final_data
-    assert %{status: :satisfied} = summary
+    final_data  = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 50}, [solution_handler: NQueens.LimitSolutionsSync])
+
+    assert final_data[:summary][:status] == :satisfied
   end
 
   test "Checks dimensions of a regular array " do
@@ -77,7 +73,8 @@ defmodule SolverlTest do
   test "Model with boolean vars" do
     conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
     results = Minizinc.solve_sync({:text, conjunction_model})
-    assert results[:solution][:data]["x"] and results[:solution][:data]["x"] == true
+    data = Enum.at(results[:solutions], 0)[:data]
+    assert data["x"] and data["y"] == true
   end
 
   test "Model with 2d array of vars" do
@@ -102,7 +99,7 @@ defmodule SolverlTest do
       constraint card(var_set) == 2;
     """
     results = Minizinc.solve_sync({:text, set_model})
-    assert results[:solution][:data]["var_set"] == MapSet.new([1,2])
+    assert Enum.at(results[:solutions], 0)[:data]["var_set"] == MapSet.new([1,2])
   end
 
   test "Using enums" do
@@ -112,7 +109,7 @@ defmodule SolverlTest do
       constraint color = max(COLOR);
     """
     results = Minizinc.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
-    assert results[:solution][:data]["color"] == "Green"
+    assert Enum.at(results[:solutions], 0)[:data]["color"] == "Green"
   end
 
 end
@@ -122,13 +119,12 @@ defmodule NQueens.LimitSolutionsSync do
 
   @doc false
   def handle_solution(%{index: count, data: data})  do
-    solution_rec = {:solution, data}
-    if count < 100, do: solution_rec, else: {:stop, solution_rec}
+    if count < 100, do: data, else: {:stop, data}
   end
 
   @doc false
   def handle_summary(summary) do
-    {:summary, summary}
+    summary
   end
 
 end

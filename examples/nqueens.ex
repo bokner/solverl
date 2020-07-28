@@ -61,20 +61,20 @@ defmodule NQueens.SyncHandler do
   @doc false
   def handle_solution(%{data: data} = solution)  do
     Logger.info print_board(data["q"]) <> "\n-----------------------"
-    {:solution, solution}
+    solution
   end
 
   @doc false
   def handle_summary(%{solver_stats: solver_stats} = summary) do
     Logger.info "Solver stats:\n #{inspect solver_stats}"
     Logger.info "Model method: #{MinizincModel.model_method(summary)}"
-    MinizincHandler.DefaultSync.handle_summary(summary)
+    summary
   end
 
   @doc false
   def handle_minizinc_error(error) do
     Logger.info "Minizinc error: #{error}"
-    {:error, error}
+    error
   end
 
 end

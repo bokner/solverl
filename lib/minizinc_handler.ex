@@ -104,15 +104,15 @@ defmodule MinizincHandler.DefaultSync do
   require Record
 
   def handle_solution(solution)  do
-    {:solution, solution}
+    solution
   end
 
   def handle_summary(summary)  do
-    {:summary, summary}
+    summary
   end
 
   def handle_minizinc_error(error)  do
-    {:error, error}
+    error
   end
 end
 

@@ -100,7 +100,7 @@ defmodule Minizinc do
   end
 
   defp receive_solutions(solution_handler, solver_pid) do
-    receive_solutions(solution_handler, solver_pid, [])
+    receive_solutions(solution_handler, solver_pid, %{})
 
   end
 
@@ -112,7 +112,8 @@ defmodule Minizinc do
     ## Clean up message mailbox, just in case.
     MinizincUtils.flush()
     if final do
-      [final | acc]
+      {event, results} = final
+      add_solver_event(event, results, acc)
     else
       acc
     end
@@ -125,7 +126,7 @@ defmodule Minizinc do
         completion_loop(solution_handler, solver_pid)
       %{from: pid, solver_results: {event, results}} when pid == solver_pid
            and event in [:summary, :minizinc_error] ->
-          MinizincHandler.handle_solver_event(event, results, solution_handler)
+          {event, MinizincHandler.handle_solver_event(event, results, solution_handler)}
     after @stop_timeout ->
       Logger.debug "The solver has been silent after requesting a stop for #{@stop_timeout} msecs"
       nil
@@ -139,18 +140,30 @@ defmodule Minizinc do
       %{from: pid, solver_results: {event, results}} when pid == solver_pid ->
         handler_res = MinizincHandler.handle_solver_event(event, results, solution_handler)
         case handler_res do
+          :skip ->
+            acc
           {:stop, data} ->
-            interrupt_solutions(solution_handler, pid, [data | acc])
+            interrupt_solutions(solution_handler, pid, add_solver_event(event, data, acc))
           :stop ->
             interrupt_solutions(solution_handler, pid, acc)
           _res when event in [:summary, :minizinc_error] ->
-            [handler_res | acc]
+            add_solver_event(event, handler_res, acc)
           _res ->
-            receive_solutions(solution_handler, pid, [handler_res | acc])
+            receive_solutions(solution_handler, pid, add_solver_event(event, handler_res, acc))
         end
       unexpected ->
         Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
     end
+  end
+
+  defp add_solver_event(event, data, acc) when event in [:summary, :minizinc_error] do
+    Map.put(acc, event, data)
+  end
+
+  defp add_solver_event(:solution, data, acc) do
+    {nil, newacc} = Map.get_and_update(acc, :solutions,
+        fn nil -> {nil, [data]}; current -> {nil, [data | current]} end)
+    newacc
   end
   ####################################################
 

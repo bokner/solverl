@@ -127,19 +127,18 @@ defmodule Sudoku.SyncHandler do
 
   @doc false
   def handle_solution(%{index: count, data: data})  do
-    solution_rec = {:solution, data}
-    if count < 3, do: solution_rec, else: {:stop, solution_rec}
+    if count < 3, do: data, else: {:stop, data}
   end
 
   @doc false
   def handle_summary(summary) do
-    {:summary, summary}
+    summary
   end
 
   @doc false
   def handle_minizinc_error(error) do
     Logger.info "Minizinc error: #{error}"
-    {:error, error}
+    error
   end
 
 end
