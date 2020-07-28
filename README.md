@@ -4,7 +4,7 @@ Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
 
 Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
-**Disclaimer**: **Disclaimer**: This project is in very early stages, has neither been used in production, nor extensively tested. Use on your own risk.
+**Disclaimer**: This project is in very early stages, has neither been used in production, nor extensively tested. Use on your own risk.
 ## Installation
 
 You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
@@ -69,11 +69,11 @@ Model could be either:
     
     **Example (model as a multiline string):** 
     ```elixir
-  """
+    """
     array [1..5] of var 1..n: x;            
     include "alldifferent.mzn";            
     constraint alldifferent(x);
-  """
+    """
     ```
 - or a (mixed) list of the above. The code will build a model by concatenating bodies of
     model files and model texts suffixed with EOL (\n).  
@@ -156,7 +156,7 @@ Data could be either:
 - #### Enums
 
      Minizinc `enum` type corresponds to [Tuple](https://hexdocs.pm/elixir/Tuple.html).
-     Tuple elements have to be either string, charlists or atoms.
+     Tuple elements have to be either of strings, charlists or atoms.
      
      Example 1 (using strings, atoms and charlists for enum entries):
      ```elixir
@@ -175,7 +175,7 @@ Data could be either:
     constraint color = max(COLOR);
   """
   results = Minizinc.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
-  results[:solution][:data]["color"]   
+  results[:summary][:last_solution][:data]["color"]   
   ```
   Output:
   ```elixir
@@ -198,7 +198,11 @@ Data could be either:
   ## Solve "mzn/nqueens.mzn" for n = 4, using Gecode solver,
   ## time limit of 1 sec, NQueens.SyncHandler as a solution handler.
   ## Extra flags: -O4 --verbose-compilation  
-  Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000, solution_handler: NQueens.SyncHandler, extra_flags: "-O4 --verbose-compilation"])
+  Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 4}, 
+    [solver: "gecode", 
+     time_limit: 1000, 
+     solution_handler: NQueens.SyncHandler, 
+     extra_flags: "-O4 --verbose-compilation"])
   ```
   
 
@@ -298,6 +302,7 @@ Please refer to [Event-specific data]
 ## Examples
  - [N-Queens](#n-queens)
  - [Sudoku](#sudoku)
+ - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
 
