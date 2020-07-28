@@ -50,7 +50,7 @@ defmodule Solverl.MixProject do
   defp package() do
     [
       # These are the default files included in the package
-      files: ~w(lib examples test .formatter.exs mix.exs README* ),
+      files: ~w(lib examples test src .formatter.exs mix.exs README* ),
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/bokner/solverl"}
     ]
