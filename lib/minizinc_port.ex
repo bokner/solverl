@@ -139,7 +139,7 @@ defmodule MinizincPort do
   end
 
   defp prepare_solver_cmd(args) do
-    {:ok, solver} = MinizincSolver.lookup(args[:solver])
+    {:ok, solver} = Minizinc.lookup(args[:solver])
     solver_str = "--solver #{solver["id"]}"
     time_limit_str = "--time-limit #{args[:time_limit]}"
     extra_flags = Keyword.get(args, :extra_flags, "")

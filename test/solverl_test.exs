@@ -5,7 +5,7 @@ defmodule SolverlTest do
 
   test "Runs the proper solver CMD" do
     test_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
-    assert {:ok, _pid} = MinizincSolver.solve(
+    assert {:ok, _pid} = Minizinc.solve(
                "mzn/test1.mzn",
                [
                  %{
@@ -22,7 +22,7 @@ defmodule SolverlTest do
   test "The same as above, but with multiple models either as a text or a file" do
     test_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
     models = [{:text, "int: test_model = true;"}, "mzn/test1.mzn"]
-    assert {:ok, _pid} = MinizincSolver.solve(
+    assert {:ok, _pid} = Minizinc.solve(
                models,
                [
                  %{
@@ -37,24 +37,24 @@ defmodule SolverlTest do
 
   test "Minizinc error" do
     ## Improper data key - should be %{n: 2}
-    [error: _] = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
+    [error: _] = Minizinc.solve_sync("mzn/nqueens.mzn", %{m: 2})
   end
 
   test "Unsatisfiable sync" do
-    unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})
+    unsat_res = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 2})
     assert unsat_res[:summary][:status] == :unsatisfiable
   end
 
   test "Solving with timeout sync" do
     ## Final record for sync solving results is in position 0.
-    final_data  = Enum.at(MinizincSolver.solve_sync(
+    final_data  = Enum.at(Minizinc.solve_sync(
       "mzn/nqueens.mzn", %{n: 50}, [time_limit: 500]),
       0)
     assert {:summary, %{status: :satisfied}} = final_data
   end
 
   test "Getting all solutions" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8})
+    results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 8})
 
     assert {:summary, %{status: :all_solutions}} = Enum.at(results, 0)
     ## 92 results for the nqueens.mzn model plus the final record.
@@ -62,7 +62,7 @@ defmodule SolverlTest do
   end
 
   test "Sync solving: solution handler that interrupts the solver after 100 solutions found" do
-    final_data  = Enum.at(MinizincSolver.solve_sync(
+    final_data  = Enum.at(Minizinc.solve_sync(
       "mzn/nqueens.mzn", %{n: 50}, [solution_handler: NQueens.LimitSolutionsSync]),
       0)
     {:summary, summary} = final_data
@@ -76,7 +76,7 @@ defmodule SolverlTest do
 
   test "Model with boolean vars" do
     conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
-    results = MinizincSolver.solve_sync({:text, conjunction_model})
+    results = Minizinc.solve_sync({:text, conjunction_model})
     assert results[:solution][:data]["x"] and results[:solution][:data]["x"] == true
   end
 
@@ -90,7 +90,7 @@ defmodule SolverlTest do
         )
     );
   """
-    results = MinizincSolver.solve_sync({:text, array_model})
+    results = Minizinc.solve_sync({:text, array_model})
     assert MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [4, 5]
   end
 
@@ -101,7 +101,7 @@ defmodule SolverlTest do
       constraint 2 in var_set;
       constraint card(var_set) == 2;
     """
-    results = MinizincSolver.solve_sync({:text, set_model})
+    results = Minizinc.solve_sync({:text, set_model})
     assert results[:solution][:data]["var_set"] == MapSet.new([1,2])
   end
 
@@ -111,7 +111,7 @@ defmodule SolverlTest do
       var COLOR: color;
       constraint color = max(COLOR);
     """
-    results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
+    results = Minizinc.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
     assert results[:solution][:data]["color"] == "Green"
   end
 

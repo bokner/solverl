@@ -171,7 +171,7 @@ Data could be either:
     var COLOR: color;
     constraint color = max(COLOR);
   """
-  results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
+  results = Minizinc.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
   results[:solution][:data]["color"]   
   ```
   Output:
@@ -195,7 +195,7 @@ Data could be either:
   ## Solve "mzn/nqueens.mzn" for n = 4, using Gecode solver,
   ## time limit of 1 sec, NQueens.SyncHandler as a solution handler.
   ## Extra flags: -O4 --verbose-compilation  
-  MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000, solution_handler: NQueens.SyncHandler, extra_flags: "-O4 --verbose-compilation"])
+  Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000, solution_handler: NQueens.SyncHandler, extra_flags: "-O4 --verbose-compilation"])
   ```
   
 
@@ -225,26 +225,38 @@ Data could be either:
   
 #### Event-specific data. 
   
-  - `:solution` event 
+  - **For `:solution` event:** 
   ```elixir
-   %{data: data, timestamp: timestamp, index: index, stats: stats} 
+   %{
+     data: data,            # Map of values keyed with their variable names
+     timestamp: timestamp,  # Timestamp of the moment solution was parsed
+     index: index,          # Sequential number of the solution
+     stats: stats           # Map of solution statistics values keyed with the field names
+     } 
    ```
-  
-  , where
-  
-`data` is a map of values keyed with their variable names;
-
-`timestamp` is a timestamp of the moment solution was parsed;
-
-`index` is the sequential number of the solution;
-
-`stats` is a map of statistics values keyed with the field names.
+   
     
-  - `:summary` event: TODO
+  - **For `:summary` event:** 
+  ```elixir
+    %{
+      status: status,                   # Solver status (one of :satisfied, :unsatisfiable etc)         
+      fzn_stats: fzn_stats,             # Map of FlatZinc statistics values keyed with the field names
+      solver_stats: solver_stats,       # Map of solver statistics values keyed with the field names
+      solution_count: solution_count,   # Total number of solutions found
+      last_solution: solution,          # Data for last :solution event (see above)
+      minizinc_output: minizinc_output, # Minizinc errors and warnings
+      time_elapsed: time_elapsed        # Time elapsed, verbatim as reported by Minizinc 
+      }
+  ```
   
-  - `:minizinc_error` event: TODO
+  - **For `:minizinc_error` event:**
+  ```elixir
+      %{
+        error: error     # Minizinc output accompanied by runtime error 
+      }
+  ```
   
-#### Handling of solution handler callback results
+#### Handling of solution handler callback returns
   
   TODO  
   
@@ -354,7 +366,10 @@ iex(79)>
 TODO
 
 ## Under the hood
-TODO
+
+Both Minizinc.solve/3 and Minizinc.solve_sync/3 use MinizincPort.start_link/3
+to start GenServer, which in turn spawns the external MiniZinc process, 
+and then parses its text output into solver events and makes appropriate callback functions as described [here](#solution-handlers)).
 
 ## Roadmap
 TODO:
@@ -362,7 +377,7 @@ TODO:
   Support LNS;
   Support Branch-and-Bound;
   Provide API for peeking into a state of Minizinc process, such as time since last solution,
-  whether it's compiling or solving the model at the moment etc.
+  whether it's compiling or solving at the moment etc.
 ```  
 ## Credits
 
