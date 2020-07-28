@@ -37,7 +37,7 @@ defmodule SolverlTest do
 
   test "Minizinc error" do
     ## Improper data key - should be %{n: 2}
-    %{minizinc_error: %{error: _error}} = res = Minizinc.solve_sync("mzn/nqueens.mzn", %{m: 2})
+    %{minizinc_error: %{error: _error}} = Minizinc.solve_sync("mzn/nqueens.mzn", %{m: 2})
   end
 
   test "Unsatisfiable sync" do
