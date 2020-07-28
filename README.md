@@ -4,14 +4,14 @@ Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
 
 Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
-**Disclaimer**: This project is in very early stages, has neither been used in production, nor extensively tested. Use on your own risk.
+**Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
 ## Installation
 
 You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
 
 ###### **Note**:
  
-The code was tested and run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3 only.
+The code was only tested and run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3.
 
 ###### **Note**:
 
@@ -52,7 +52,7 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 solver_results = Minizinc.solve_sync(model, data, opts)
 
 ```
-, where: 
+, where 
 - ```model``` - [specification of Minizinc model](#model-specification);
 - ```data```  - [specification of data](#data-specification) passed to ```model```;
 - ```opts``` - [solver options](#solver-options).
@@ -208,7 +208,7 @@ Data could be either:
 
 ### Solution handlers
 
-  **Solution handler** is either a 
+  **Solution handler** is either 
   - a *function*, or
   - a *module* that implements [MinizincHandler](MinizincHandler.html) behaviour.
   
@@ -224,11 +224,11 @@ Data could be either:
   - `summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
   - `minizinc_error` - the wrapper detected Minizinc runtime error.
   
-  In case solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
+  In case the solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
   being the event name(i.e., :solution, :summary, :minizinc_error), 2nd being the event-specific data of that event.
   
-  In case solution handler is a module that implements [MinizincHandler](MinizincHandler.html) behaviour,
-  its functions `handle_solution/1`, `handle_summary/1`, `handle_minizinc_error/1` take an event-specific data.   
+  In case the solution handler is a module that implements [MinizincHandler](MinizincHandler.html) behaviour,
+  its functions `handle_solution/1`, `handle_summary/1`, `handle_minizinc_error/1` take an [event-specific data](#event-specific-data).   
   
 #### Event-specific data. 
   
@@ -289,7 +289,7 @@ Data could be either:
    
 #### Solver results
 
-    **Note: this is applicable only to a synchronous solving.**
+**Note: this is applicable only to a synchronous solving.**
     
    `Solver results` is a map with the following keys:
    
@@ -297,7 +297,7 @@ Data could be either:
  - `:summary`  -  data, produced by handling of `:summary` event
  - `:minizinc_error` - data, produced by handling of `:minizinc_error` event
 
-Please refer to [Event-specific data]
+Please refer to [Event-specific data](#event-specific-data).
 
 ## Examples
  - [N-Queens](#n-queens)
@@ -402,13 +402,26 @@ iex(79)>
 ```
 
 ## Erlang interface
-TODO
+
+[`minizinc` module](https://github.com/bokner/solverl/blob/master/src/minizinc.erl) mirrors all exported functions of [Elixir Minizinc module](Minizinc.html).
+
+Once you manage to make `solverl` dependency part of your Erlang application build (for instance with [rebar_mix](https://github.com/Supersonido/rebar_mix)),
+you should be able to use its interface.
+ 
+Example:
+
+```erlang
+results = minizinc:solve_sync(<<"mzn/nqueens.mzn">>, #{n=> 4}, [{solution_handler, fun 'Elixir.NQueens':solution_handler/2}]).
+```  
+
+Note: Please use `binary` strings as opposed to `char` strings whenever you need to pass a string to API.
+The API functions will always use `binary` strings whenever the function return needs to use strings. 
 
 ## Under the hood
 
 Both Minizinc.solve/3 and Minizinc.solve_sync/3 use MinizincPort.start_link/3
 to start GenServer, which in turn spawns the external MiniZinc process, 
-and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers)).
+and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers).
 
 ## Roadmap
 
