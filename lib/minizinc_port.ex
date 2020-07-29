@@ -16,13 +16,16 @@ defmodule MinizincPort do
   def init(args \\ []) do
     Process.flag(:trap_exit, true)
     # Locate minizinc executable and run it with args converted to CLI params.
-    command = prepare_solver_cmd(args)
+    {:ok, model_text} = MinizincModel.make_model(args[:model])
+    {:ok, dzn_text} = MinizincData.make_dzn(args[:data])
+    command = prepare_solver_cmd(model_text, dzn_text, args)
     Logger.warn "Command: #{command}"
     port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
     Port.monitor(port)
 
     {:ok, %{port: port, current_results: parser_rec(),
       solution_handler: args[:solution_handler],
+      model: model_text, dzn: dzn_text,
       exit_status: nil} }
   end
 
@@ -138,14 +141,12 @@ defmodule MinizincPort do
     GenServer.cast(pid, :stop_solver)
   end
 
-  defp prepare_solver_cmd(args) do
-    {:ok, solver} = Minizinc.lookup(args[:solver])
+  defp prepare_solver_cmd(model_str, dzn_str, opts) do
+    {:ok, solver} = Minizinc.lookup(opts[:solver])
     solver_str = "--solver #{solver["id"]}"
-    time_limit_str = "--time-limit #{args[:time_limit]}"
-    extra_flags = Keyword.get(args, :extra_flags, "")
-    {:ok, model_str} = MinizincModel.make_model(args[:model])
-    {:ok, dzn_str} = MinizincData.make_dzn(args[:data])
-    args[:minizinc_executable] <> " " <>
+    time_limit_str = "--time-limit #{opts[:time_limit]}"
+    extra_flags = Keyword.get(opts, :extra_flags, "")
+    opts[:minizinc_executable] <> " " <>
       String.trim(
         "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a "
          <>
