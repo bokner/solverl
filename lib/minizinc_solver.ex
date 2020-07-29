@@ -112,8 +112,8 @@ defmodule Minizinc do
 
 
 
-  defp interrupt_solutions(solution_handler, solver_pid, acc) do
-    stop_solver(solver_pid)
+  defp stop_solving(solution_handler, solver_pid, acc) do
+    stop_solver_process(solver_pid)
     final = completion_loop(solution_handler, solver_pid)
     ## Clean up message mailbox, just in case.
     MinizincUtils.flush()
@@ -144,18 +144,24 @@ defmodule Minizinc do
   defp receive_events(solution_handler, solver_pid, acc) do
     receive do
       %{from: pid, solver_results: {event, results}} when pid == solver_pid ->
-        handler_res = MinizincHandler.handle_solver_event(event, results, solution_handler)
-        case handler_res do
-          :skip ->
-            receive_events(solution_handler, pid, acc)
-          {:stop, data} ->
-            interrupt_solutions(solution_handler, pid, add_solver_event(event, data, acc))
-          :stop ->
-            interrupt_solutions(solution_handler, pid, acc)
-          _res when event in [:summary, :minizinc_error] ->
-            add_solver_event(event, handler_res, acc)
-          _res ->
-            receive_events(solution_handler, pid, add_solver_event(event, handler_res, acc))
+        try do
+          case MinizincHandler.handle_solver_event(event, results, solution_handler) do
+            :skip ->
+              receive_events(solution_handler, pid, acc)
+            {:stop, data} ->
+              stop_solving(solution_handler, pid, add_solver_event(event, data, acc))
+            :stop ->
+              stop_solving(solution_handler, pid, acc)
+            result when event in [:summary, :minizinc_error] ->
+              add_solver_event(event, result, acc)
+            result ->
+              receive_events(solution_handler, pid, add_solver_event(event, result, acc))
+          end
+        catch
+          handler_error ->
+            Logger.error "Solution handler error: #{inspect handler_error}"
+
+            stop_solving(solution_handler, pid, Map.put(acc, :handler_error, handler_error))
         end
       unexpected ->
         Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
@@ -178,7 +184,7 @@ defmodule Minizinc do
   @doc """
   Stop solver process.
   """
-  def stop_solver(pid) do
+  def stop_solver_process(pid) do
     MinizincPort.stop(pid)
   end
 

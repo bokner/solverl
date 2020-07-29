@@ -61,7 +61,7 @@ defmodule SolverlTest do
 
   test "Sync solving: solution handler that interrupts the solver after first 100 solutions have been found" do
     final_data  = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 50}, [solution_handler: SolverTest.LimitSolutionsSync])
-
+    assert length(final_data[:solutions]) == 100
     assert final_data[:summary][:status] == :satisfied
   end
 
@@ -70,6 +70,15 @@ defmodule SolverlTest do
     ## 92 results for the nqueens.mzn model, but we drop every other one...
     assert length(results[:solutions]) == div(92, 2)
   end
+
+  test "Sync solving: solution handler throws an exception" do
+    results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 9}, [solution_handler: SolverTest.ThrowAfter100])
+    ## Should get 100 solutions
+    assert length(results[:solutions]) == 100
+    ## The exception is stored with :handler_error key
+    assert results[:handler_error] == :throw_after_100
+  end
+
 
   test "Checks dimensions of a regular array " do
     good_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
@@ -192,7 +201,23 @@ defmodule SolverTest.SummaryOnlySync do
   def handle_summary(summary) do
     summary
   end
+end
 
+## For testing throws within a solution handler
+#
+defmodule SolverTest.ThrowAfter100 do
+  use MinizincHandler
+
+  @doc false
+  def handle_solution(%{index: index, data: data} = _solution)  do
+    if index > 100, do: throw :throw_after_100
+    data
+  end
+
+  @doc false
+  def handle_summary(summary) do
+    summary
+  end
 end
 
 
