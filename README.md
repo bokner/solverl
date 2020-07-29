@@ -419,8 +419,8 @@ The API functions will always use `binary` strings whenever the function return 
 
 ## Under the hood
 
-Both Minizinc.solve/3 and Minizinc.solve_sync/3 use MinizincPort.start_link/3
-to start GenServer, which in turn spawns the external MiniZinc process, 
+Both **Minizinc.solve/3** and **Minizinc.solve_sync/3** use **MinizincPort.start_link/3**
+to start *GenServer* process, which in turn spawns the external MiniZinc process, 
 and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers).
 
 ## Roadmap
