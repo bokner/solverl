@@ -75,8 +75,8 @@ defmodule SolverlTest do
     results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 9}, [solution_handler: SolverTest.ThrowAfter100])
     ## Should get 100 solutions
     assert length(results[:solutions]) == 100
-    ## The exception is stored with :handler_error key
-    assert results[:handler_error] == :throw_after_100
+    ## The exception is stored with :handler_exception key
+    assert results[:handler_exception] == :throw_after_100
   end
 
 

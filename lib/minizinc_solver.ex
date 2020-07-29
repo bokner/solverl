@@ -158,10 +158,10 @@ defmodule Minizinc do
               receive_events(solution_handler, pid, add_solver_event(event, result, acc))
           end
         catch
-          handler_error ->
-            Logger.error "Solution handler error: #{inspect handler_error}"
+          handler_exception ->
+            Logger.error "Solution handler error: #{inspect handler_exception}"
 
-            stop_solving(solution_handler, pid, Map.put(acc, :handler_error, handler_error))
+            stop_solving(solution_handler, pid, Map.put(acc, :handler_exception, handler_exception))
         end
       unexpected ->
         Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")

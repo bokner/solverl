@@ -208,7 +208,10 @@ Data could be either:
 
 ### Solution handlers
 
-  **Solution handler** is either 
+  `Solution handler` is a pluggable code created by the user in order to customize
+  handling of solutions and metadata produced by **Minizinc.solve/3** and **Minizinc.solve_sync/3**.
+  
+  Solution handler is either 
   - a *function*, or
   - a *module* that implements [MinizincHandler](MinizincHandler.html) behaviour.
   
@@ -298,6 +301,13 @@ Data could be either:
  - `:minizinc_error` - data, produced by handling of `:minizinc_error` event
 
 Please refer to [Event-specific data](#event-specific-data).
+
+### Handling exceptions
+
+Solution handler is a pluggable code that is typically created by a user. MinizincSolver catches exceptions from solution handlers
+to make sure that the solver process is gracefully shut down. Moreover, in case of synchronous solving,
+MinizincSolver preserves the solver results accumulated before the exception, and returns them to the calling process.
+The exception value will be added to [solver results](#solver-results) under `:handler_exception` key.
 
 ## Examples
  - [N-Queens](#n-queens)
