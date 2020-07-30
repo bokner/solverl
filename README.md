@@ -11,7 +11,7 @@ You will need to install Minizinc. Please refer to https://www.minizinc.org/soft
 
 ###### **Note**:
  
-The code was only tested and run on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3.
+The code was only tested on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3.
 
 ###### **Note**:
 
@@ -187,7 +187,7 @@ Data could be either:
 
   - `solver`: Solver id supported by your Minizinc configuration. Default: "gecode".
   - `time_limit`: Time in msecs given to Minizinc to find a solution. Default: 300000 (5 mins).
-  - `minizinc_executable`: Full path to Minizinc executable (you'd need it if executable cannot be located by your system).
+  - `minizinc_executable`: Full path to Minizinc executable (you'd need it if `minizinc` executable cannot be located by your system).
   - `solution_handler`: Module or function that controls processing of solutions and/or metadata. Default: MinizincHandler.DefaultAsync.
   
     Check out [Solution handlers](#solution-handlers) for more details. 
