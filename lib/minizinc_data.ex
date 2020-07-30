@@ -77,9 +77,15 @@ defmodule MinizincData do
 
   end
 
+  defp dzn_to_elixir(el) when is_list(el) do
+    Enum.map(el, fn e -> dzn_to_elixir(e) end)
+  end
+
   defp dzn_to_elixir(el) do
     el
   end
+
+
 
   #############################################
   # Convert element to .dzn string
