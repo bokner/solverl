@@ -11,11 +11,11 @@ defmodule NQueens do
   # N queens puzzle
   # Async solving
   def solve(n, opts \\ [solution_handler: &solution_handler/2]) do
-    Minizinc.solve(@nqueens_model, %{n: n}, opts)
+    MinizincSolver.solve(@nqueens_model, %{n: n}, opts)
   end
 
   def solve_sync(n, opts \\ [solution_handler: NQueens.SyncHandler]) do
-    Minizinc.solve_sync(@nqueens_model, %{n: n}, opts)
+    MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
   end
 
   @doc false

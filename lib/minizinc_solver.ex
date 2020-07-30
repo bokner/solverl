@@ -1,4 +1,4 @@
-defmodule Minizinc do
+defmodule MinizincSolver do
   @moduledoc """
     Minizinc solver API.
   """
@@ -44,7 +44,7 @@ defmodule Minizinc do
       # Solve Sudoku puzzle with "mzn/sudoku.mzn" model, "mzn/sudoku.dzn" data,
       # and custom solution handler Sudoku.solution_handler/2.
       #
-      Minizinc.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
+      MinizincSolver.solve("mzn/sudoku.mzn", "mzn/sudoku.dzn", [solution_handler: &Sudoku.solution_handler/2])
 
     Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
@@ -53,7 +53,7 @@ defmodule Minizinc do
 
   def solve(model, data, opts \\ []) do
     args = [model: model, data: data] ++
-           Keyword.merge(Minizinc.default_args, opts)
+           Keyword.merge(MinizincSolver.default_args, opts)
     {:ok, _pid} = MinizincPort.start_link(args)
   end
 
@@ -74,7 +74,7 @@ defmodule Minizinc do
       # Solve N-queens puzzle with n = 4.
       # Use Gecode solver, solve within 1000 ms.
       #
-      results = Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000])
+      results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, [solver: "gecode", time_limit: 1000])
 
     Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
@@ -190,7 +190,7 @@ defmodule Minizinc do
 
 
   @doc """
-  Get list of descriptions for solvers available to Minizinc.
+  Get list of descriptions for solvers available to MinizincSolver.
   """
   def get_solvers do
     solvers_json = to_string(:os.cmd('#{get_executable()} --solvers-json'))
@@ -199,7 +199,7 @@ defmodule Minizinc do
   end
 
   @doc """
-  Get list of solver ids for solvers available to Minizinc.
+  Get list of solver ids for solvers available to MinizincSolver.
   """
   def get_solverids do
     for solver <- get_solvers(), do: solver["id"]

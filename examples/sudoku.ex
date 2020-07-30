@@ -20,7 +20,7 @@ defmodule Sudoku do
     Logger.info print_grid(sudoku_array)
 
     opts = Keyword.put(args, :solution_handler, Sudoku.AsyncHandler)
-    {:ok, _pid} = Minizinc.solve(
+    {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array},
       opts)
@@ -43,7 +43,7 @@ defmodule Sudoku do
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle (solved synchronously)"
     Logger.info print_grid(sudoku_array)
-    Minizinc.solve_sync("mzn/sudoku.mzn",
+    MinizincSolver.solve_sync("mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array}, [solution_handler: Sudoku.SyncHandler])
   end
 

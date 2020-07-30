@@ -40,16 +40,16 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 
 ## Usage
 
-[Minizinc](Minizinc.html) module provides functions both for synchronous and asynchronous solving. 
+[MinizincSolver](MinizincSolver.html) module provides functions both for synchronous and asynchronous solving. 
 
 ```elixir
 # Asynchronous solving.
 # Creates a solver process. 
-{:ok, solver_pid} = Minizinc.solve(model, data, opts)
+{:ok, solver_pid} = MinizincSolver.solve(model, data, opts)
 
 # Synchronous solving.
 # Starts the solver and gets the results (solutions and/or solver stats) once the solver finishes.
-solver_results = Minizinc.solve_sync(model, data, opts)
+solver_results = MinizincSolver.solve_sync(model, data, opts)
 
 ```
 , where 
@@ -174,7 +174,7 @@ Data could be either:
     var COLOR: color;
     constraint color = max(COLOR);
   """
-  results = Minizinc.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
+  results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
   results[:summary][:last_solution][:data]["color"]   
   ```
   Output:
@@ -198,7 +198,7 @@ Data could be either:
   ## Solve "mzn/nqueens.mzn" for n = 4, using Gecode solver,
   ## time limit of 1 sec, NQueens.SyncHandler as a solution handler.
   ## Extra flags: -O4 --verbose-compilation  
-  Minizinc.solve_sync("mzn/nqueens.mzn", %{n: 4}, 
+  MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, 
     [solver: "gecode", 
      time_limit: 1000, 
      solution_handler: NQueens.SyncHandler, 
@@ -209,7 +209,7 @@ Data could be either:
 ### Solution handlers
 
   `Solution handler` is a pluggable code created by the user in order to customize
-  handling of solutions and metadata produced by **Minizinc.solve/3** and **Minizinc.solve_sync/3**.
+  handling of solutions and metadata produced by **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3**.
   
   Solution handler is either 
   - a *function*, or
@@ -413,7 +413,7 @@ iex(79)>
 
 ## Erlang interface
 
-[`minizinc` module](https://github.com/bokner/solverl/blob/master/src/minizinc.erl) mirrors all exported functions of [Elixir Minizinc module](Minizinc.html).
+[`minizinc` module](https://github.com/bokner/solverl/blob/master/src/minizinc.erl) mirrors all exported functions of [MinizincSolver module](MinizincSolver.html).
 
 Once you manage to make `solverl` dependency part of your Erlang application build (for instance with [rebar_mix](https://github.com/Supersonido/rebar_mix)),
 you should be able to use its interface.
@@ -429,7 +429,7 @@ The API functions will always use `binary` strings whenever the function return 
 
 ## Under the hood
 
-Both **Minizinc.solve/3** and **Minizinc.solve_sync/3** use **MinizincPort.start_link/3**
+Both **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3** use **MinizincPort.start_link/3**
 to start *GenServer* process, which in turn spawns the external MiniZinc process, 
 and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers).
 

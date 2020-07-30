@@ -9,7 +9,7 @@
 -module(minizinc).
 -author("bokner").
 
--define(MINIZINC, 'Elixir.Minizinc').
+-define(MINIZINC, 'Elixir.MinizincSolver').
 
 %% API
 -export([solve/1, solve/2, solve/3]).
