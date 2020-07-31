@@ -6,8 +6,19 @@ defmodule GraphColoring do
 
   @gc_model "mzn/graph_coloring.mzn"
 
-  def optimal_coloring(dzn_file, opts \\ []) do
-    MinizincSolver.solve_sync(@gc_model, dzn_file, Keyword.put_new(opts, :solution_handler, GraphColoring.SyncHandler))
+  def optimal_coloring(data, opts \\ [])
+
+  def optimal_coloring(dzn_file, opts) when is_binary(dzn_file) do
+    solve_sync(dzn_file, opts)
+  end
+
+  def optimal_coloring({vertices, edges}, opts) when is_integer(vertices) and is_list(edges) do
+    solve_sync(%{edges: edges, n: vertices, n_edges: length(edges)},
+      opts)
+  end
+
+  defp solve_sync(data, opts) do
+    MinizincSolver.solve_sync(@gc_model, data, Keyword.put_new(opts, :solution_handler, GraphColoring.SyncHandler))
   end
 
   def show_results(gc_results) do
@@ -23,12 +34,8 @@ defmodule GraphColoring do
             end)
   end
 
-  def do_coloring(dzn_file, opts) when is_binary(dzn_file) do
-    optimal_coloring(dzn_file, opts) |> show_results
-  end
-
-  def do_coloring({vertices, edges}, opts) when is_integer(vertices) and is_list(edges) do
-    optimal_coloring(%{edges: edges, n: vertices, n_edges: length(edges)}, opts) |> show_results
+  def do_coloring(data, opts) do
+    optimal_coloring(data, opts) |> show_results
   end
 
 end
