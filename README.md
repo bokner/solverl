@@ -477,4 +477,4 @@ and then parses its text output into solver events and makes appropriate callbac
 ```  
 ## Credits
 
-TODO
+The project extensively uses ideas and code examples from [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
