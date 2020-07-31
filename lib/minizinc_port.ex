@@ -6,7 +6,7 @@ defmodule MinizincPort do
   use GenServer
   require Logger
 
-  import MinizincResults
+  import MinizincParser
 
   # GenServer API
   def start_link(args, opts \\ []) do
@@ -53,7 +53,7 @@ defmodule MinizincPort do
     {_eol, text_line} = line
     parser_event = MinizincParser.parse_output(text_line)
     updated_results =
-      MinizincResults.update_results(current_results, parser_event)
+      MinizincParser.update_results(current_results, parser_event)
     updated_state = Map.put(state, :current_results, updated_results)
     case parser_event do
       {:status, :satisfied} ->
@@ -156,17 +156,17 @@ defmodule MinizincPort do
 
   defp handle_solution(solution_handler, results) do
     MinizincHandler.handle_solution(
-      MinizincResults.solution(results), solution_handler)
+      MinizincParser.solution(results), solution_handler)
   end
 
   defp handle_summary(solution_handler, results) do
     MinizincHandler.handle_summary(
-      MinizincResults.summary(results), solution_handler)
+      MinizincParser.summary(results), solution_handler)
   end
 
   defp handle_minizinc_error(solution_handler, results) do
     MinizincHandler.handle_minizinc_error(
-      MinizincResults.minizinc_error(results), solution_handler)
+      MinizincParser.minizinc_error(results), solution_handler)
   end
 
 end

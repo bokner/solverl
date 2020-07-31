@@ -42,39 +42,39 @@ defmodule SolverlTest do
 
   test "Unsatisfiable sync" do
     unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})
-    assert unsat_res[:summary][:status] == :unsatisfiable
+    assert MinizincResults.get_status(unsat_res) == :unsatisfiable
   end
 
   test "Solving with timeout sync" do
     ## Final record for sync solving results is in position 0.
     final_data  = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 50}, [time_limit: 500])
-    assert final_data[:summary][:status] == :satisfied
+    assert MinizincResults.get_status(final_data) == :satisfied
   end
 
   test "Getting all solutions" do
     results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8})
 
-    assert results[:summary][:status] == :all_solutions
+    assert MinizincResults.get_status(results) == :all_solutions
     ## 92 results for the nqueens.mzn model.
     assert length(results[:solutions]) == 92
   end
 
   test "Sync solving: solution handler that interrupts the solver after first 100 solutions have been found" do
     final_data  = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 50}, [solution_handler: SolverTest.LimitSolutionsSync])
-    assert length(final_data[:solutions]) == 100
-    assert final_data[:summary][:status] == :satisfied
+    assert length(MinizincResults.get_solutions(final_data)) == 100
+    assert MinizincResults.get_status(final_data) == :satisfied
   end
 
   test "Sync solving: solution handler that skips every other solution" do
     results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.EveryOtherSync])
     ## 92 results for the nqueens.mzn model, but we drop every other one...
-    assert length(results[:solutions]) == div(92, 2)
+    assert length(MinizincResults.get_solutions(results)) == div(92, 2)
   end
 
   test "Sync solving: solution handler throws an exception" do
     results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 9}, [solution_handler: SolverTest.ThrowAfter100])
     ## Should get 100 solutions
-    assert length(results[:solutions]) == 100
+    assert length(MinizincResults.get_solutions(results)) == 100
     ## The exception is stored with :handler_exception key
     assert results[:handler_exception] == :throw_after_100
   end
@@ -88,7 +88,7 @@ defmodule SolverlTest do
   test "Model with boolean vars" do
     conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
     results = MinizincSolver.solve_sync({:text, conjunction_model})
-    data = Enum.at(results[:solutions], 0)[:data]
+    data = Enum.at(MinizincResults.get_solutions(results), 0)[:data]
     assert data["x"] and data["y"] == true
   end
 
@@ -103,7 +103,9 @@ defmodule SolverlTest do
     );
   """
     results = MinizincSolver.solve_sync({:text, array_model})
-    assert MinizincData.dimensions(results[:summary][:last_solution][:data]["arr"]) == [4, 5]
+    assert MinizincResults.get_last_solution(results) |>
+      MinizincResults.get_solution_value("arr") |>
+      MinizincData.dimensions == [4, 5]
   end
 
   test "Model with set vars" do
@@ -114,7 +116,9 @@ defmodule SolverlTest do
       constraint card(var_set) == 2;
     """
     results = MinizincSolver.solve_sync({:text, set_model})
-    assert Enum.at(results[:solutions], 0)[:data]["var_set"] == MapSet.new([1,2])
+    solution = Enum.at(MinizincResults.get_solutions(results), 0)
+
+    assert MinizincResults.get_solution_value(solution, "var_set") == MapSet.new([1,2])
   end
 
   test "Model with enums" do
@@ -124,17 +128,19 @@ defmodule SolverlTest do
       constraint color = max(COLOR);
     """
     results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
-    assert Enum.at(results[:solutions], 0)[:data]["color"] == "Green"
+    solution = Enum.at(MinizincResults.get_solutions(results), 0)
+    assert MinizincResults.get_solution_value(solution, "color") == "Green"
   end
 
   test "Get last solution from summary, drop other solutions" do
     results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.SummaryOnlySync])
     ## We dropped all solutions...
-    assert length(results[:solutions]) == 0
+    assert length(MinizincResults.get_solutions(results)) == 0
     ## ... but the solution count is still correct...
-    assert results[:summary][:last_solution][:index] == 92
+    last_solution = MinizincResults.get_last_solution(results)
+    assert MinizincResults.get_solution_index(last_solution) == 92
     ## ... and the last solution is there
-    assert length(results[:summary][:last_solution][:data]["q"]) == 8
+    assert length(MinizincResults.get_solution_value(last_solution, "q")) == 8
   end
 
 end

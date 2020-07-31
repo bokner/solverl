@@ -22,8 +22,9 @@ defmodule GraphColoring do
   end
 
   def show_results(gc_results) do
-     color_classes = gc_results[:summary][:last_solution][:data]["vertex_sets"]
-     Logger.info "Best coloring found: #{MinizincResults.get_objective(gc_results[:summary][:last_solution])} colors"
+     last_solution = MinizincResults.get_last_solution(gc_results)
+     color_classes = MinizincResults.get_solution_value(last_solution, "vertex_sets")
+     Logger.info "Best coloring found: #{MinizincResults.get_solution_objective(last_solution)} colors"
      solution_status = gc_results[:summary][:status]
      Logger.info "Optimal? #{if solution_status == :optimal, do: "Yes", else: "No"}"
      Enum.each(Enum.with_index(
@@ -46,7 +47,7 @@ defmodule  GraphColoring.SyncHandler do
   use MinizincHandler
 
   def handle_solution(solution) do
-    Logger.info "Found coloring to #{MinizincResults.get_objective(solution)} colors"
+    Logger.info "Found coloring to #{MinizincResults.get_solution_objective(solution)} colors"
     solution
   end
 
