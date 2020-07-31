@@ -208,33 +208,37 @@ Data could be either:
 
 ### Solution handlers
 
-  `Solution handler` is a pluggable code created by the user in order to customize
-  handling of solutions and metadata produced by **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3**.
+  **Solution handler** is a pluggable code created by the user in order to customize
+  processing of solutions and metadata produced by **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3**.
+  
+  **Solution handler** is specified by `solution_handler` [option](#solver_options).
   
   Solution handler is either 
   - a *function*, or
   - a *module* that implements [MinizincHandler](MinizincHandler.html) behaviour.
   
-  It represents a pluggable logic to customize processing of the solutions and metadata produced by Minizinc solver process.
-  **Solution handler** is specified by `solution_handler` [option](#solver_options).
   
-  Solution handler code acts as a callback for the solver events emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
+  Solution handler code acts as a callback for the [solver events](#solver-events) emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
   which is a wrapper process for Minizinc executable (see [Under the hood](#under-the-hood) for more details).
   
-  Currently, there are following types of solver events:
-  
-  - `solution` - the new solution detected;
-  - `summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
-  - `minizinc_error` - the wrapper detected Minizinc runtime error.
   
   In case the solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
-  being the event name(i.e., :solution, :summary, :minizinc_error), 2nd being the event-specific data of that event.
+  denoting the [solver event](#solver-events) type (i.e., :solution, :summary, :minizinc_error), 2nd being the event-specific data of that event.
   
   In case the solution handler is a module that implements [MinizincHandler](MinizincHandler.html) behaviour,
   its functions `handle_solution/1`, `handle_summary/1`, `handle_minizinc_error/1` take an [event-specific data](#event-specific-data).   
   
-#### Event-specific data. 
-  
+### Solver events 
+
+Solver event is a tuple {`event_type`, `event_data`}.
+
+Currently, there are following types of solver events:
+
+- `:solution` - the new solution detected;
+- `:summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
+- `:minizinc_error` - the wrapper detected Minizinc runtime error.
+
+#### Event-specific data
   - **For `:solution` event:** 
   ```elixir
    %{
@@ -244,8 +248,7 @@ Data could be either:
      stats: stats           # Map of solution statistics values keyed with the field names
      } 
    ```
-   
-    
+       
   - **For `:summary` event:** 
   ```elixir
     %{
@@ -300,7 +303,7 @@ Data could be either:
  - `:summary`  -  data, produced by handling of `:summary` event
  - `:minizinc_error` - data, produced by handling of `:minizinc_error` event
 
-Please refer to [Event-specific data](#event-specific-data).
+Please refer to [Event-specific data](#event-specific-data) for description of data for solver events.
 
 ### Handling exceptions
 
@@ -427,7 +430,7 @@ edges = [
   ]
 vertices = 4
 ## Color graph with time limit of 1 sec:
-GraphColoring.do_coloring({4, edges}, [time_limit: 1*1000])   
+GraphColoring.do_coloring({vertices, edges}, [time_limit: 1*1000])   
 ```
 Output:
 ```erlang
