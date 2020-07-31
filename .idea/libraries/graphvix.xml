@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="graphvix" type="mix">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/_build/dev/lib/graphvix/ebin" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/deps/graphvix/lib" />
+    </SOURCES>
+  </library>
+</component>

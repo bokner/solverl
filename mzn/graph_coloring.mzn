@@ -2,9 +2,7 @@
     int: n;
     int: n_edges;
     int: upper_bound;
-    int: lower_bound;
-
-    array[1..n] of VERTEX: degrees;
+    int: lower_bound = 2;
 
     set of int: VERTEX = 0..n-1;
     set of int: EDGE = 1..n_edges;

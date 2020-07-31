@@ -1,0 +1,10 @@
+n=6;
+
+n_edges=3;
+
+upper_bound=5;
+
+edges= array2d(1..n_edges, 1..2, [
+0, 1,
+1, 2,
+1, 3]);

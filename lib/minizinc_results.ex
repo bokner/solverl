@@ -153,5 +153,10 @@ defmodule MinizincResults do
     %{error: error}
   end
 
+  ############### Events and solver results ##################
+  def get_objective(solution) do
+    solution[:data]["_objective"]
+  end
+
 
 end
