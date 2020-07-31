@@ -1,7 +1,7 @@
     include "globals.mzn";
     int: n;
     int: n_edges;
-    int: upper_bound;
+    int: upper_bound = n;
     int: lower_bound = 2;
 
     set of int: VERTEX = 0..n-1;
@@ -24,15 +24,14 @@
     constraint int_set_channel(colors, vertex_sets);
     constraint colors[0] = 0;
 
-    constraint forall(i in EDGE  %where edges[i, 1] in VERTEX /\ edges[i,2] in VERTEX
-    )
+    constraint forall(i in EDGE)
                 (colors[edges[i,1]] != colors[edges[i,2]] );
 
 
 
     %% Objectives
-    constraint chromatic = sum(c in cards)(c > 0);
-                          %1 + max(colors);
+    constraint chromatic = %sum(c in cards)(c > 0);
+                          1 + max(colors);
     var 2..n: independence = max(cards);
 
     var 2..n: avg_independence = sum(cards) div chromatic;
@@ -56,4 +55,4 @@ int: lns = 60;
        minimize chromatic;
 
 
-
+output["\(edges)"];

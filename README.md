@@ -309,9 +309,12 @@ to make sure that the solver process is gracefully shut down. Moreover, in case 
 MinizincSolver preserves the solver results accumulated before the exception, and returns them to the calling process.
 The exception value will be added to [solver results](#solver-results) under `:handler_exception` key.
 
-## Examples
+
+
+## Model solving examples
  - [N-Queens](#n-queens)
  - [Sudoku](#sudoku)
+ - [Graph Coloring](#graph-coloring)
  - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
@@ -410,6 +413,36 @@ iex(79)>
 
 17:19:28.224 [debug] ** TERMINATE: :normal
 ```
+
+### Graph coloring
+
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/graph_coloring.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
+
+
+The model's objective is to minimize the number of colors for proper [Graph Vertex Coloring](https://www.wikiwand.com/en/Graph_coloring#/Vertex_coloring).
+```elixir
+edges = [
+  [0, 1], [1, 2], [1, 3]
+  ]
+vertices = 4
+## Color graph with time limit of 1 sec:
+GraphColoring.do_coloring({4, edges}, [time_limit: 1*1000])   
+```
+Output:
+```erlang
+
+22:43:01.318 [info]  Found coloring to 2 colors
+ 
+22:43:01.328 [info]  Best coloring found: 2 colors
+
+22:43:01.328 [info]  Optimal? Yes
+
+22:43:01.328 [info]  Color 1 -> vertices: 0, 2, 3
+
+22:43:01.328 [info]  Color 2 -> vertices: 1
+```
+
 
 ## Erlang interface
 
