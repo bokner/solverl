@@ -5,6 +5,20 @@ Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
 Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
 **Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
+
+- [Installation](#installation)
+- [Features](#features)
+- [Usage](#usage)
+  - [Model specification](#model-specification)
+  - [Data specification](#data-specification)
+  - [Support for Minizinc data types](#support-for-minizinc-data-types)
+  - [Configuring the solver](#solver-options)
+  - [Solution handlers: customizing results and controlling execution](#solution-handlers)    
+- [Examples](#model-solving-examples)
+- [Erlang interface](#erlang-interface)
+- [Roadmap](#roadmap)
+- [Credits](#credits)
+
 ## Installation
 
 You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
@@ -275,7 +289,7 @@ Currently, there are following types of solver events:
       }
   ```
   
-#### Tailoring results and controlling execution.
+#### Customizing results and controlling execution.
  
   
   Solution handlers can modify or ignore data passed by solver events, or interrupt the solver process early,
