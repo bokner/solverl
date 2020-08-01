@@ -85,6 +85,11 @@ defmodule SolverlTest do
     assert MinizincData.dimensions(good_arr) == [2, 3, 3]
   end
 
+  test "Throws exception if the array is not regular" do
+    bad_arr = [1, [2,3]]
+    assert catch_throw(MinizincData.elixir_to_dzn(bad_arr)) == {:irregular_array, bad_arr}
+  end
+
   test "Model with boolean vars" do
     conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
     results = MinizincSolver.solve_sync({:text, conjunction_model})

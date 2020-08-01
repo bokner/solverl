@@ -126,6 +126,9 @@ Data could be either:
 
     Minizinc `array` type corresponds to (nested) [List](https://hexdocs.pm/elixir/List.html).
     The code determines dimensions of the array based on its nested structure.
+    Each level of nested list has to contain elements of the same length, or the exception 
+    `{:irregular_array, array}` will be thrown.
+    6 levels of nesting are currently supported, in line with Minizinc.
     
     By default, the indices of the dimensions are 1-based.
     
