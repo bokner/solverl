@@ -28,11 +28,12 @@ defmodule MinizincParser do
     mzn_stats: %{} ,
     solution_data: %{},
     time_elapsed: nil,
+    fzn_output: "",
     minizinc_output: "",
     timestamp: nil,
     solution_count: 0,
     json_buffer: "",
-    final_stats_flag: false # Flags first occurrence of "%%%mzn-stat-end".
+    compiled: true # Flags first occurrence of "%%%mzn-stat-end".
     # which triggers parsing of final block of "%%%mzn-stat:"
     # as solver stats.
   )
@@ -44,11 +45,12 @@ defmodule MinizincParser do
                         mzn_stats: map(),
                         solution_data: map(),
                         time_elapsed: any(),
+                        fzn_output: binary(),
                         minizinc_output: binary(),
                         timestamp: DateTime.t(),
                         solution_count: integer(),
                         json_buffer: binary(),
-                        final_stats_flag: boolean()
+                        compiled: boolean()
                       )
 
 
@@ -146,7 +148,7 @@ defmodule MinizincParser do
   ## Statistics
   ##
   # FlatZinc stats
-  def update_results(parser_rec(fzn_stats: stats, final_stats_flag: false) = results,
+  def update_results(parser_rec(fzn_stats: stats, compiled: true) = results,
         {:solver_stats, {key, val} }) do
     parser_rec(results, fzn_stats: Map.put(stats, key, val))
   end
@@ -157,8 +159,14 @@ defmodule MinizincParser do
     parser_rec(results, solver_stats: Map.put(stats, key, val))
   end
 
-  def update_results(results, :stats_end) do
-    parser_rec(results, final_stats_flag: true)
+  ## The end of compilation
+  def update_results(parser_rec(compiled: true, minizinc_output: output) = results, :stats_end) do
+    ## flag the completion of compilation and make output to be FZN output
+    parser_rec(results, compiled: false, fzn_output: output, minizinc_output: "")
+  end
+
+  def update_results(parser_rec(compiled: false) = results, :stats_end) do
+    results
   end
 
   # JSON-formatted solution data
@@ -201,6 +209,7 @@ defmodule MinizincParser do
   def summary(parser_rec(
     status: status, solution_count: solution_count,
     solver_stats: solver_stats, fzn_stats: fzn_stats,
+    fzn_output: fzn_output,
     minizinc_output: minizinc_output, time_elapsed: time_elapsed
   ) = results) do
     raw_summary = %{status: status,
@@ -208,6 +217,7 @@ defmodule MinizincParser do
       solver_stats: solver_stats,
       solution_count: solution_count,
       last_solution: solution(results),
+      fzn_output: fzn_output,
       minizinc_output: minizinc_output,
       time_elapsed: time_elapsed}
     ## Update status
