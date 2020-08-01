@@ -185,12 +185,16 @@ Data could be either:
 
 ### Solver options
 
-  - `solver`: Solver id supported by your Minizinc configuration. Default: "gecode".
+  - `solver`: Solver id supported by your Minizinc configuration. 
+ 
+    Default: "gecode".
   - `time_limit`: Time in msecs given to Minizinc to find a solution. 
   
     Default: 300000 (5 mins). Use `[time_limit: nil]` for unlimited time.
   - `minizinc_executable`: Full path to Minizinc executable (you'd need it if `minizinc` executable cannot be located by your system).
-  - `solution_handler`: Module or function that controls processing of solutions and/or metadata. Default: MinizincHandler.DefaultAsync.
+  - `solution_handler`: Module or function that controls processing of solutions and/or metadata. 
+  
+    Default: MinizincHandler.DefaultAsync.
   
     Check out [Solution handlers](#solution-handlers) for more details. 
   - `extra_flags`: A string of command line flags supported by the solver. 
