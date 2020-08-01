@@ -102,9 +102,8 @@ defmodule Sudoku.AsyncHandler do
 
   ## Handle no more than 3 solutions, print the final one.
   @doc false
-  def handle_solution(%{index: count, data: data}) when count <= 3 do
+  def handle_solution(%{index: count, data: data}) do
     Sudoku.print_solution(data, count)
-    if count < 3, do: :ok, else: :stop
   end
 
   @doc false
@@ -126,8 +125,9 @@ defmodule Sudoku.SyncHandler do
   require Logger
 
   @doc false
-  def handle_solution(%{index: count, data: data})  do
-    if count < 3, do: data, else: {:stop, data}
+  def handle_solution(%{index: _count, data: data})  do
+    # if count < 3, do: data, else: {:stop, data}
+    data
   end
 
   @doc false
