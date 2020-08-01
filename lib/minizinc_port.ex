@@ -144,7 +144,8 @@ defmodule MinizincPort do
   defp prepare_solver_cmd(model_str, dzn_str, opts) do
     {:ok, solver} = MinizincSolver.lookup(opts[:solver])
     solver_str = "--solver #{solver["id"]}"
-    time_limit_str = "--time-limit #{opts[:time_limit]}"
+    time_limit = opts[:time_limit]
+    time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
     extra_flags = Keyword.get(opts, :extra_flags, "")
     opts[:minizinc_executable] <> " " <>
       String.trim(
