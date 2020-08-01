@@ -5,6 +5,20 @@ Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
 Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
 **Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
+
+- [Installation](#installation)
+- [Features](#features)
+- [Usage](#usage)
+  - [Model specification](#model-specification)
+  - [Data specification](#data-specification)
+  - [Support for Minizinc data types](#support-for-minizinc-data-types)
+  - [Configuring the solver](#solver-options)
+  - [Solution handlers: customizing results and controlling execution](#solution-handlers)    
+- [Examples](#model-solving-examples)
+- [Erlang interface](#erlang-interface)
+- [Roadmap](#roadmap)
+- [Credits](#credits)
+
 ## Installation
 
 You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
@@ -16,7 +30,7 @@ The code was only tested on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3
 ###### **Note**:
 
 `minizinc` executable is expected to be in its default location, or in a folder in the $PATH `env` variable.
-Otherwise, you can use `minizinc_executable` option (see [Solver Options](#solver-options)). 
+Otherwise, you can use the `minizinc_executable` option (see [Solver Options](#solver-options)). 
 
 
 The package can be installed by adding `solverl` to your list of dependencies in `mix.exs`:
@@ -217,7 +231,7 @@ Data could be either:
   **Solution handler** is a pluggable code created by the user in order to customize
   processing of solutions and metadata produced by **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3**.
   
-  **Solution handler** is specified by `solution_handler` [option](#solver_options).
+  **Solution handler** is specified by `solution_handler` [option](#solver-options).
   
   Solution handler is either 
   - a *function*, or
@@ -275,7 +289,7 @@ Currently, there are following types of solver events:
       }
   ```
   
-#### Tailoring results and controlling execution.
+#### Customizing results and controlling execution.
  
   
   Solution handlers can modify or ignore data passed by solver events, or interrupt the solver process early,
@@ -289,7 +303,7 @@ Currently, there are following types of solver events:
 
 - `{:stop, data}`
    
-   Same as above, but in case of synchronous solving, `data` will be [added to solver results](#solver-results).
+   Same as above, but in case of synchronous solving, `data` will be added to [solver results](#solver-results).
 
 - `:skip`
    
@@ -297,9 +311,9 @@ Currently, there are following types of solver events:
 
 - `data :: any()`
    
-   In case of synchronous solving, data will be [added to solver results](#solver-results).
+   In case of synchronous solving, data will be added to [solver results](#solver-results).
    
-#### Solver results
+### Solver results
 
 **Note: this is applicable only to a synchronous solving.**
     
