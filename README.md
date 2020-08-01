@@ -30,7 +30,7 @@ The code was only tested on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3
 ###### **Note**:
 
 `minizinc` executable is expected to be in its default location, or in a folder in the $PATH `env` variable.
-Otherwise, you can use `minizinc_executable` option (see [Solver Options](#solver-options)). 
+Otherwise, you can use the `minizinc_executable` option (see [Solver Options](#solver-options)). 
 
 
 The package can be installed by adding `solverl` to your list of dependencies in `mix.exs`:
@@ -126,6 +126,9 @@ Data could be either:
 
     Minizinc `array` type corresponds to (nested) [List](https://hexdocs.pm/elixir/List.html).
     The code determines dimensions of the array based on its nested structure.
+    Each level of nested list has to contain elements of the same length, or the exception 
+    `{:irregular_array, array}` will be thrown.
+    6 levels of nesting are currently supported, in line with Minizinc.
     
     By default, the indices of the dimensions are 1-based.
     
@@ -231,7 +234,7 @@ Data could be either:
   **Solution handler** is a pluggable code created by the user in order to customize
   processing of solutions and metadata produced by **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3**.
   
-  **Solution handler** is specified by `solution_handler` [option](#solver_options).
+  **Solution handler** is specified by `solution_handler` [option](#solver-options).
   
   Solution handler is either 
   - a *function*, or
@@ -303,7 +306,7 @@ Currently, there are following types of solver events:
 
 - `{:stop, data}`
    
-   Same as above, but in case of synchronous solving, `data` will be [added to solver results](#solver-results).
+   Same as above, but in case of synchronous solving, `data` will be added to [solver results](#solver-results).
 
 - `:skip`
    
@@ -311,9 +314,9 @@ Currently, there are following types of solver events:
 
 - `data :: any()`
    
-   In case of synchronous solving, data will be [added to solver results](#solver-results).
+   In case of synchronous solving, data will be added to [solver results](#solver-results).
    
-#### Solver results
+### Solver results
 
 **Note: this is applicable only to a synchronous solving.**
     
