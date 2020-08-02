@@ -41,7 +41,11 @@ defmodule GraphColoring do
 
 end
 
+
 defmodule  GraphColoring.SyncHandler do
+
+  @moduledoc false
+
   require Logger
 
   use MinizincHandler
