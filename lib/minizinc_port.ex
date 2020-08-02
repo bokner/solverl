@@ -20,8 +20,8 @@ defmodule MinizincPort do
     {:ok, dzn_text} = MinizincData.make_dzn(args[:data])
     command = prepare_solver_cmd(model_text, dzn_text, args)
     Logger.warn "Command: #{command}"
-    port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
-    Port.monitor(port)
+
+    port = run_port(command)
 
     {:ok, %{port: port, current_results: parser_rec(),
       solution_handler: args[:solution_handler],
@@ -153,6 +153,12 @@ defmodule MinizincPort do
          <>
         " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
       )
+  end
+
+  defp run_port(command) do
+    port = Port.open({:spawn, command}, [:binary, :exit_status, :stderr_to_stdout, line: 64*1024  ])
+    Port.monitor(port)
+    port
   end
 
   defp handle_solution(solution_handler, results) do
