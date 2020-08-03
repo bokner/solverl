@@ -21,41 +21,32 @@ defmodule MinizincPort do
     command = prepare_solver_cmd(model_text, dzn_text, args)
     Logger.warn "Command: #{command}"
 
-    port = run_port(command)
+    {:ok, pid, ospid} = run_minizinc(command)
 
-    {:ok, %{port: port, parser_state: parser_rec(),
+    {:ok, %{pid: pid, ospid: ospid, parser_state: parser_rec(),
       solution_handler: args[:solution_handler],
       model: model_text, dzn: dzn_text,
       exit_status: nil} }
   end
 
-  def terminate(reason, %{port: port} = _state) do
+  def terminate(reason, _state) do
     Logger.debug "** TERMINATE: #{inspect reason}"
     #Logger.info "in state: #{inspect state}"
-
-    port_info = Port.info(port)
-    os_pid = port_info[:os_pid]
-
-    if os_pid do
-      true = Port.close(port)
-    end
 
     :normal
   end
 
   # Handle incoming stream from the command's STDOUT
-  def handle_info({_port, {:data, data}},
+  def handle_info({:stdout, _processid, data},
         %{parser_state: parser_state,
           solution_handler: solution_handler} = state) do
 
     ##TODO: handle data chunks that are not terminated by newline.
     lines = String.split(data, "\n")
-    #{_eol, text_line} = data
-
 
     res = Enum.reduce_while(lines, parser_state,
         fn text_line, acc ->
-          {action, s} = parse_port_data(text_line, acc, solution_handler)
+          {action, s} = parse_minizinc_data(text_line, acc, solution_handler)
           case action do
             :stop ->
               {:halt, {:stop, s}}
@@ -76,37 +67,19 @@ defmodule MinizincPort do
   # Handle process exits
   #
   ## Normal exit
-  def handle_info(
-      {port, {:exit_status, 0}},
-        %{port: port,
-          parser_state: results,
-          solution_handler: solution_handler} = state) do
-    #Logger.debug "Port exit: :exit_status: #{port_status}"
-    handle_summary(solution_handler, results)
-    new_state = state |> Map.put(:exit_status, 0)
-
-    {:noreply, new_state}
-  end
 
   def handle_info(
-        {port, {:exit_status, abnormal_exit}},
-        %{port: port,
+        {:DOWN, _process_id, :process, _pid, status_info},
+        %{
           parser_state: results,
           solution_handler: solution_handler} = state) do
-    Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
-    handle_minizinc_error(solution_handler, results)
-    new_state = Map.put(state, :exit_status, abnormal_exit)
-    {:noreply, new_state}
+    finalize(status_info, solution_handler, results, state)
   end
 
-    def handle_info({:DOWN, _ref, :port, port, :normal}, state) do
-    Logger.info ":DOWN message from port: #{inspect port}"
-    {:stop, :normal, state}
-  end
-
-  def handle_info({:EXIT, _port, :normal}, state) do
-    #Logger.info "handle_info: EXIT"
-    {:stop, :normal, state}
+  def handle_info({:EXIT, _pid, status_info}, %{
+    parser_state: results,
+    solution_handler: solution_handler} = state) do
+    finalize(status_info, solution_handler, results, state)
   end
 
   def handle_info(msg, state) do
@@ -151,19 +124,23 @@ defmodule MinizincPort do
       )
   end
 
-  defp run_port(command) do
-    port = Port.open({:spawn, command},
-                              [:binary,
-                               :exit_status,
-                               :stderr_to_stdout
-                              ])
-    Port.monitor(port)
-    port
+
+  defp finalize(exit_status, solution_handler, results, state) when exit_status == :normal do
+    handle_summary(solution_handler, results)
+    new_state = state |> Map.put(:exit_status, 0)
+    {:stop, :normal, new_state}
   end
 
-#  def run_port(command) do
-#    Exexec.run_link(command, [:stdout, :stderr])
-#  end
+  defp finalize({:exit_status, abnormal_exit}, solution_handler, results, state) do
+    Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
+    handle_minizinc_error(solution_handler, results)
+    new_state = Map.put(state, :exit_status, abnormal_exit)
+    {:stop, :normal, new_state}
+  end
+
+  defp run_minizinc(command) do
+  {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: false, monitor: true)
+  end
 
   defp handle_solution(solution_handler, results) do
     MinizincHandler.handle_solution(
@@ -180,8 +157,8 @@ defmodule MinizincPort do
       MinizincParser.minizinc_error(results), solution_handler)
   end
 
-  ## Parse port data
-  def parse_port_data(data, parser_state, solution_handler) do
+  ## Parse data from external Minizinc process
+  def parse_minizinc_data(data, parser_state, solution_handler) do
     parser_event = MinizincParser.parse_output(data)
     parser_state =
       MinizincParser.update_state(parser_state, parser_event)
@@ -190,7 +167,6 @@ defmodule MinizincPort do
       case parser_event do
       {:status, :satisfied} ->
         # Solution handler can force the termination of solver process
-
         solution_res = handle_solution(solution_handler, parser_state)
         ## Deciding if the solver is to be stopped...
         case solution_res do

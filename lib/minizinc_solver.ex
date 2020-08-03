@@ -101,7 +101,7 @@ defmodule MinizincSolver do
 
   defp receive_events(solution_handler, solver_pid) do
     results = receive_events(solution_handler, solver_pid, %{})
-    # Reverse list of solutions (as they are being added in revese order
+    # Reverse list of solutions (as they are being added in reverse order)
     {nil, updated_results} = Map.get_and_update(results, :solutions,
       fn
         nil -> {nil, []};
