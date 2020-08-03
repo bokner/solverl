@@ -123,7 +123,7 @@ defmodule MinizincParser do
 
   @doc false
   # Update parser with the line produced by Minizinc port.
-  def update_results(parser_rec(solution_count: sc) =  results, {:status, :satisfied}) do
+  def update_state(parser_rec(solution_count: sc) =  results, {:status, :satisfied}) do
     parser_rec(results,
       status: :satisfied,
       timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
@@ -131,52 +131,52 @@ defmodule MinizincParser do
     )
   end
 
-  def update_results(results, {:status, status}) do
+  def update_state(results, {:status, status}) do
     parser_rec(results, status: status)
   end
 
   # Solution status update
-  def update_results(parser_rec(mzn_stats: stats) = results,
+  def update_state(parser_rec(mzn_stats: stats) = results,
         {:solution_stats, {key, val} }) do
     parser_rec(results, mzn_stats: Map.put(stats, key, val))
   end
 
   ## Time elapsed
-  def update_results(results, {:time_elapsed, time}) do
+  def update_state(results, {:time_elapsed, time}) do
     parser_rec(results, time_elapsed: time)
   end
   ## Statistics
   ##
   # FlatZinc stats
-  def update_results(parser_rec(fzn_stats: stats, compiled: true) = results,
+  def update_state(parser_rec(fzn_stats: stats, compiled: true) = results,
         {:solver_stats, {key, val} }) do
     parser_rec(results, fzn_stats: Map.put(stats, key, val))
   end
 
   # Solver stats (occurs only after solver outputs its last solution).
-  def update_results(parser_rec(solver_stats: stats) = results,
+  def update_state(parser_rec(solver_stats: stats) = results,
         {:solver_stats, {key, val} }) do
     parser_rec(results, solver_stats: Map.put(stats, key, val))
   end
 
   ## The end of compilation
-  def update_results(parser_rec(compiled: true, minizinc_output: output) = results, :stats_end) do
+  def update_state(parser_rec(compiled: true, minizinc_output: output) = results, :stats_end) do
     ## flag the completion of compilation and make output to be FZN output
     parser_rec(results, compiled: false, fzn_output: output, minizinc_output: "")
   end
 
-  def update_results(parser_rec(compiled: false) = results, :stats_end) do
+  def update_state(parser_rec(compiled: false) = results, :stats_end) do
     results
   end
 
   # JSON-formatted solution data
   ## Opening of JSON
-  def update_results(results, :solution_json_start) do
+  def update_state(results, :solution_json_start) do
     parser_rec(results, json_buffer: "{", solution_data: nil)
   end
 
   ## Closing of JSON
-  def update_results(parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, :solution_json_end) do
+  def update_state(parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, :solution_json_end) do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
@@ -186,18 +186,18 @@ defmodule MinizincParser do
   end
 
   ## Collecting JSON data
-  def update_results(
+  def update_state(
         parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, json_chunk) when is_binary(json_chunk) do
     parser_rec(results, json_buffer: buff <> json_chunk)
   end
 
   # Drop empty lines
-  def update_results(results, "") do
+  def update_state(results, "") do
     results
   end
 
   ## Unclassified, likely Minizinc stderr.
-  def update_results(parser_rec(minizinc_output: u) = solution, new_line) when is_binary(new_line) do
+  def update_state(parser_rec(minizinc_output: u) = solution, new_line) when is_binary(new_line) do
     parser_rec(solution, minizinc_output: u <> "\n" <> new_line)
   end
 
