@@ -33,11 +33,12 @@ defmodule MinizincParser do
     solution_data: %{},
     time_elapsed: nil,
     fzn_output: "",
-    minizinc_output: "",
+    minizinc_stderr: "",
+    unclassified_output: "",
     timestamp: nil,
     solution_count: 0,
     json_buffer: "",
-    compiled: true
+    compiled: false
     # Flags first occurrence of "%%%mzn-stat-end".
     # which triggers parsing of final block of "%%%mzn-stat:"
     # as solver stats.
@@ -52,7 +53,8 @@ defmodule MinizincParser do
                         solution_data: map(),
                         time_elapsed: any(),
                         fzn_output: binary(),
-                        minizinc_output: binary(),
+                        minizinc_stderr: binary(),
+                        unclassified_output: binary(),
                         timestamp: DateTime.t(),
                         solution_count: integer(),
                         json_buffer: binary(),
@@ -60,6 +62,15 @@ defmodule MinizincParser do
                       )
 
 
+
+  ## Parser interface
+  def parse_output(:stderr, data) do
+    {:stderr, data}
+  end
+
+  def parse_output(:stdout, data) do
+    parse_output(data)
+  end
 
   ## Status events
   def parse_output(@solution_separator) do
@@ -154,11 +165,12 @@ defmodule MinizincParser do
   def update_state(results, {:time_elapsed, time}) do
     parser_rec(results, time_elapsed: time)
   end
+
   ## Statistics
   ##
   # FlatZinc stats
   def update_state(
-        parser_rec(fzn_stats: stats, compiled: true) = results,
+        parser_rec(fzn_stats: stats, compiled: false) = results,
         {:solver_stats, {key, val}}
       ) do
     parser_rec(results, fzn_stats: Map.put(stats, key, val))
@@ -173,12 +185,12 @@ defmodule MinizincParser do
   end
 
   ## The end of compilation
-  def update_state(parser_rec(compiled: true, minizinc_output: output) = results, :stats_end) do
+  def update_state(parser_rec(compiled: false) = results, :stats_end) do
     ## flag the completion of compilation and make output to be FZN output
-    parser_rec(results, compiled: false, fzn_output: output, minizinc_output: "")
+    parser_rec(results, compiled: true)
   end
 
-  def update_state(parser_rec(compiled: false) = results, :stats_end) do
+  def update_state(parser_rec(compiled: true) = results, :stats_end) do
     results
   end
 
@@ -213,10 +225,22 @@ defmodule MinizincParser do
     results
   end
 
-  ## Unclassified, likely Minizinc stderr.
-  def update_state(parser_rec(minizinc_output: u) = solution, new_line) when is_binary(new_line) do
-    parser_rec(solution, minizinc_output: u <> "\n" <> new_line)
+  ## Minizinc stderr.
+  def update_state(parser_rec(minizinc_stderr: u) = results, {:stderr, new_line}) when is_binary(new_line) do
+    parser_rec(results, minizinc_stderr: u <> "\n" <> new_line)
   end
+
+  ## Compilation in progress...
+  def update_state(parser_rec(fzn_output: u, compiled: false) = results, new_line) when is_binary(new_line) do
+    parser_rec(results, fzn_output: u <> "\n" <> new_line)
+  end
+
+ # Unclassified
+  def update_state(parser_rec(unclassified_output: u, compiled: true) = results, new_line) when is_binary(new_line) do
+    parser_rec(results, unclassified_output: u <> "\n" <> new_line)
+  end
+
+
 
   ## Data for solver events
   def solution(parser_rec(solution_data: data, timestamp: timestamp, mzn_stats: stats, solution_count: count)) do
@@ -230,7 +254,8 @@ defmodule MinizincParser do
           solver_stats: solver_stats,
           fzn_stats: fzn_stats,
           fzn_output: fzn_output,
-          minizinc_output: minizinc_output,
+          minizinc_stderr: minizinc_stderr,
+          unclassified_output: unclassified,
           time_elapsed: time_elapsed
         ) = results
       ) do
@@ -241,7 +266,8 @@ defmodule MinizincParser do
       solution_count: solution_count,
       last_solution: solution(results),
       fzn_output: fzn_output,
-      minizinc_output: minizinc_output,
+      minizinc_stderr: minizinc_stderr,
+      unclassified_output: unclassified,
       time_elapsed: time_elapsed
     }
     ## Update status
@@ -252,7 +278,7 @@ defmodule MinizincParser do
   ## Rather, it's being used by solution handlers.
   ## For now, we just take the unclassified output as an error message.
   ## TODO: actually parse in order to give more details on the error.
-  def minizinc_error(parser_rec(minizinc_output: error)) do
+  def minizinc_error(parser_rec(minizinc_stderr: error)) do
     %{error: error}
   end
 

@@ -46,7 +46,7 @@ defmodule MinizincPort do
 
   # Handle incoming stream from the command's STDOUT
   def handle_info(
-        {out_stream, _processid, data},
+        {out_stream, _ospid, data},
         %{
           parser_state: parser_state,
           solution_handler: solution_handler
@@ -60,7 +60,7 @@ defmodule MinizincPort do
       lines,
       parser_state,
       fn text_line, acc ->
-        {action, s} = parse_minizinc_data(text_line, acc, solution_handler)
+        {action, s} = parse_minizinc_data(out_stream, text_line, acc, solution_handler)
         case action do
           :stop ->
             {:halt, {:stop, s}}
@@ -84,7 +84,7 @@ defmodule MinizincPort do
   ## Normal exit
 
   def handle_info(
-        {:DOWN, _process_id, :process, _pid, status_info},
+        {:DOWN, _ospid, :process, _pid, status_info},
         %{
           parser_state: results,
           solution_handler: solution_handler
@@ -141,12 +141,11 @@ defmodule MinizincPort do
     time_limit = opts[:time_limit]
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
     extra_flags = Keyword.get(opts, :extra_flags, "")
-    opts[:minizinc_executable] <> " " <>
-                                  String.trim(
-                                    "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a "
-                                    <>
-                                    " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
-                                  )
+    Enum.join(
+      [opts[:minizinc_executable],
+        "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a ",
+        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"], " "
+      )
   end
 
 
@@ -190,8 +189,8 @@ defmodule MinizincPort do
   end
 
   ## Parse data from external Minizinc process
-  defp parse_minizinc_data(data, parser_state, solution_handler) do
-    parser_event = MinizincParser.parse_output(data)
+  defp parse_minizinc_data(out_stream, data, parser_state, solution_handler) do
+    parser_event = MinizincParser.parse_output(out_stream, data)
     parser_state =
       MinizincParser.update_state(parser_state, parser_event)
     #updated_state = Map.put(state, :parser_state, updated_results)
