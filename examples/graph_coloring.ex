@@ -1,7 +1,7 @@
 defmodule GraphColoring do
   @moduledoc """
-  Example: Graph Coloring
-"""
+    Example: Graph Coloring
+  """
   require Logger
 
   @gc_model "mzn/graph_coloring.mzn"
@@ -13,8 +13,10 @@ defmodule GraphColoring do
   end
 
   def optimal_coloring({vertices, edges}, opts) when is_integer(vertices) and is_list(edges) do
-    solve_sync(%{edges: edges, n: vertices, n_edges: length(edges)},
-      opts)
+    solve_sync(
+      %{edges: edges, n: vertices, n_edges: length(edges)},
+      opts
+    )
   end
 
   defp solve_sync(data, opts) do
@@ -22,21 +24,25 @@ defmodule GraphColoring do
   end
 
   def show_results(gc_results) do
-     last_solution = MinizincResults.get_last_solution(gc_results)
-     color_classes = MinizincResults.get_solution_value(last_solution, "vertex_sets")
-     Logger.info "Best coloring found: #{MinizincResults.get_solution_objective(last_solution)} colors"
-     solution_status = gc_results[:summary][:status]
-     Logger.info "Optimal? #{if solution_status == :optimal, do: "Yes", else: "No"}"
-     Enum.each(Enum.with_index(
-          ## Model-specific: there are empty color classes, which will be dropped
-          Enum.filter(color_classes, fn c -> MapSet.size(c) > 0 end)),
-            fn {class, idx} ->
-              Logger.info "Color #{idx + 1} -> vertices: #{Enum.join(class, ", ")}"
-            end)
+    last_solution = MinizincResults.get_last_solution(gc_results)
+    color_classes = MinizincResults.get_solution_value(last_solution, "vertex_sets")
+    Logger.info "Best coloring found: #{MinizincResults.get_solution_objective(last_solution)} colors"
+    solution_status = gc_results[:summary][:status]
+    Logger.info "Optimal? #{if solution_status == :optimal, do: "Yes", else: "No"}"
+    Enum.each(
+      Enum.with_index(
+        ## Model-specific: there are empty color classes, which will be dropped
+        Enum.filter(color_classes, fn c -> MapSet.size(c) > 0 end)
+      ),
+      fn {class, idx} ->
+        Logger.info "Color #{idx + 1} -> vertices: #{Enum.join(class, ", ")}"
+      end
+    )
   end
 
   def do_coloring(data, opts) do
-    optimal_coloring(data, opts) |> show_results
+    optimal_coloring(data, opts)
+    |> show_results
   end
 
 end

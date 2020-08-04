@@ -23,7 +23,8 @@ defmodule Sudoku do
     {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array},
-      opts)
+      opts
+    )
   end
 
   @doc """
@@ -43,14 +44,17 @@ defmodule Sudoku do
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle (solved synchronously)"
     Logger.info print_grid(sudoku_array)
-    MinizincSolver.solve_sync("mzn/sudoku.mzn",
-      %{"S": 3, start: sudoku_array}, [solution_handler: Sudoku.SyncHandler])
+    MinizincSolver.solve_sync(
+      "mzn/sudoku.mzn",
+      %{"S": 3, start: sudoku_array},
+      [solution_handler: Sudoku.SyncHandler]
+    )
   end
 
 
   defp sudoku_string_to_grid(sudoku_str) do
     str0 = String.replace(sudoku_str, ".", "0")
-    for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i-1)*9 + (j-1)))
+    for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i - 1) * 9 + (j - 1)))
   end
 
   @doc false
@@ -65,14 +69,15 @@ defmodule Sudoku do
     gridline = "+-------+-------+-------+\n"
     gridcol = "| "
 
-    ["\n" |
-    for i <- 0..8 do
-      [(if rem(i, 3) == 0, do: gridline, else: "")] ++
-      (for j <- 0..8 do
-        "#{if rem(j, 3) == 0, do: gridcol, else: ""}" <>
-        "#{print_cell(Enum.at(Enum.at(grid, i), j))} "
-      end) ++ ["#{gridcol}\n"]
-    end
+    [
+      "\n" |
+      for i <- 0..8 do
+        [(if rem(i, 3) == 0, do: gridline, else: "")] ++
+        (for j <- 0..8 do
+           "#{if rem(j, 3) == 0, do: gridcol, else: ""}" <>
+           "#{print_cell(Enum.at(Enum.at(grid, i), j))} "
+         end) ++ ["#{gridcol}\n"]
+      end
     ] ++ [gridline]
   end
 

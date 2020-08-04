@@ -11,13 +11,14 @@ defmodule MinizincSolver do
                         {:solution_handler, function()} |
                         {:extra_flags, binary()}
 
-  @type solver_opts() :: list(solver_opt() )
+  @type solver_opts() :: list(solver_opt())
 
   @default_args [
     minizinc_executable: System.find_executable("minizinc"),
     solver: "gecode",
-    time_limit: 60*5*1000,
-    solution_handler: MinizincHandler.DefaultAsync]
+    time_limit: 60 * 5 * 1000,
+    solution_handler: MinizincHandler.DefaultAsync
+  ]
 
   ## How long to wait after :stop_solver message had been sent to a solver port, and
   ## nothing came from the port.
@@ -85,8 +86,11 @@ defmodule MinizincSolver do
     solution_handler = Keyword.get(opts, :solution_handler, MinizincHandler.DefaultSync)
     # Plug sync_handler to have solver send the results back to us
     caller = self()
-    sync_opts = Keyword.put(opts,
-      :solution_handler, sync_handler(caller))
+    sync_opts = Keyword.put(
+      opts,
+      :solution_handler,
+      sync_handler(caller)
+    )
     {:ok, solver_pid} = solve(model, data, sync_opts)
     receive_events(solution_handler, solver_pid)
   end
@@ -95,18 +99,22 @@ defmodule MinizincSolver do
   # Support for synchronous handling of results.
   ####################################################
   defp sync_handler(caller) do
-     fn(event, results) ->
-        send(caller,  %{solver_results: {event, results}, from: self()}) end
+    fn (event, results) ->
+      send(caller, %{solver_results: {event, results}, from: self()})
+    end
   end
 
   defp receive_events(solution_handler, solver_pid) do
     results = receive_events(solution_handler, solver_pid, %{})
     # Reverse list of solutions (as they are being added in reverse order)
-    {nil, updated_results} = Map.get_and_update(results, :solutions,
+    {nil, updated_results} = Map.get_and_update(
+      results,
+      :solutions,
       fn
         nil -> {nil, []};
         solutions -> {nil, Enum.reverse(solutions)}
-      end)
+      end
+    )
     updated_results
   end
 
@@ -131,8 +139,8 @@ defmodule MinizincSolver do
         ## Ignore new solutions
         completion_loop(solution_handler, solver_pid)
       %{from: pid, solver_results: {event, results}} when pid == solver_pid
-           and event in [:summary, :minizinc_error] ->
-          {event, MinizincHandler.handle_solver_event(event, results, solution_handler)}
+                                                          and event in [:summary, :minizinc_error] ->
+        {event, MinizincHandler.handle_solver_event(event, results, solution_handler)}
     after @stop_timeout ->
       Logger.debug "The solver has been silent after requesting a stop for #{@stop_timeout} msecs"
       nil
@@ -173,8 +181,13 @@ defmodule MinizincSolver do
   end
 
   defp add_solver_event(:solution, data, acc) do
-    {nil, newacc} = Map.get_and_update(acc, :solutions,
-        fn nil -> {nil, [data]}; current -> {nil, [data | current]} end)
+    {nil, newacc} = Map.get_and_update(
+      acc,
+      :solutions,
+      fn
+        nil -> {nil, [data]};
+        current -> {nil, [data | current]} end
+    )
     newacc
   end
   ####################################################
@@ -211,11 +224,13 @@ defmodule MinizincSolver do
   """
 
   def lookup(solver_id) do
-    solvers = Enum.filter(get_solvers(),
+    solvers = Enum.filter(
+      get_solvers(),
       fn s ->
         s["id"] == solver_id or
         List.last(String.split(s["id"], ".")) == solver_id
-      end)
+      end
+    )
     case solvers do
       [] ->
         {:solver_not_found, solver_id}

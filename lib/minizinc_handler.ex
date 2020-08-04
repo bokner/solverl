@@ -5,7 +5,7 @@ defmodule MinizincHandler do
 
 
   @callback handle_solution(solution :: map())
-            ::  :stop | {:stop, any()} | any()
+            :: :stop | {:stop, any()} | any()
 
   @callback handle_summary(summary :: map()) :: any()
 

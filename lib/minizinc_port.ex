@@ -23,10 +23,18 @@ defmodule MinizincPort do
 
     {:ok, pid, ospid} = run_minizinc(command)
 
-    {:ok, %{pid: pid, ospid: ospid, parser_state: parser_rec(),
-      solution_handler: args[:solution_handler],
-      model: model_text, dzn: dzn_text,
-      exit_status: nil} }
+    {
+      :ok,
+      %{
+        pid: pid,
+        ospid: ospid,
+        parser_state: parser_rec(),
+        solution_handler: args[:solution_handler],
+        model: model_text,
+        dzn: dzn_text,
+        exit_status: nil
+      }
+    }
   end
 
   def terminate(reason, _state) do
@@ -37,23 +45,30 @@ defmodule MinizincPort do
   end
 
   # Handle incoming stream from the command's STDOUT
-  def handle_info({out_stream, _processid, data},
-        %{parser_state: parser_state,
-          solution_handler: solution_handler} = state) when out_stream in [:stdout, :stderr] do
+  def handle_info(
+        {out_stream, _processid, data},
+        %{
+          parser_state: parser_state,
+          solution_handler: solution_handler
+        } = state
+      ) when out_stream in [:stdout, :stderr] do
 
     ##TODO: handle data chunks that are not terminated by newline.
     lines = String.split(data, "\n")
 
-    res = Enum.reduce_while(lines, parser_state,
-        fn text_line, acc ->
-          {action, s} = parse_minizinc_data(text_line, acc, solution_handler)
-          case action do
-            :stop ->
-              {:halt, {:stop, s}}
-            :ok ->
-              {:cont, s}
-          end
-        end)
+    res = Enum.reduce_while(
+      lines,
+      parser_state,
+      fn text_line, acc ->
+        {action, s} = parse_minizinc_data(text_line, acc, solution_handler)
+        case action do
+          :stop ->
+            {:halt, {:stop, s}}
+          :ok ->
+            {:cont, s}
+        end
+      end
+    )
 
     case res do
       {:stop, new_parser_state} ->
@@ -72,13 +87,19 @@ defmodule MinizincPort do
         {:DOWN, _process_id, :process, _pid, status_info},
         %{
           parser_state: results,
-          solution_handler: solution_handler} = state) do
+          solution_handler: solution_handler
+        } = state
+      ) do
     finalize(status_info, solution_handler, results, state)
   end
 
-  def handle_info({:EXIT, _pid, status_info}, %{
-    parser_state: results,
-    solution_handler: solution_handler} = state) do
+  def handle_info(
+        {:EXIT, _pid, status_info},
+        %{
+          parser_state: results,
+          solution_handler: solution_handler
+        } = state
+      ) do
     finalize(status_info, solution_handler, results, state)
   end
 
@@ -88,14 +109,18 @@ defmodule MinizincPort do
   end
 
   ## Retrieve current solver results
-  def handle_call(:get_results,  _from, state) do
+  def handle_call(:get_results, _from, state) do
     {:reply, {:ok, state[:parser_state]}, state}
   end
 
   ## Same as above, but stop the solver
-  def handle_cast(:stop_solver,
-          %{parser_state: results,
-            solution_handler: solution_handler} = state) do
+  def handle_cast(
+        :stop_solver,
+        %{
+          parser_state: results,
+          solution_handler: solution_handler
+        } = state
+      ) do
     Logger.debug "Request to stop the solver..."
     handle_summary(solution_handler, results)
     {:stop, :normal, state}
@@ -117,17 +142,18 @@ defmodule MinizincPort do
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
     extra_flags = Keyword.get(opts, :extra_flags, "")
     opts[:minizinc_executable] <> " " <>
-      String.trim(
-        "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a "
-         <>
-        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
-      )
+                                  String.trim(
+                                    "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a "
+                                    <>
+                                    " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
+                                  )
   end
 
 
   defp finalize(exit_status, solution_handler, results, state) when exit_status == :normal do
     handle_summary(solution_handler, results)
-    new_state = state |> Map.put(:exit_status, 0)
+    new_state = state
+                |> Map.put(:exit_status, 0)
     {:stop, :normal, new_state}
   end
 
@@ -139,50 +165,56 @@ defmodule MinizincPort do
   end
 
   defp run_minizinc(command) do
-  {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: true, monitor: true)
+    {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: true, monitor: true)
   end
 
   defp handle_solution(solution_handler, results) do
     MinizincHandler.handle_solution(
-      MinizincParser.solution(results), solution_handler)
+      MinizincParser.solution(results),
+      solution_handler
+    )
   end
 
   defp handle_summary(solution_handler, results) do
     MinizincHandler.handle_summary(
-      MinizincParser.summary(results), solution_handler)
+      MinizincParser.summary(results),
+      solution_handler
+    )
   end
 
   defp handle_minizinc_error(solution_handler, results) do
     MinizincHandler.handle_minizinc_error(
-      MinizincParser.minizinc_error(results), solution_handler)
+      MinizincParser.minizinc_error(results),
+      solution_handler
+    )
   end
 
   ## Parse data from external Minizinc process
-  def parse_minizinc_data(data, parser_state, solution_handler) do
+  defp parse_minizinc_data(data, parser_state, solution_handler) do
     parser_event = MinizincParser.parse_output(data)
     parser_state =
       MinizincParser.update_state(parser_state, parser_event)
     #updated_state = Map.put(state, :parser_state, updated_results)
     next_action =
       case parser_event do
-      {:status, :satisfied} ->
-        # Solution handler can force the termination of solver process
-        solution_res = handle_solution(solution_handler, parser_state)
-        ## Deciding if the solver is to be stopped...
-        case solution_res do
-          :stop ->
-            handle_summary(solution_handler, parser_state)
-            :stop
-          {:stop, _data} ->
-            handle_summary(solution_handler, parser_state)
-            :stop
-          _other ->
-            :ok
-        end
-      _event ->
-        :ok
-  end
+        {:status, :satisfied} ->
+          # Solution handler can force the termination of solver process
+          solution_res = handle_solution(solution_handler, parser_state)
+          ## Deciding if the solver is to be stopped...
+          case solution_res do
+            :stop ->
+              handle_summary(solution_handler, parser_state)
+              :stop
+            {:stop, _data} ->
+              handle_summary(solution_handler, parser_state)
+              :stop
+            _other ->
+              :ok
+          end
+        _event ->
+          :ok
+      end
     {next_action, parser_state}
-end
+  end
 
 end

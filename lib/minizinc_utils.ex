@@ -6,8 +6,8 @@ defmodule MinizincUtils do
   def flush() do
     receive do
       msg ->
-       Logger.debug "Residual from solver: #{inspect msg}"
-       flush()
+        Logger.debug "Residual from solver: #{inspect msg}"
+        flush()
     after 0 ->
       :ok
     end

@@ -4,40 +4,50 @@ defmodule SolverlTest do
 
 
   test "Runs the proper solver CMD" do
-    test_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
+    test_arr = [[[1, 2, 3], [2, 3, 1], [3, 4, 5]], [[1, 2, 3], [2, 3, 1], [3, 4, 5]]]
     assert {:ok, _pid} = MinizincSolver.solve(
-               "mzn/test1.mzn",
-               [
-                 %{
+             "mzn/test1.mzn",
+             [
+               %{
                  test_data1: 100,
                  test_arr: test_arr,
                  test_base_arr: {[0, 1, 0], test_arr},
-                 test_set: MapSet.new([1,2,3]),
-                 test_enum: MapSet.new([:red, :blue, :white]) },
-                 "mzn/test_data2.dzn"],
-               [solver: "gecode"])
+                 test_set: MapSet.new([1, 2, 3]),
+                 test_enum: MapSet.new([:red, :blue, :white])
+               },
+               "mzn/test_data2.dzn"
+             ],
+             [solver: "gecode"]
+           )
 
   end
 
   test "The same as above, but with multiple models either as a text or a file" do
-    test_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
+    test_arr = [[[1, 2, 3], [2, 3, 1], [3, 4, 5]], [[1, 2, 3], [2, 3, 1], [3, 4, 5]]]
     models = [{:text, "int: test_model = true;"}, "mzn/test1.mzn"]
     assert {:ok, _pid} = MinizincSolver.solve(
-               models,
-               [
-                 %{
-                   test_data1: 100,
-                   test_arr: test_arr,
-                   test_base_arr: {[0, 1, 0], test_arr},
-                   test_set: MapSet.new([1,2,3]),
-                   test_enum: MapSet.new([:red, :blue, :white]) },
-                 "mzn/test_data2.dzn"],
-               [solver: "gecode"])
+             models,
+             [
+               %{
+                 test_data1: 100,
+                 test_arr: test_arr,
+                 test_base_arr: {[0, 1, 0], test_arr},
+                 test_set: MapSet.new([1, 2, 3]),
+                 test_enum: MapSet.new([:red, :blue, :white])
+               },
+               "mzn/test_data2.dzn"
+             ],
+             [solver: "gecode"]
+           )
   end
 
   test "Minizinc error" do
     ## Improper data key - should be %{n: 2}
-    %{minizinc_error: %{error: _error}} = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
+    %{
+      minizinc_error: %{
+        error: _error
+      }
+    } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
   end
 
   test "Unsatisfiable sync" do
@@ -47,7 +57,7 @@ defmodule SolverlTest do
 
   test "Solving with timeout sync" do
     ## Final record for sync solving results is in position 0.
-    final_data  = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 50}, [time_limit: 500])
+    final_data = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 50}, [time_limit: 500])
     assert MinizincResults.get_status(final_data) == :satisfied
   end
 
@@ -60,7 +70,11 @@ defmodule SolverlTest do
   end
 
   test "Sync solving: solution handler that interrupts the solver after first 100 solutions have been found" do
-    final_data  = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 50}, [solution_handler: SolverTest.LimitSolutionsSync])
+    final_data = MinizincSolver.solve_sync(
+      "mzn/nqueens.mzn",
+      %{n: 50},
+      [solution_handler: SolverTest.LimitSolutionsSync]
+    )
     assert length(MinizincResults.get_solutions(final_data)) == 100
     assert MinizincResults.get_status(final_data) == :satisfied
   end
@@ -81,12 +95,12 @@ defmodule SolverlTest do
 
 
   test "Checks dimensions of a regular array " do
-    good_arr = [ [ [1,2,3], [2,3,1], [3,4,5] ], [ [1,2,3], [2,3,1], [3,4,5] ] ]
+    good_arr = [[[1, 2, 3], [2, 3, 1], [3, 4, 5]], [[1, 2, 3], [2, 3, 1], [3, 4, 5]]]
     assert MinizincData.dimensions(good_arr) == [2, 3, 3]
   end
 
   test "Throws exception if the array is not regular" do
-    bad_arr = [1, [2,3]]
+    bad_arr = [1, [2, 3]]
     assert catch_throw(MinizincData.elixir_to_dzn(bad_arr)) == {:irregular_array, bad_arr}
   end
 
@@ -99,18 +113,18 @@ defmodule SolverlTest do
 
   test "Model with 2d array of vars" do
     array_model = """
-      array[1..4, 1..5] of var 0..1: arr;
+        array[1..4, 1..5] of var 0..1: arr;
 
-      constraint forall(i in 1..4)(
-      forall(j in 1..4)(
-        arr[i, j] != arr[i, j+1]
-        )
-    );
-  """
+        constraint forall(i in 1..4)(
+        forall(j in 1..4)(
+          arr[i, j] != arr[i, j+1]
+          )
+      );
+    """
     results = MinizincSolver.solve_sync({:text, array_model})
-    assert MinizincResults.get_last_solution(results) |>
-      MinizincResults.get_solution_value("arr") |>
-      MinizincData.dimensions == [4, 5]
+    assert MinizincResults.get_last_solution(results)
+           |> MinizincResults.get_solution_value("arr")
+           |> MinizincData.dimensions == [4, 5]
   end
 
   test "Model with set vars" do
@@ -123,7 +137,7 @@ defmodule SolverlTest do
     results = MinizincSolver.solve_sync({:text, set_model})
     solution = Enum.at(MinizincResults.get_solutions(results), 0)
 
-    assert MinizincResults.get_solution_value(solution, "var_set") == MapSet.new([1,2])
+    assert MinizincResults.get_solution_value(solution, "var_set") == MapSet.new([1, 2])
   end
 
   test "Model with enums" do

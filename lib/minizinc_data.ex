@@ -4,7 +4,7 @@ defmodule MinizincData do
   """
 
   @type data_chunk() :: Path.t() | map()
-  @type mzn_data()    :: data_chunk() | list(data_chunk)
+  @type mzn_data() :: data_chunk() | list(data_chunk)
 
   @element_separator ", "
   @default_array_base 1
@@ -49,17 +49,23 @@ defmodule MinizincData do
 
   # Convert map to the list of strings in .dzn format
   defp map_to_dzn(data) do
-    Enum.reduce(data, "",
-      fn({k, v}, acc) ->
+    Enum.reduce(
+      data,
+      "",
+      fn ({k, v}, acc) ->
         "#{k} = #{elixir_to_dzn(v)};\n" <> acc
-      end)
+      end
+    )
   end
 
   def output_to_elixir(data_dict) do
-    Enum.reduce(data_dict, %{},
-      fn({k, v}, acc) ->
+    Enum.reduce(
+      data_dict,
+      %{},
+      fn ({k, v}, acc) ->
         Map.put(acc, k, dzn_to_elixir(v))
-      end)
+      end
+    )
   end
 
   defp dzn_to_elixir(el) when is_map(el) do
@@ -69,7 +75,7 @@ defmodule MinizincData do
     case map_type do
       "set" ->
         MapSet.new(List.flatten(el["set"]))
-      "e"  ->
+      "e" ->
         el["e"]
       _unknown ->
         throw {:unknown_map_type, map_type}
@@ -111,7 +117,9 @@ defmodule MinizincData do
   def elixir_to_dzn(enum) when is_tuple(enum) do
     enum_list = Tuple.to_list(enum)
     "{" <> Enum.join(
-            Enum.map(enum_list, fn e -> "#{e}" end), @element_separator) <> "}"
+             Enum.map(enum_list, fn e -> "#{e}" end),
+             @element_separator
+           ) <> "}"
   end
 
   def elixir_to_dzn(el) do
@@ -123,7 +131,7 @@ defmodule MinizincData do
     dims = dimensions(el)
     if dims do
       array_dimensions(dims, make_base_list(dims, bases))
-      <>"[#{Enum.join(List.flatten(el), @element_separator)}]" <> ")"
+      <> "[#{Enum.join(List.flatten(el), @element_separator)}]" <> ")"
     else
       throw {:irregular_array, el}
     end
@@ -144,10 +152,14 @@ defmodule MinizincData do
   defp array_dimensions(dims, bases) do
     if length(dims) == length(bases) do
       "array#{length(dims)}d(" <>
-      Enum.reduce(Enum.zip(dims, bases), "",
+      Enum.reduce(
+        Enum.zip(dims, bases),
+        "",
         fn {d, b}, acc ->
-          acc <> "#{b}..#{d + b - 1},"  ## Shift upper bound to match dimension base
-        end)
+          acc <> "#{b}..#{d + b - 1},"
+          ## Shift upper bound to match dimension base
+        end
+      )
     else
       throw {:base_list_mismatch, bases}
     end

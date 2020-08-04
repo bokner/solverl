@@ -7,7 +7,7 @@ defmodule MinizincModel do
 
 
   @type model_chunk :: Path.t() | {:text, binary()}
-  @type mzn_model    :: model_chunk() | list(model_chunk())
+  @type mzn_model :: model_chunk() | list(model_chunk())
 
 
   @submodel_header "%%%%% START OF SUBMODEL %%%%%"
@@ -53,7 +53,8 @@ defmodule MinizincModel do
 
   ## Model info
   def model_method(%{fzn_stats: stats} = _summary) do
-    Map.get(stats, :method, "undefined") |> String.to_atom()
+    Map.get(stats, :method, "undefined")
+    |> String.to_atom()
   end
 
 end

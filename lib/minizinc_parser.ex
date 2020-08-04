@@ -14,18 +14,22 @@ defmodule MinizincParser do
   @status_unbounded        "=====UNBOUNDED====="
 
   @terminating_separators [
-    @status_completed, @status_unsatisfiable,
-    @status_unknown, @status_error,
-    @status_unsatOrUnbounded, @status_unbounded
+    @status_completed,
+    @status_unsatisfiable,
+    @status_unknown,
+    @status_error,
+    @status_unsatOrUnbounded,
+    @status_unbounded
   ]
 
   require Record
   @doc false
-  Record.defrecord(:parser_rec,
+  Record.defrecord(
+    :parser_rec,
     status: nil,
-    fzn_stats: %{} ,
-    solver_stats: %{} ,
-    mzn_stats: %{} ,
+    fzn_stats: %{},
+    solver_stats: %{},
+    mzn_stats: %{},
     solution_data: %{},
     time_elapsed: nil,
     fzn_output: "",
@@ -33,12 +37,14 @@ defmodule MinizincParser do
     timestamp: nil,
     solution_count: 0,
     json_buffer: "",
-    compiled: true # Flags first occurrence of "%%%mzn-stat-end".
+    compiled: true
+    # Flags first occurrence of "%%%mzn-stat-end".
     # which triggers parsing of final block of "%%%mzn-stat:"
     # as solver stats.
   )
 
-  @type parser_rec :: record(:parser_rec,
+  @type parser_rec :: record(
+                        :parser_rec,
                         status: atom(),
                         fzn_stats: map(),
                         solver_stats: map(),
@@ -69,19 +75,19 @@ defmodule MinizincParser do
     {:status, :unsatisfiable}
   end
 
-  def parse_output( @status_unknown) do
+  def parse_output(@status_unknown) do
     {:status, :unknown}
   end
 
-  def parse_output( @status_error) do
+  def parse_output(@status_error) do
     {:status, :error}
   end
 
-  def parse_output( @status_unsatOrUnbounded) do
+  def parse_output(@status_unsatOrUnbounded) do
     {:status, :unsatOrUnbounded}
   end
 
-  def parse_output( @status_unbounded) do
+  def parse_output(@status_unbounded) do
     {:status, :ubounded}
   end
 
@@ -123,8 +129,9 @@ defmodule MinizincParser do
 
   @doc false
   # Update parser with the line produced by Minizinc port.
-  def update_state(parser_rec(solution_count: sc) =  results, {:status, :satisfied}) do
-    parser_rec(results,
+  def update_state(parser_rec(solution_count: sc) = results, {:status, :satisfied}) do
+    parser_rec(
+      results,
       status: :satisfied,
       timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
       solution_count: sc + 1
@@ -136,8 +143,10 @@ defmodule MinizincParser do
   end
 
   # Solution status update
-  def update_state(parser_rec(mzn_stats: stats) = results,
-        {:solution_stats, {key, val} }) do
+  def update_state(
+        parser_rec(mzn_stats: stats) = results,
+        {:solution_stats, {key, val}}
+      ) do
     parser_rec(results, mzn_stats: Map.put(stats, key, val))
   end
 
@@ -148,14 +157,18 @@ defmodule MinizincParser do
   ## Statistics
   ##
   # FlatZinc stats
-  def update_state(parser_rec(fzn_stats: stats, compiled: true) = results,
-        {:solver_stats, {key, val} }) do
+  def update_state(
+        parser_rec(fzn_stats: stats, compiled: true) = results,
+        {:solver_stats, {key, val}}
+      ) do
     parser_rec(results, fzn_stats: Map.put(stats, key, val))
   end
 
   # Solver stats (occurs only after solver outputs its last solution).
-  def update_state(parser_rec(solver_stats: stats) = results,
-        {:solver_stats, {key, val} }) do
+  def update_state(
+        parser_rec(solver_stats: stats) = results,
+        {:solver_stats, {key, val}}
+      ) do
     parser_rec(results, solver_stats: Map.put(stats, key, val))
   end
 
@@ -181,13 +194,17 @@ defmodule MinizincParser do
       buff <> "}"
     )
     parser_rec(
-      results, json_buffer: "",
-      solution_data: MinizincData.output_to_elixir(solution_data))
+      results,
+      json_buffer: "",
+      solution_data: MinizincData.output_to_elixir(solution_data)
+    )
   end
 
   ## Collecting JSON data
   def update_state(
-        parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, json_chunk) when is_binary(json_chunk) do
+        parser_rec(json_buffer: "{" <> _jbuffer = buff) = results,
+        json_chunk
+      ) when is_binary(json_chunk) do
     parser_rec(results, json_buffer: buff <> json_chunk)
   end
 
@@ -206,20 +223,27 @@ defmodule MinizincParser do
     %{data: data, timestamp: timestamp, index: count, stats: stats}
   end
 
-  def summary(parser_rec(
-    status: status, solution_count: solution_count,
-    solver_stats: solver_stats, fzn_stats: fzn_stats,
-    fzn_output: fzn_output,
-    minizinc_output: minizinc_output, time_elapsed: time_elapsed
-  ) = results) do
-    raw_summary = %{status: status,
+  def summary(
+        parser_rec(
+          status: status,
+          solution_count: solution_count,
+          solver_stats: solver_stats,
+          fzn_stats: fzn_stats,
+          fzn_output: fzn_output,
+          minizinc_output: minizinc_output,
+          time_elapsed: time_elapsed
+        ) = results
+      ) do
+    raw_summary = %{
+      status: status,
       fzn_stats: fzn_stats,
       solver_stats: solver_stats,
       solution_count: solution_count,
       last_solution: solution(results),
       fzn_output: fzn_output,
       minizinc_output: minizinc_output,
-      time_elapsed: time_elapsed}
+      time_elapsed: time_elapsed
+    }
     ## Update status
     Map.put(raw_summary, :status, get_status(raw_summary))
   end
@@ -244,7 +268,9 @@ defmodule MinizincParser do
   end
 
   defp get_status(%{status: status} = _summary) do
-    status |> Atom.to_string |> String.to_atom
+    status
+    |> Atom.to_string
+    |> String.to_atom
   end
 
 
