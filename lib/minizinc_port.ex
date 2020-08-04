@@ -37,9 +37,9 @@ defmodule MinizincPort do
   end
 
   # Handle incoming stream from the command's STDOUT
-  def handle_info({:stdout, _processid, data},
+  def handle_info({out_stream, _processid, data},
         %{parser_state: parser_state,
-          solution_handler: solution_handler} = state) do
+          solution_handler: solution_handler} = state) when out_stream in [:stdout, :stderr] do
 
     ##TODO: handle data chunks that are not terminated by newline.
     lines = String.split(data, "\n")
@@ -139,7 +139,7 @@ defmodule MinizincPort do
   end
 
   defp run_minizinc(command) do
-  {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: false, monitor: true)
+  {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: true, monitor: true)
   end
 
   defp handle_solution(solution_handler, results) do
