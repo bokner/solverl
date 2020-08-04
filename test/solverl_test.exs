@@ -162,6 +162,11 @@ defmodule SolverlTest do
     assert length(MinizincResults.get_solution_value(last_solution, "q")) == 8
   end
 
+  test "Fix variable for LNS" do
+    assert MinizincSearch.lns_fix("var1", [1,2], 0.5, 2)
+           in ["constraint var1[2] = 2;\n", "constraint var1[2] = 1;\n"]
+  end
+  
 end
 
 defmodule LimitSolutionsSync do
