@@ -16,8 +16,8 @@ defmodule MinizincPort do
   def init(args \\ []) do
     Process.flag(:trap_exit, true)
     # Locate minizinc executable and run it with args converted to CLI params.
-    {:ok, model_text} = MinizincModel.make_model(args[:model])
-    {:ok, dzn_text} = MinizincData.make_dzn(args[:data])
+    model_text = MinizincModel.make_model(args[:model])
+    dzn_text = MinizincData.make_dzn(args[:data])
     command = prepare_solver_cmd(model_text, dzn_text, args)
     Logger.warn "Command: #{command}"
 

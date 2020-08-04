@@ -15,7 +15,7 @@ defmodule MinizincData do
   def make_dzn(data, target \\ nil)
 
   def make_dzn([], _) do
-    {:ok, ""}
+    ""
   end
 
   def make_dzn(data, nil) do
@@ -26,10 +26,9 @@ defmodule MinizincData do
   def make_dzn(data, target) when is_list(data) do
     target_file = String.replace_suffix(target, ".dzn", "") <> ".dzn"
     for d <- data do
-      {:ok, content} = read_dzn(d)
-      File.write(target_file, content <> "\n", [:append])
+      File.write(target_file, read_dzn(d) <> "\n", [:append])
     end
-    {:ok, target_file}
+    target_file
   end
 
   def make_dzn(data, target) when is_binary(data) or is_map(data) do
@@ -39,12 +38,12 @@ defmodule MinizincData do
 
   # Dzn as filename
   defp read_dzn(data) when is_binary(data) do
-    {:ok, _dzn} = File.read(data)
+    File.read!(data)
   end
 
   # Dzn as dict/map
   defp read_dzn(data) when is_map(data) do
-    {:ok, map_to_dzn(data)}
+    map_to_dzn(data)
   end
 
   # Convert map to the list of strings in .dzn format

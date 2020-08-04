@@ -27,12 +27,11 @@ defmodule MinizincModel do
   def make_model(model, target) when is_list(model) do
     target_file = String.replace_suffix(target, ".mzn", "") <> ".mzn"
     for m <- model do
-      {:ok, content} = read_model(m)
       File.write(target_file, @submodel_header <> "\n", [:append])
-      File.write(target_file, content <> "\n", [:append])
+      File.write(target_file, read_model(m) <> "\n", [:append])
       File.write(target_file, @submodel_footer <> "\n", [:append])
     end
-    {:ok, target_file}
+    target_file
   end
 
   ## Single model
@@ -43,12 +42,12 @@ defmodule MinizincModel do
 
   ## Model as text
   defp read_model({:text, model_text}) when is_binary(model_text) do
-    {:ok, model_text}
+    model_text
   end
 
   ## Model as file
   defp read_model(model_file) when is_binary(model_file) do
-    {:ok, _model} = File.read(model_file)
+    File.read!(model_file)
   end
 
   ## Model info
