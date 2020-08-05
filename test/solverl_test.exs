@@ -24,7 +24,7 @@ defmodule SolverlTest do
 
   test "The same as above, but with multiple models either as a text or a file" do
     test_arr = [[[1, 2, 3], [2, 3, 1], [3, 4, 5]], [[1, 2, 3], [2, 3, 1], [3, 4, 5]]]
-    models = [{:text, "int: test_model = true;"}, "mzn/test1.mzn"]
+    models = [{:model_text, "int: test_model = true;"}, "mzn/test1.mzn"]
     assert {:ok, _pid} = MinizincSolver.solve(
              models,
              [
@@ -106,7 +106,7 @@ defmodule SolverlTest do
 
   test "Model with boolean vars" do
     conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
-    results = MinizincSolver.solve_sync({:text, conjunction_model})
+    results = MinizincSolver.solve_sync({:model_text, conjunction_model})
     data = Enum.at(MinizincResults.get_solutions(results), 0)[:data]
     assert data["x"] and data["y"] == true
   end
@@ -121,7 +121,7 @@ defmodule SolverlTest do
           )
       );
     """
-    results = MinizincSolver.solve_sync({:text, array_model})
+    results = MinizincSolver.solve_sync({:model_text, array_model})
     assert MinizincResults.get_last_solution(results)
            |> MinizincResults.get_solution_value("arr")
            |> MinizincData.dimensions == [4, 5]
@@ -134,7 +134,7 @@ defmodule SolverlTest do
       constraint 2 in var_set;
       constraint card(var_set) == 2;
     """
-    results = MinizincSolver.solve_sync({:text, set_model})
+    results = MinizincSolver.solve_sync({:model_text, set_model})
     solution = Enum.at(MinizincResults.get_solutions(results), 0)
 
     assert MinizincResults.get_solution_value(solution, "var_set") == MapSet.new([1, 2])
@@ -146,7 +146,7 @@ defmodule SolverlTest do
       var COLOR: color;
       constraint color = max(COLOR);
     """
-    results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
+    results = MinizincSolver.solve_sync({:model_text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
     solution = Enum.at(MinizincResults.get_solutions(results), 0)
     assert MinizincResults.get_solution_value(solution, "color") == "Green"
   end
@@ -166,7 +166,7 @@ defmodule SolverlTest do
     assert MinizincSearch.lns_fix("var1", [1,2], 0.5, 2)
            in ["constraint var1[2] = 2;\n", "constraint var1[2] = 1;\n"]
   end
-  
+
 end
 
 defmodule LimitSolutionsSync do

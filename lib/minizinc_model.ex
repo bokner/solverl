@@ -6,7 +6,7 @@ defmodule MinizincModel do
 
 
 
-  @type model_chunk :: Path.t() | {:text, binary()}
+  @type model_chunk :: Path.t() | {:model_text, binary()}
   @type mzn_model :: model_chunk() | list(model_chunk())
 
 
@@ -41,7 +41,7 @@ defmodule MinizincModel do
 
 
   ## Model as text
-  defp read_model({:text, model_text}) when is_binary(model_text) do
+  defp read_model({:model_text, model_text}) when is_binary(model_text) do
     model_text
   end
 

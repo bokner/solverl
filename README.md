@@ -84,7 +84,7 @@ Model could be either:
 
     **Example:** "mzn/sudoku.mzn"
     
-- or, a tuple {:text, `model_text`}. 
+- or, a tuple {:model_text, `model_text`}. 
     
     **Example (model as a multiline string):** 
     ```elixir
@@ -99,7 +99,7 @@ Model could be either:
     
     **Example:**
     ```elixir 
-    ["mzn/test1.mzn", {:text, "constraint y[1] + y[2] <= 0;"}]
+    ["mzn/test1.mzn", {:model_text, "constraint y[1] + y[2] <= 0;"}]
     ```
             
 ### Data specification
@@ -196,7 +196,7 @@ Data could be either:
     var COLOR: color;
     constraint color = max(COLOR);
   """
-  results = MinizincSolver.solve_sync({:text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
+  results = MinizincSolver.solve_sync({:model_text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
   results[:summary][:last_solution][:data]["color"]   
   ```
   Output:
