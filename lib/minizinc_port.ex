@@ -16,10 +16,10 @@ defmodule MinizincPort do
   def init(args \\ []) do
     Process.flag(:trap_exit, true)
     # Locate minizinc executable and run it with args converted to CLI params.
-    model_text = MinizincModel.make_model(args[:model])
-    dzn_text = MinizincData.make_dzn(args[:data])
-    command = prepare_solver_cmd(model_text, dzn_text, args)
-    Logger.warn "Command: #{command}"
+    model_file = MinizincModel.make_model(args[:model])
+    dzn_file = MinizincData.make_dzn(args[:data])
+    command = prepare_solver_cmd(model_file, dzn_file, args)
+    Logger.debug "Command: #{command}"
 
     {:ok, pid, ospid} = run_minizinc(command)
 
@@ -30,8 +30,8 @@ defmodule MinizincPort do
         ospid: ospid,
         parser_state: parser_rec(),
         solution_handler: args[:solution_handler],
-        model: model_text,
-        dzn: dzn_text,
+        model: model_file,
+        dzn: dzn_file,
         exit_status: nil
       }
     }
@@ -85,22 +85,16 @@ defmodule MinizincPort do
 
   def handle_info(
         {:DOWN, _ospid, :process, _pid, status_info},
-        %{
-          parser_state: results,
-          solution_handler: solution_handler
-        } = state
+        state
       ) do
-    finalize(status_info, solution_handler, results, state)
+    finalize(status_info, state)
   end
 
   def handle_info(
         {:EXIT, _pid, status_info},
-        %{
-          parser_state: results,
-          solution_handler: solution_handler
-        } = state
+        state
       ) do
-    finalize(status_info, solution_handler, results, state)
+    finalize(status_info, state)
   end
 
   def handle_info(msg, state) do
@@ -116,17 +110,27 @@ defmodule MinizincPort do
   ## Same as above, but stop the solver
   def handle_cast(
         :stop_solver,
-        %{
-          parser_state: results,
-          solution_handler: solution_handler
-        } = state
+        state
       ) do
     Logger.debug "Request to stop the solver..."
-    handle_summary(solution_handler, results)
-    {:stop, :normal, state}
+    finalize(:normal, state)
   end
 
+  ## Branching on the model
+  def handle_cast(
+        {:branch, _constraint_specs},
+        %{} = state
+      ) do
+    Logger.debug "Request to branch..."
+    {:noreply, state}
+  end
+
+
   ## Helpers
+  def branch(pid, constraint_specs) do
+    GenServer.cast(pid, {:branch, constraint_specs})
+  end
+
   def get_results(pid) do
     GenServer.call(pid, :get_results)
   end
@@ -142,21 +146,31 @@ defmodule MinizincPort do
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
     extra_flags = Keyword.get(opts, :extra_flags, "")
     Enum.join(
-      [opts[:minizinc_executable],
+      [
+        opts[:minizinc_executable],
         "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a ",
-        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"], " "
-      )
+        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
+      ],
+      " "
+    )
   end
 
 
-  defp finalize(exit_status, solution_handler, results, state) when exit_status == :normal do
+  defp finalize(
+         exit_status,
+         %{solution_handler: solution_handler, parser_state: results} = state
+       )
+       when exit_status == :normal do
     handle_summary(solution_handler, results)
     new_state = state
                 |> Map.put(:exit_status, 0)
     {:stop, :normal, new_state}
   end
 
-  defp finalize({:exit_status, abnormal_exit}, solution_handler, results, state) do
+  defp finalize(
+         {:exit_status, abnormal_exit},
+         %{solution_handler: solution_handler, parser_state: results} = state
+       ) do
     Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
     handle_minizinc_error(solution_handler, results)
     new_state = Map.put(state, :exit_status, abnormal_exit)

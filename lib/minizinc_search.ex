@@ -1,6 +1,12 @@
 defmodule MinizincSearch do
   @moduledoc false
 
+  import MinizincUtils
+
+  ## Branches on the solution
+  def branch(branch_fun) do
+
+  end
 
   ## Takes the name and solution for an array of decision variables and
   ## creates the list of constraints for variables that will be fixed for the next iteration of solving.
@@ -14,11 +20,11 @@ defmodule MinizincSearch do
     Enum.join(
       Enum.map(
         Enum.with_index(fixed_data, offset),
-              fn {d, idx} -> make_constraint(varname, idx, d) end))
+              fn {d, idx} -> lns_constraint(varname, idx, d) end))
   end
 
-  defp make_constraint(varname, idx, val) do
-    "constraint #{varname}[#{idx}] = #{val};\n"
+  defp lns_constraint(varname, idx, val) do
+    constraint("#{varname}[#{idx}] = #{val}")
   end
 
 end

@@ -13,4 +13,9 @@ defmodule MinizincUtils do
     end
   end
 
+  def constraint(body) do
+    "constraint #{body};\n"
+  end
+
+
 end

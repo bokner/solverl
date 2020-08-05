@@ -4,7 +4,7 @@ defmodule MinizincModel do
   """
   require Logger
 
-
+  import MinizincUtils
 
   @type model_chunk :: Path.t() | {:model_text, binary()}
   @type mzn_model :: model_chunk() | list(model_chunk())
@@ -27,9 +27,11 @@ defmodule MinizincModel do
   def make_model(model, target) when is_list(model) do
     target_file = String.replace_suffix(target, ".mzn", "") <> ".mzn"
     for m <- model do
-      File.write(target_file, @submodel_header <> "\n", [:append])
-      File.write(target_file, read_model(m) <> "\n", [:append])
-      File.write(target_file, @submodel_footer <> "\n", [:append])
+      File.write(target_file,
+        Enum.join([
+             @submodel_header,
+             read_model(m),
+             @submodel_footer], "\n"), [:append])
     end
     target_file
   end
@@ -54,6 +56,20 @@ defmodule MinizincModel do
   def model_method(%{fzn_stats: stats} = _summary) do
     Map.get(stats, :method, "undefined")
     |> String.to_atom()
+  end
+
+  ## Add constraints to the model.
+  ## 'constraints' is a list of strings that are bodies of Minizinc 'constraint' expressions.
+  ## Example: "x[0] < 1"
+  ## Note: no "constraint" keyword, and no terminators.
+  ## 'model' is a string representation of a model, i.e. text, and NOT a model file.
+  ##
+  def add_constraints(model, constraints) when is_binary(model) and is_list(constraints) do
+    Enum.reduce(constraints, model,
+      fn c, acc ->
+        acc <> constraint(c)
+      end
+    )
   end
 
 end
