@@ -22,7 +22,7 @@
 
 
     constraint int_set_channel(colors, vertex_sets);
-    constraint colors[0] = 0;
+    %constraint colors[0] = 0;
 
     constraint forall(i in EDGE)
                 (colors[edges[i,1]] != colors[edges[i,2]] );
@@ -50,8 +50,8 @@ int: lns = 60;
                     int_search(cards, dom_w_deg, indomain_random, complete),
                     int_search([independence],  dom_w_deg, indomain_max, complete)
                         ])
-            :: relax_and_reconstruct(colors, lns)
-            :: restart_luby(100)
+            %:: relax_and_reconstruct(colors, lns)
+            %:: restart_luby(100)
        minimize chromatic;
 
 
