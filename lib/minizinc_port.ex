@@ -7,6 +7,7 @@ defmodule MinizincPort do
   require Logger
 
   import MinizincParser
+  import MinizincUtils
 
   # GenServer API
   def start_link(args, opts \\ []) do
@@ -118,10 +119,13 @@ defmodule MinizincPort do
 
   ## Branching on the model
   def handle_cast(
-        {:branch, _constraint_specs},
-        %{} = state
+        {:branch, constraints},
+        %{model: model_file} = state
       ) do
     Logger.debug "Request to branch..."
+    new_model = MinizincModel.make_model([model_file |
+                             Enum.map(constraints, fn c -> {:model_text, constraint(c)} end)])
+    branch(new_model)
     {:noreply, state}
   end
 
@@ -129,6 +133,10 @@ defmodule MinizincPort do
   ## Helpers
   def branch(pid, constraint_specs) do
     GenServer.cast(pid, {:branch, constraint_specs})
+  end
+
+  def branch(_model) do
+    :todo
   end
 
   def get_results(pid) do
@@ -202,32 +210,38 @@ defmodule MinizincPort do
     )
   end
 
+  def handle_compiled(_solution_handler, _parser_state) do
+    :todo
+    :ok
+  end
+
   ## Parse data from external Minizinc process
   defp parse_minizinc_data(out_stream, data, parser_state, solution_handler) do
-    parser_event = MinizincParser.parse_output(out_stream, data)
-    parser_state =
-      MinizincParser.update_state(parser_state, parser_event)
-    #updated_state = Map.put(state, :parser_state, updated_results)
+    {parser_event, new_parser_state} = MinizincParser.parse_output(out_stream, data, parser_state)
+
     next_action =
       case parser_event do
         {:status, :satisfied} ->
           # Solution handler can force the termination of solver process
-          solution_res = handle_solution(solution_handler, parser_state)
+          solution_res = handle_solution(solution_handler, new_parser_state)
           ## Deciding if the solver is to be stopped...
           case solution_res do
             :stop ->
-              handle_summary(solution_handler, parser_state)
+              handle_summary(solution_handler, new_parser_state)
               :stop
             {:stop, _data} ->
-              handle_summary(solution_handler, parser_state)
+              handle_summary(solution_handler, new_parser_state)
               :stop
             _other ->
               :ok
           end
-        _event ->
+        :compiled ->
+            handle_compiled(solution_handler, new_parser_state)
+            :ok
+        _other ->
           :ok
       end
-    {next_action, parser_state}
+    {next_action, new_parser_state}
   end
 
 end

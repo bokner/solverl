@@ -3,10 +3,6 @@ defmodule MinizincSearch do
 
   import MinizincUtils
 
-  ## Branches on the solution
-  def branch(branch_fun) do
-
-  end
 
   ## Takes the name and solution for an array of decision variables and
   ## creates the list of constraints for variables that will be fixed for the next iteration of solving.

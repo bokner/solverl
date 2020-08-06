@@ -17,5 +17,8 @@ defmodule MinizincUtils do
     "constraint #{body};\n"
   end
 
+  def now(timeunit) do
+    DateTime.to_unix(DateTime.utc_now, timeunit)
+  end
 
 end

@@ -13,41 +13,37 @@ defmodule MinizincParser do
   @status_unsatOrUnbounded "=====UNSATorUNBOUNDED====="
   @status_unbounded        "=====UNBOUNDED====="
 
-  @terminating_separators [
-    @status_completed,
-    @status_unsatisfiable,
-    @status_unknown,
-    @status_error,
-    @status_unsatOrUnbounded,
-    @status_unbounded
-  ]
+
 
   require Record
   @doc false
-  Record.defrecord(
-    :parser_rec,
+  Record.defrecord(:parser_rec,
+
     status: nil,
     fzn_stats: %{},
+    fzn_output: "",
+    compiled: false,
+    compilation_timestamp: nil,
     solver_stats: %{},
     mzn_stats: %{},
     solution_data: %{},
     time_elapsed: nil,
-    fzn_output: "",
+
     minizinc_stderr: "",
     unclassified_output: "",
     timestamp: nil,
     solution_count: 0,
-    json_buffer: "",
-    compiled: false
-    # Flags first occurrence of "%%%mzn-stat-end".
-    # which triggers parsing of final block of "%%%mzn-stat:"
-    # as solver stats.
+    json_buffer: ""
+
   )
 
   @type parser_rec :: record(
                         :parser_rec,
                         status: atom(),
                         fzn_stats: map(),
+                        fzn_output: binary(),
+                        compiled: boolean(),
+                        compilation_timestamp: DateTime.t(),
                         solver_stats: map(),
                         mzn_stats: map(),
                         solution_data: map(),
@@ -57,104 +53,115 @@ defmodule MinizincParser do
                         unclassified_output: binary(),
                         timestamp: DateTime.t(),
                         solution_count: integer(),
-                        json_buffer: binary(),
-                        compiled: boolean()
+                        json_buffer: binary()
+
                       )
 
 
 
   ## Parser interface
-  def parse_output(:stderr, data) do
+  def parse_output(stream, data, parser_state) do
+    parser_event = parse_output(stream, data)
+    case update_state(parser_state, parser_event) do
+      {extended_parser_event, new_parser_state} ->
+        {extended_parser_event, new_parser_state}
+      new_parser_state ->
+        {parser_event, new_parser_state}
+      #when is_record()
+    end
+  end
+
+  defp parse_output(:stderr, data) do
     {:stderr, data}
   end
 
-  def parse_output(:stdout, data) do
+  defp parse_output(:stdout, data) do
     parse_output(data)
   end
 
   ## Status events
-  def parse_output(@solution_separator) do
+  defp parse_output(@solution_separator) do
     {:status, :satisfied}
   end
 
   ## TODO: parsing/capturing status
-  def parse_output(@status_completed) do
+  defp parse_output(@status_completed) do
     {:status, :all_solutions}
   end
 
-  def parse_output(@status_unsatisfiable) do
+  defp parse_output(@status_unsatisfiable) do
     {:status, :unsatisfiable}
   end
 
-  def parse_output(@status_unknown) do
+  defp parse_output(@status_unknown) do
     {:status, :unknown}
   end
 
-  def parse_output(@status_error) do
+  defp parse_output(@status_error) do
     {:status, :error}
   end
 
-  def parse_output(@status_unsatOrUnbounded) do
+  defp parse_output(@status_unsatOrUnbounded) do
     {:status, :unsatOrUnbounded}
   end
 
-  def parse_output(@status_unbounded) do
+  defp parse_output(@status_unbounded) do
     {:status, :ubounded}
   end
 
   ## Solution body events
-  def parse_output("{") do
+  defp parse_output("{") do
     :solution_json_start
   end
 
-  def parse_output("}") do
+  defp parse_output("}") do
     :solution_json_end
   end
 
   ## Time elapsed
-  def parse_output("% time elapsed: " <> rest) do
+  defp parse_output("% time elapsed: " <> rest) do
     {:time_elapsed, rest}
   end
 
   ## Solution stat record
-  def parse_output("%%%mzn-stat " <> rest) do
+  defp parse_output("%%%mzn-stat " <> rest) do
     [stats_key, stats_value] = String.split(rest, "=")
     {:solution_stats, key_value(stats_key, stats_value)}
   end
 
   ## Solver (fzn or post-solving) stat record
-  def parse_output("%%%mzn-stat: " <> rest) do
+  defp parse_output("%%%mzn-stat: " <> rest) do
     [stats_key, stats_value] = String.split(rest, "=")
     {:solver_stats, key_value(stats_key, stats_value)}
   end
 
 
-  def parse_output("%%%mzn-stat-end" <> _rest) do
+  defp parse_output("%%%mzn-stat-end" <> _rest) do
     :stats_end
   end
 
-  def parse_output(new_line) do
+  defp parse_output(new_line) do
     new_line
   end
 
 
   @doc false
   # Update parser with the line produced by Minizinc port.
-  def update_state(parser_rec(solution_count: sc) = results, {:status, :satisfied}) do
+  defp update_state(parser_rec(solution_count: sc) = results, {:status, :satisfied}) do
     parser_rec(
       results,
       status: :satisfied,
-      timestamp: DateTime.to_unix(DateTime.utc_now, :microsecond),
+      timestamp: MinizincUtils.now(:microsecond),
       solution_count: sc + 1
     )
   end
 
-  def update_state(results, {:status, status}) do
+  defp update_state(results, {:status, status}) do
     parser_rec(results, status: status)
   end
 
   # Solution status update
-  def update_state(
+  defp update_state(
         parser_rec(mzn_stats: stats) = results,
         {:solution_stats, {key, val}}
       ) do
@@ -162,14 +169,14 @@ defmodule MinizincParser do
   end
 
   ## Time elapsed
-  def update_state(results, {:time_elapsed, time}) do
+  defp update_state(results, {:time_elapsed, time}) do
     parser_rec(results, time_elapsed: time)
   end
 
   ## Statistics
   ##
   # FlatZinc stats
-  def update_state(
+  defp update_state(
         parser_rec(fzn_stats: stats, compiled: false) = results,
         {:solver_stats, {key, val}}
       ) do
@@ -177,7 +184,7 @@ defmodule MinizincParser do
   end
 
   # Solver stats (occurs only after solver outputs its last solution).
-  def update_state(
+  defp update_state(
         parser_rec(solver_stats: stats) = results,
         {:solver_stats, {key, val}}
       ) do
@@ -185,23 +192,26 @@ defmodule MinizincParser do
   end
 
   ## The end of compilation
-  def update_state(parser_rec(compiled: false) = results, :stats_end) do
+  defp update_state(parser_rec(compiled: false) = results, :stats_end) do
     ## flag the completion of compilation and make output to be FZN output
-    parser_rec(results, compiled: true)
+    ## Return extended event and a parser state
+    {:compiled,
+    parser_rec(results, compiled: true, compilation_timestamp: MinizincUtils.now(:microsecond))
+   }
   end
 
-  def update_state(parser_rec(compiled: true) = results, :stats_end) do
+  defp update_state(parser_rec(compiled: true) = results, :stats_end) do
     results
   end
 
   # JSON-formatted solution data
   ## Opening of JSON
-  def update_state(results, :solution_json_start) do
+  defp update_state(results, :solution_json_start) do
     parser_rec(results, json_buffer: "{", solution_data: nil)
   end
 
   ## Closing of JSON
-  def update_state(parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, :solution_json_end) do
+  defp update_state(parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, :solution_json_end) do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
@@ -213,7 +223,7 @@ defmodule MinizincParser do
   end
 
   ## Collecting JSON data
-  def update_state(
+  defp update_state(
         parser_rec(json_buffer: "{" <> _jbuffer = buff) = results,
         json_chunk
       ) when is_binary(json_chunk) do
@@ -221,22 +231,22 @@ defmodule MinizincParser do
   end
 
   # Drop empty lines
-  def update_state(results, "") do
+  defp update_state(results, "") do
     results
   end
 
   ## Minizinc stderr.
-  def update_state(parser_rec(minizinc_stderr: u) = results, {:stderr, new_line}) when is_binary(new_line) do
+  defp update_state(parser_rec(minizinc_stderr: u) = results, {:stderr, new_line}) when is_binary(new_line) do
     parser_rec(results, minizinc_stderr: u <> "\n" <> new_line)
   end
 
   ## Compilation in progress...
-  def update_state(parser_rec(fzn_output: u, compiled: false) = results, new_line) when is_binary(new_line) do
+  defp update_state(parser_rec(fzn_output: u, compiled: false) = results, new_line) when is_binary(new_line) do
     parser_rec(results, fzn_output: u <> "\n" <> new_line)
   end
 
  # Unclassified
-  def update_state(parser_rec(unclassified_output: u, compiled: true) = results, new_line) when is_binary(new_line) do
+  defp update_state(parser_rec(unclassified_output: u, compiled: true) = results, new_line) when is_binary(new_line) do
     parser_rec(results, unclassified_output: u <> "\n" <> new_line)
   end
 
@@ -254,6 +264,8 @@ defmodule MinizincParser do
           solver_stats: solver_stats,
           fzn_stats: fzn_stats,
           fzn_output: fzn_output,
+          compiled: compiled,
+          compilation_timestamp: compilation_timestamp,
           minizinc_stderr: minizinc_stderr,
           unclassified_output: unclassified,
           time_elapsed: time_elapsed
@@ -261,11 +273,13 @@ defmodule MinizincParser do
       ) do
     raw_summary = %{
       status: status,
-      fzn_stats: fzn_stats,
-      solver_stats: solver_stats,
       solution_count: solution_count,
-      last_solution: solution(results),
+      fzn_stats: fzn_stats,
       fzn_output: fzn_output,
+      compiled: compiled,
+      compilation_timestamp: compilation_timestamp,
+      solver_stats: solver_stats,
+      last_solution: solution(results),
       minizinc_stderr: minizinc_stderr,
       unclassified_output: unclassified,
       time_elapsed: time_elapsed
