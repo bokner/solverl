@@ -21,4 +21,12 @@ defmodule MinizincUtils do
     DateTime.to_unix(DateTime.utc_now, timeunit)
   end
 
+  @doc """
+  Default Minizinc executable.
+  """
+  def default_executable() do
+    System.find_executable("minizinc")
+  end
+
+
 end

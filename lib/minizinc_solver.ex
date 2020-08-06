@@ -14,7 +14,7 @@ defmodule MinizincSolver do
   @type solver_opts() :: list(solver_opt())
 
   @default_args [
-    minizinc_executable: System.find_executable("minizinc"),
+    minizinc_executable: MinizincUtils.default_executable(),
     solver: "gecode",
     time_limit: 60 * 5 * 1000,
     solution_handler: MinizincHandler.DefaultAsync
@@ -205,8 +205,8 @@ defmodule MinizincSolver do
   @doc """
   Get list of descriptions for solvers available to MinizincSolver.
   """
-  def get_solvers do
-    solvers_json = to_string(:os.cmd('#{get_executable()} --solvers-json'))
+  def get_solvers(minizinc_executable \\ MinizincUtils.default_executable()) do
+    solvers_json = to_string(:os.cmd('#{minizinc_executable} --solvers-json'))
     {:ok, solvers} = Jason.decode(solvers_json)
     solvers
   end
@@ -239,13 +239,6 @@ defmodule MinizincSolver do
       [_ | _rest] ->
         {:solver_id_ambiguous, (for solver <- solvers, do: solver["id"])}
     end
-  end
-
-  @doc """
-  Default Minizinc executable.
-  """
-  def get_executable do
-    default_args()[:minizinc_executable]
   end
 
 
