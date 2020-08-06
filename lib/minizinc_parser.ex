@@ -1,5 +1,25 @@
+defmodule ParserState do
+  defstruct status: nil,
+    fzn_stats: %{},
+    fzn_output: "",
+    compiled: false,
+    compilation_timestamp: nil,
+    solver_stats: %{},
+    mzn_stats: %{},
+    solution_data: %{},
+    time_elapsed: nil,
+    minizinc_stderr: "",
+    unclassified_output: "",
+    timestamp: nil,
+    solution_count: 0,
+    json_buffer: ""
+end
+
+
 defmodule MinizincParser do
   @moduledoc false
+
+  import ParserState
 
   # Functions for parsing a stream of text produced by Minizinc process.
   require Logger
@@ -15,50 +35,54 @@ defmodule MinizincParser do
 
 
 
-  require Record
-  @doc false
-  Record.defrecord(:parser_rec,
+#  require Record
+#  @doc false
+#  Record.defrecord(%ParserState,
+#
+#    status: nil,
+#    fzn_stats: %{},
+#    fzn_output: "",
+#    compiled: false,
+#    compilation_timestamp: nil,
+#    solver_stats: %{},
+#    mzn_stats: %{},
+#    solution_data: %{},
+#    time_elapsed: nil,
+#
+#    minizinc_stderr: "",
+#    unclassified_output: "",
+#    timestamp: nil,
+#    solution_count: 0,
+#    json_buffer: ""
+#
+#  )
+#
+#  @type %ParserState :: record(
+#                        %ParserState,
+#                        status: atom(),
+#                        fzn_stats: map(),
+#                        fzn_output: binary(),
+#                        compiled: boolean(),
+#                        compilation_timestamp: DateTime.t(),
+#                        solver_stats: map(),
+#                        mzn_stats: map(),
+#                        solution_data: map(),
+#                        time_elapsed: any(),
+#                        fzn_output: binary(),
+#                        minizinc_stderr: binary(),
+#                        unclassified_output: binary(),
+#                        timestamp: DateTime.t(),
+#                        solution_count: integer(),
+#                        json_buffer: binary()
+#
+#                      )
+#
 
-    status: nil,
-    fzn_stats: %{},
-    fzn_output: "",
-    compiled: false,
-    compilation_timestamp: nil,
-    solver_stats: %{},
-    mzn_stats: %{},
-    solution_data: %{},
-    time_elapsed: nil,
 
-    minizinc_stderr: "",
-    unclassified_output: "",
-    timestamp: nil,
-    solution_count: 0,
-    json_buffer: ""
-
-  )
-
-  @type parser_rec :: record(
-                        :parser_rec,
-                        status: atom(),
-                        fzn_stats: map(),
-                        fzn_output: binary(),
-                        compiled: boolean(),
-                        compilation_timestamp: DateTime.t(),
-                        solver_stats: map(),
-                        mzn_stats: map(),
-                        solution_data: map(),
-                        time_elapsed: any(),
-                        fzn_output: binary(),
-                        minizinc_stderr: binary(),
-                        unclassified_output: binary(),
-                        timestamp: DateTime.t(),
-                        solution_count: integer(),
-                        json_buffer: binary()
-
-                      )
-
-
-
+  def initial_state do
+    %ParserState{}
+  end
+  
   ## Parser interface
   def parse_output(stream, data, parser_state) do
     parser_event = parse_output(stream, data)
@@ -147,87 +171,85 @@ defmodule MinizincParser do
 
   @doc false
   # Update parser with the line produced by Minizinc port.
-  defp update_state(parser_rec(solution_count: sc) = results, {:status, :satisfied}) do
-    parser_rec(
-      results,
+  defp update_state(%ParserState{solution_count: sc} = results, {:status, :satisfied}) do
+    %{results |
       status: :satisfied,
       timestamp: MinizincUtils.now(:microsecond),
       solution_count: sc + 1
-    )
+    }
   end
 
   defp update_state(results, {:status, status}) do
-    parser_rec(results, status: status)
+    %{results | status: status}
   end
 
   # Solution status update
   defp update_state(
-        parser_rec(mzn_stats: stats) = results,
+        %ParserState{mzn_stats: stats} = results,
         {:solution_stats, {key, val}}
       ) do
-    parser_rec(results, mzn_stats: Map.put(stats, key, val))
+    %{results | mzn_stats: Map.put(stats, key, val)}
   end
 
   ## Time elapsed
   defp update_state(results, {:time_elapsed, time}) do
-    parser_rec(results, time_elapsed: time)
+    %{results | time_elapsed: time}
   end
 
   ## Statistics
   ##
   # FlatZinc stats
   defp update_state(
-        parser_rec(fzn_stats: stats, compiled: false) = results,
+        %ParserState{fzn_stats: stats, compiled: false} = results,
         {:solver_stats, {key, val}}
-      ) do
-    parser_rec(results, fzn_stats: Map.put(stats, key, val))
+       ) do
+    %{results | fzn_stats: Map.put(stats, key, val)}
   end
 
   # Solver stats (occurs only after solver outputs its last solution).
   defp update_state(
-        parser_rec(solver_stats: stats) = results,
+        %ParserState{solver_stats: stats} = results,
         {:solver_stats, {key, val}}
       ) do
-    parser_rec(results, solver_stats: Map.put(stats, key, val))
+    %{results | solver_stats: Map.put(stats, key, val)}
   end
 
   ## The end of compilation
-  defp update_state(parser_rec(compiled: false) = results, :stats_end) do
+  defp update_state(%ParserState{compiled: false} = results, :stats_end) do
     ## flag the completion of compilation and make output to be FZN output
     ## Return extended event and a parser state
     {:compiled,
-    parser_rec(results, compiled: true, compilation_timestamp: MinizincUtils.now(:microsecond))
+    %{results | compiled: true, compilation_timestamp: MinizincUtils.now(:microsecond)}
    }
   end
 
-  defp update_state(parser_rec(compiled: true) = results, :stats_end) do
+  defp update_state(%ParserState{compiled: true} = results, :stats_end) do
     results
   end
 
   # JSON-formatted solution data
   ## Opening of JSON
   defp update_state(results, :solution_json_start) do
-    parser_rec(results, json_buffer: "{", solution_data: nil)
+    %{results | json_buffer: "{", solution_data: nil}
   end
 
   ## Closing of JSON
-  defp update_state(parser_rec(json_buffer: "{" <> _jbuffer = buff) = results, :solution_json_end) do
+  defp update_state(%ParserState{json_buffer: "{" <> _jbuffer = buff} = results, :solution_json_end) do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
-    parser_rec(
-      results,
+    %{results |
       json_buffer: "",
       solution_data: MinizincData.output_to_elixir(solution_data)
-    )
+    }
   end
 
   ## Collecting JSON data
   defp update_state(
-        parser_rec(json_buffer: "{" <> _jbuffer = buff) = results,
+        %ParserState{json_buffer: "{" <> _jbuffer = buff} = results,
         json_chunk
       ) when is_binary(json_chunk) do
-    parser_rec(results, json_buffer: buff <> json_chunk)
+    %{results | json_buffer: buff <> json_chunk}
   end
 
   # Drop empty lines
@@ -236,29 +258,29 @@ defmodule MinizincParser do
   end
 
   ## Minizinc stderr.
-  defp update_state(parser_rec(minizinc_stderr: u) = results, {:stderr, new_line}) when is_binary(new_line) do
-    parser_rec(results, minizinc_stderr: u <> "\n" <> new_line)
+  defp update_state(%ParserState{minizinc_stderr: u} = results, {:stderr, new_line}) when is_binary(new_line) do
+    %{results | minizinc_stderr: u <> "\n" <> new_line}
   end
 
   ## Compilation in progress...
-  defp update_state(parser_rec(fzn_output: u, compiled: false) = results, new_line) when is_binary(new_line) do
-    parser_rec(results, fzn_output: u <> "\n" <> new_line)
+  defp update_state(%ParserState{fzn_output: u, compiled: false} = results, new_line) when is_binary(new_line) do
+    %{results | fzn_output: u <> "\n" <> new_line}
   end
 
  # Unclassified
-  defp update_state(parser_rec(unclassified_output: u, compiled: true) = results, new_line) when is_binary(new_line) do
-    parser_rec(results, unclassified_output: u <> "\n" <> new_line)
+  defp update_state(%ParserState{unclassified_output: u, compiled: true} = results, new_line) when is_binary(new_line) do
+    %{results | unclassified_output: u <> "\n" <> new_line}
   end
 
 
 
   ## Data for solver events
-  def solution(parser_rec(solution_data: data, timestamp: timestamp, mzn_stats: stats, solution_count: count)) do
+  def solution(%ParserState{solution_data: data, timestamp: timestamp, mzn_stats: stats, solution_count: count}) do
     %{data: data, timestamp: timestamp, index: count, stats: stats}
   end
 
   def summary(
-        parser_rec(
+        %ParserState{
           status: status,
           solution_count: solution_count,
           solver_stats: solver_stats,
@@ -269,7 +291,7 @@ defmodule MinizincParser do
           minizinc_stderr: minizinc_stderr,
           unclassified_output: unclassified,
           time_elapsed: time_elapsed
-        ) = results
+        } = results
       ) do
     raw_summary = %{
       status: status,
@@ -292,7 +314,7 @@ defmodule MinizincParser do
   ## Rather, it's being used by solution handlers.
   ## For now, we just take the unclassified output as an error message.
   ## TODO: actually parse in order to give more details on the error.
-  def minizinc_error(parser_rec(minizinc_stderr: error)) do
+  def minizinc_error(%ParserState{minizinc_stderr: error}) do
     %{error: error}
   end
 

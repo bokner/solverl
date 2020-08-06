@@ -6,7 +6,6 @@ defmodule MinizincPort do
   use GenServer
   require Logger
 
-  import MinizincParser
   import MinizincUtils
 
   # GenServer API
@@ -29,7 +28,7 @@ defmodule MinizincPort do
       %{
         pid: pid,
         ospid: ospid,
-        parser_state: parser_rec(),
+        parser_state: MinizincParser.initial_state(),
         solution_handler: args[:solution_handler],
         model: model_file,
         dzn: dzn_file,
