@@ -40,7 +40,7 @@ defmodule GraphColoring do
     )
   end
 
-  def do_coloring(data, opts) do
+  def do_coloring(data, opts \\ []) do
     optimal_coloring(data, opts)
     |> show_results
   end
