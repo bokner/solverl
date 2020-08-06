@@ -19,7 +19,7 @@ defmodule MinizincData do
   end
 
   def make_dzn(data, nil) do
-    make_dzn(data, String.trim(to_string(:os.cmd('mktemp'))))
+    make_dzn(data, String.trim(MinizincUtils.cmd("mktemp")))
   end
 
 

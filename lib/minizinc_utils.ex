@@ -28,5 +28,8 @@ defmodule MinizincUtils do
     System.find_executable("minizinc")
   end
 
+  def cmd(os_command) do
+    to_string(:os.cmd(to_charlist(os_command)))
+  end
 
 end

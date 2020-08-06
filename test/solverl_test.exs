@@ -167,6 +167,13 @@ defmodule SolverlTest do
            in ["constraint var1[2] = 2;\n", "constraint var1[2] = 1;\n"]
   end
 
+  test "Get model info" do
+    model_info = MinizincModel.model_info("mzn/sudoku.mzn")
+    ## Model has "start" parameter
+    assert model_info[:pars]["start"] == %{"dim" => 2, "type" => "int"}
+    ## Model has "puzzle" variable
+    assert model_info[:vars]["puzzle"] == %{"dim" => 2, "type" => "int"}
+  end
 end
 
 defmodule LimitSolutionsSync do

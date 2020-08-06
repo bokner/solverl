@@ -13,6 +13,8 @@ defmodule MinizincModel do
   @submodel_header "%%%%% START OF SUBMODEL %%%%%"
   @submodel_footer "%%%%% END OF SUBMODEL %%%%%\n\n"
 
+  ## Build model file from multiple files and/or textual chunks.
+  ##
   def make_model(model, target \\ nil)
 
   def make_model([], _) do
@@ -20,7 +22,7 @@ defmodule MinizincModel do
   end
 
   def make_model(model, nil) do
-    make_model(model, String.trim(to_string(:os.cmd('mktemp'))))
+    make_model(model, String.trim(MinizincUtils.cmd("mktemp")))
   end
 
   ## Multiple models
@@ -53,6 +55,30 @@ defmodule MinizincModel do
   end
 
   ## Model info
+  ## 'model' is model file
+  def model_info(model_file, minizinc_executable \\ default_executable()) when is_binary(model_file) do
+    model_json = cmd("#{minizinc_executable} #{model_file} --model-interface-only")
+    {:ok, model_info} = Jason.decode(model_json)
+    Enum.map(model_info,
+      fn {"input", v} ->  {:pars,v};
+         {"output", v} -> {:vars, v};
+         {"method", method_name} -> {:method, translate_method(method_name)};
+         {k, v} -> {String.to_atom(k), v}
+      end)
+  end
+
+  defp translate_method("sat") do
+    :satisfy
+  end
+
+  defp translate_method("max") do
+    :maximize
+  end
+
+  defp translate_method("min") do
+    :minimize
+  end
+
   def model_method(%{fzn_stats: stats} = _summary) do
     Map.get(stats, :method, "undefined")
     |> String.to_atom()

@@ -206,7 +206,7 @@ defmodule MinizincSolver do
   Get list of descriptions for solvers available to MinizincSolver.
   """
   def get_solvers(minizinc_executable \\ MinizincUtils.default_executable()) do
-    solvers_json = to_string(:os.cmd('#{minizinc_executable} --solvers-json'))
+    solvers_json = MinizincUtils.cmd("#{minizinc_executable} --solvers-json")
     {:ok, solvers} = Jason.decode(solvers_json)
     solvers
   end
