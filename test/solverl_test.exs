@@ -143,12 +143,16 @@ defmodule SolverlTest do
   test "Model with enums" do
     enum_model = """
       enum COLOR;
-      var COLOR: color;
-      constraint color = max(COLOR);
+      COLOR: some_color;
+      var COLOR: bigger_color;
+      constraint bigger_color > some_color;
     """
-    results = MinizincSolver.solve_sync({:model_text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})
+    results = MinizincSolver.solve_sync({:model_text, enum_model},
+      %{'COLOR': {"White", "Black", "Red", "Blue", "Green"},
+        some_color: "Blue"
+      })
     solution = Enum.at(MinizincResults.get_solutions(results), 0)
-    assert MinizincResults.get_solution_value(solution, "color") == "Green"
+    assert MinizincResults.get_solution_value(solution, "bigger_color") == "Green"
   end
 
   test "Get last solution from summary, drop other solutions" do
