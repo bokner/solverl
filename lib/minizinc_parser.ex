@@ -82,7 +82,7 @@ defmodule MinizincParser do
   def initial_state do
     %ParserState{}
   end
-  
+
   ## Parser interface
   def parse_output(stream, data, parser_state) do
     parser_event = parse_output(stream, data)

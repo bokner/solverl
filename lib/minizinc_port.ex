@@ -28,6 +28,7 @@ defmodule MinizincPort do
       %{
         pid: pid,
         ospid: ospid,
+        started_at: MinizincUtils.now(:microsecond),
         parser_state: MinizincParser.initial_state(),
         solution_handler: args[:solution_handler],
         model: model_file,
