@@ -49,7 +49,6 @@ defmodule MinizincPort do
   def handle_info(
         {out_stream, _ospid, data},
         %{
-          parser_state: parser_state,
           solution_handler: solution_handler
         } = state
       ) when out_stream in [:stdout, :stderr] do
@@ -59,7 +58,7 @@ defmodule MinizincPort do
 
     res = Enum.reduce_while(
       lines,
-      parser_state,
+      state,
       fn text_line, acc ->
         {action, s} = parse_minizinc_data(out_stream, text_line, acc, solution_handler)
         case action do
@@ -72,10 +71,10 @@ defmodule MinizincPort do
     )
 
     case res do
-      {:stop, new_parser_state} ->
-        {:stop, :normal, Map.put(state, :parser_state, new_parser_state)}
-      new_parser_state ->
-        {:noreply, Map.put(state, :parser_state, new_parser_state)}
+      {:stop, new_state} ->
+        {:stop, :normal, new_state}
+      new_state ->
+        {:noreply, new_state}
     end
 
   end
@@ -216,7 +215,7 @@ defmodule MinizincPort do
   end
 
   ## Parse data from external Minizinc process
-  defp parse_minizinc_data(out_stream, data, parser_state, solution_handler) do
+  defp parse_minizinc_data(out_stream, data, %{parser_state: parser_state} = state, solution_handler) do
     {parser_event, new_parser_state} = MinizincParser.parse_output(out_stream, data, parser_state)
 
     next_action =
@@ -241,7 +240,8 @@ defmodule MinizincPort do
         _other ->
           :ok
       end
-    {next_action, new_parser_state}
+    {next_action, Map.put(state, :last_event_timestamp, MinizincUtils.now(:microsecond)) |>
+                                 Map.put(:parser_state, new_parser_state)}
   end
 
 end
