@@ -2,7 +2,6 @@ include "alldifferent.mzn";
 
 int: S;
 int: N = S * S;
-int: digs = ceil(log(10.0,int2float(N))); % digits for output
 
 set of int: PuzzleRange = 1..N;
 set of int: SubSquareRange = 1..S;
