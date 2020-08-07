@@ -33,52 +33,6 @@ defmodule MinizincParser do
   @status_unsatOrUnbounded "=====UNSATorUNBOUNDED====="
   @status_unbounded        "=====UNBOUNDED====="
 
-
-
-#  require Record
-#  @doc false
-#  Record.defrecord(%ParserState,
-#
-#    status: nil,
-#    fzn_stats: %{},
-#    fzn_output: "",
-#    compiled: false,
-#    compilation_timestamp: nil,
-#    solver_stats: %{},
-#    mzn_stats: %{},
-#    solution_data: %{},
-#    time_elapsed: nil,
-#
-#    minizinc_stderr: "",
-#    unclassified_output: "",
-#    timestamp: nil,
-#    solution_count: 0,
-#    json_buffer: ""
-#
-#  )
-#
-#  @type %ParserState :: record(
-#                        %ParserState,
-#                        status: atom(),
-#                        fzn_stats: map(),
-#                        fzn_output: binary(),
-#                        compiled: boolean(),
-#                        compilation_timestamp: DateTime.t(),
-#                        solver_stats: map(),
-#                        mzn_stats: map(),
-#                        solution_data: map(),
-#                        time_elapsed: any(),
-#                        fzn_output: binary(),
-#                        minizinc_stderr: binary(),
-#                        unclassified_output: binary(),
-#                        timestamp: DateTime.t(),
-#                        solution_count: integer(),
-#                        json_buffer: binary()
-#
-#                      )
-#
-
-
   def initial_state do
     %ParserState{}
   end
@@ -188,7 +142,7 @@ defmodule MinizincParser do
         %ParserState{mzn_stats: stats} = results,
         {:solution_stats, {key, val}}
       ) do
-    %{results | mzn_stats: Map.put(stats, key, val)}
+    %{results | mzn_stats: add_key_value(stats, key, val)}
   end
 
   ## Time elapsed
@@ -203,7 +157,7 @@ defmodule MinizincParser do
         %ParserState{fzn_stats: stats, compiled: false} = results,
         {:solver_stats, {key, val}}
        ) do
-    %{results | fzn_stats: Map.put(stats, key, val)}
+    %{results | fzn_stats: add_key_value(stats, key, val)}
   end
 
   # Solver stats (occurs only after solver outputs its last solution).
@@ -211,7 +165,7 @@ defmodule MinizincParser do
         %ParserState{solver_stats: stats} = results,
         {:solver_stats, {key, val}}
       ) do
-    %{results | solver_stats: Map.put(stats, key, val)}
+    %{results | solver_stats: add_key_value(stats, key, val)}
   end
 
   ## The end of compilation
@@ -339,6 +293,19 @@ defmodule MinizincParser do
 
   defp key_value(key, value) do
     {String.to_atom(key), parse_value(value)}
+  end
+
+  defp add_key_value(map, key, value) when is_map(map) do
+  {nil, new_map} = Map.get_and_update(
+      map,
+      key,
+      fn
+        nil -> {nil, value};
+        current when is_list(current)   -> {nil, [value | current]}
+        current  -> {nil, [value, current]}
+      end
+    )
+    new_map
   end
 
   @doc false
