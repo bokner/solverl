@@ -15,7 +15,7 @@ defmodule MinizincData do
   def make_dzn(data, target \\ nil)
 
   def make_dzn([], _) do
-    ""
+    nil
   end
 
   def make_dzn(data, nil) do
@@ -192,4 +192,45 @@ defmodule MinizincData do
     Enum.reverse(acc)
   end
 
+  ## Check dzn file against the model info
+  ## Currently only checking for mismatch between
+  ## a list of assigned pars in dzn file
+  ## and a list of pars required to be assigned
+  ## according to a model info
+  ##
+  def check_dzn(model_info, dzn_file) do
+    dzn_pars = MapSet.new(parse_dzn(dzn_file))
+    ## Check if dzn pars match model pars
+    model_pars = MapSet.new(Map.keys(model_info[:pars]))
+    if model_pars == dzn_pars do
+      :ok
+    else
+      {:error,
+        {:mismatch, MinizincUtils.sym_diff(model_pars, dzn_pars)}
+
+      }
+    end
+  end
+
+  defp parse_dzn(nil) do
+    []
+  end
+
+  defp parse_dzn(dzn_file) do
+    assignments = String.split(File.read!(dzn_file), ";", trim: true)
+    Enum.reduce(
+      assignments, [],
+      fn assignment, acc ->
+        trimmed = String.trim(drop_comments(assignment))
+        case String.split(trimmed, "=", trim: true, parts: 2) do
+          [par, _val] -> [String.trim(par) | acc]
+          _nonmatching -> acc
+        end
+      end
+    )
+  end
+
+  defp drop_comments(line) do
+    hd(String.split(String.trim(line), "%"))
+  end
 end

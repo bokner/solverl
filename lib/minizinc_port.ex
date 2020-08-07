@@ -18,6 +18,10 @@ defmodule MinizincPort do
     # Locate minizinc executable and run it with args converted to CLI params.
     model_file = MinizincModel.make_model(args[:model])
     dzn_file = MinizincData.make_dzn(args[:data])
+
+    model_info = MinizincModel.model_info(model_file)
+    MinizincData.check_dzn(model_info, dzn_file)
+
     command = prepare_solver_cmd(model_file, dzn_file, args)
     Logger.debug "Command: #{command}"
 

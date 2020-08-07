@@ -63,7 +63,7 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 
 ```elixir
 # Asynchronous solving.
-# Creates a solver process. 
+# Creates a solver process and processes solutions as they come in.
 {:ok, solver_pid} = MinizincSolver.solve(model, data, opts)
 
 # Synchronous solving.

@@ -32,4 +32,9 @@ defmodule MinizincUtils do
     to_string(:os.cmd(to_charlist(os_command)))
   end
 
+  ## Symmetric difference of 2 sets
+  def sym_diff(a, b) do
+    MapSet.difference(MapSet.union(a,b), MapSet.intersection(a,b))
+  end
+
 end
