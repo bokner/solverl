@@ -205,8 +205,18 @@ defmodule MinizincData do
     if model_pars == dzn_pars do
       :ok
     else
-      {:error,
-        {:mismatch, MinizincUtils.sym_diff(model_pars, dzn_pars)}
+      {
+        :error,
+        {
+          :mismatch,
+          Enum.map(
+            MinizincUtils.sym_diff_details(model_pars, dzn_pars),
+            fn
+              {par, true} -> {par, :not_in_dzn};
+              {par, false} -> {par, :not_in_model}
+            end
+          )
+        }
 
       }
     end
@@ -219,7 +229,8 @@ defmodule MinizincData do
   defp parse_dzn(dzn_file) do
     assignments = String.split(File.read!(dzn_file), ";", trim: true)
     Enum.reduce(
-      assignments, [],
+      assignments,
+      [],
       fn assignment, acc ->
         trimmed = String.trim(drop_comments(assignment))
         case String.split(trimmed, "=", trim: true, parts: 2) do

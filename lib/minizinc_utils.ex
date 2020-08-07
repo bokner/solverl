@@ -37,4 +37,9 @@ defmodule MinizincUtils do
     MapSet.difference(MapSet.union(a,b), MapSet.intersection(a,b))
   end
 
+  ## Details on symmetric difference
+  def sym_diff_details(a, b) do
+    diff = sym_diff(a, b)
+    Enum.map(diff, fn el -> {el, MapSet.member?(a, el)} end)
+  end
 end

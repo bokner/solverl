@@ -42,12 +42,24 @@ defmodule SolverlTest do
   end
 
   test "Minizinc error" do
-    ## Improper data key - should be %{n: 2}
-    %{
+    ## Unrecognized Minizinc option
+    assert %{
       minizinc_error: %{
         error: _error
       }
-    } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
+    } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2}, extra_flags: "--fake-flag")
+  end
+
+  test "Checking dzn against the model: mismatch between declared and factual input parameter names" do
+    ## The model expects to have 'n' par as input, but gets 'm' par instead.
+    Process.flag(:trap_exit, true)
+    error_msg = "{:error, {:bad_return_value, {:error, {:mismatch, [{\"m\", :not_in_model}, {\"n\", :not_in_dzn}]}}}}"
+    assert_raise MatchError,
+             #"{:error, {:bad_return_value, {:error, {:mismatch, [{\"m\", :not_in_model}, {\"n\", :not_in_dzn}]}}}",
+                 "no match of right hand side value: #{error_msg}",
+               fn ->
+                  MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
+                end
   end
 
   test "Unsatisfiable sync" do

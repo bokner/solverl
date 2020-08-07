@@ -14,18 +14,19 @@ defmodule MinizincPort do
   end
 
   def init(args \\ []) do
-    Process.flag(:trap_exit, true)
-    # Locate minizinc executable and run it with args converted to CLI params.
+
+    {:ok, solver} = MinizincSolver.lookup(args[:solver])
     model_file = MinizincModel.make_model(args[:model])
     dzn_file = MinizincData.make_dzn(args[:data])
-
     model_info = MinizincModel.model_info(model_file)
-    MinizincData.check_dzn(model_info, dzn_file)
+    case MinizincData.check_dzn(model_info, dzn_file) do
+      :ok -> :ok
+      dzn_error ->
+        Logger.debug "dzn error: #{inspect dzn_error}"
+        throw dzn_error
+    end
 
-    command = prepare_solver_cmd(model_file, dzn_file, args)
-    Logger.debug "Command: #{command}"
-
-    {:ok, pid, ospid} = run_minizinc(command)
+    {:ok, pid, ospid} = run_minizinc(solver, model_file, dzn_file, args)
 
     {
       :ok,
@@ -36,8 +37,7 @@ defmodule MinizincPort do
         parser_state: MinizincParser.initial_state(),
         solution_handler: args[:solution_handler],
         model: model_file,
-        dzn: dzn_file,
-        exit_status: nil
+        dzn: dzn_file
       }
     }
   end
@@ -150,13 +150,12 @@ defmodule MinizincPort do
     GenServer.cast(pid, :stop_solver)
   end
 
-  defp prepare_solver_cmd(model_str, dzn_str, opts) do
-    {:ok, solver} = MinizincSolver.lookup(opts[:solver])
+  defp run_minizinc(solver, model_str, dzn_str, opts) do
     solver_str = "--solver #{solver["id"]}"
     time_limit = opts[:time_limit]
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
     extra_flags = Keyword.get(opts, :extra_flags, "")
-    Enum.join(
+    command = Enum.join(
       [
         opts[:minizinc_executable],
         "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a ",
@@ -164,6 +163,9 @@ defmodule MinizincPort do
       ],
       " "
     )
+    Logger.debug "Minizinc command: #{command}"
+    Process.flag(:trap_exit, true)
+    {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: true, monitor: true)
   end
 
 
@@ -188,9 +190,7 @@ defmodule MinizincPort do
     {:stop, :normal, new_state}
   end
 
-  defp run_minizinc(command) do
-    {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: true, monitor: true)
-  end
+
 
   defp handle_solution(solution_handler, results) do
     MinizincHandler.handle_solution(
