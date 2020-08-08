@@ -124,7 +124,7 @@ defmodule MinizincSolver do
 
 
   defp stop_solving(solution_handler, solver_pid, acc) do
-    stop_solver_process(solver_pid)
+    stop_solver(solver_pid)
     final = completion_loop(solution_handler, solver_pid)
     ## Clean up message mailbox, just in case.
     MinizincUtils.flush()
@@ -208,7 +208,7 @@ defmodule MinizincSolver do
   @doc """
   Stop solver process.
   """
-  def stop_solver_process(pid) do
+  def stop_solver(pid) do
     MinizincPort.stop(pid)
   end
 

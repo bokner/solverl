@@ -55,7 +55,7 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 - [Synchronous and asynchronous solving](#usage)
 - [Pluggable solution handlers](#solution-handlers) 
 - [Support for basic Minizinc types, arrays, sets and enums](#support-for-minizinc-data-types)
-- [Monitoring the status of solving process](#monitoring-the-solving-process)
+- [Monitoring and controlling the solving process](#monitoring-and-controlling-the-solving-process)
 
 ## Usage
 
@@ -96,7 +96,7 @@ Model could be either:
     """
     ```
 - or a (mixed) list of the above. The code will build a model by concatenating bodies of
-    model files and model texts suffixed with EOL (\n).  
+    model files and model texts, each with a trailing line break.  
     
     **Example:**
     ```elixir 
@@ -120,7 +120,7 @@ Data could be either:
        
 - or a (mixed) list of the above. The code will build a data file by mapping elements of the list
     to bodies of data files and/or data maps, serialized as described in [Support for Minizinc data types](#support-for-minizinc-data-types),
-     then concatenating the elements of the list, suffixed with EOL (\n). 
+     then concatenating the elements of the list, each with a trailing line break. 
     
     **Example:**
     ```elixir
@@ -197,8 +197,10 @@ Data could be either:
     var COLOR: color;
     constraint color = max(COLOR);
   """
-  results = MinizincSolver.solve_sync({:model_text, enum_model}, %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
-  results[:summary][:last_solution][:data]["color"]   
+  results = MinizincSolver.solve_sync({:model_text, enum_model}, 
+      %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
+  
+  MinizincResults.get_last_solution(results)[:data]["color"]  
   ```
   Output:
   ```elixir
@@ -217,7 +219,9 @@ As of now, there are following external API calls:
  
 ```elixir
 ## Start long-running solving process named Graph1000...
-{:ok, pid} = MinizincSolver.solve("mzn/graph_coloring.mzn", "mzn/gc_1000.dzn", [time_limit: 60*60*1000], name: Graph1000)
+{:ok, pid} = MinizincSolver.solve("mzn/graph_coloring.mzn", "mzn/gc_1000.dzn", 
+  [time_limit: 60*60*1000], 
+   name: Graph1000)
 ```
 ```
 {:ok, #PID<0.995.0>}
@@ -225,7 +229,7 @@ As of now, there are following external API calls:
 
 ```elixir
 ## ... and check for its status
-MinizincSolver.solver_status(Graph1000)                                                                                   
+MinizincSolver.solver_status(Graph1000)
 ```
 ```
 {:ok,
@@ -550,7 +554,8 @@ you should be able to use its interface.
 Example:
 
 ```erlang
-results = minizinc:solve_sync(<<"mzn/nqueens.mzn">>, #{n=> 4}, [{solution_handler, fun 'Elixir.NQueens':solution_handler/2}]).
+results = minizinc:solve_sync(<<"mzn/nqueens.mzn">>, 
+    #{n=> 4}, [{solution_handler, fun 'Elixir.NQueens':solution_handler/2}]).
 ```  
 
 Note: Please use `binary` strings as opposed to `char` strings whenever you need to pass a string to API.
