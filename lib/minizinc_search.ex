@@ -23,4 +23,9 @@ defmodule MinizincSearch do
     constraint("#{varname}[#{idx}] = #{val}")
   end
 
+  def branch(solver_pid, constraint_specs) do
+    GenServer.cast(solver_pid, {:branch, constraint_specs})
+  end
+
+
 end

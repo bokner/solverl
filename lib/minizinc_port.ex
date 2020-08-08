@@ -6,7 +6,6 @@ defmodule MinizincPort do
   use GenServer
   require Logger
 
-  import MinizincUtils
 
   # GenServer API
   def start_link(args, opts \\ []) do
@@ -102,13 +101,17 @@ defmodule MinizincPort do
   end
 
   def handle_info(msg, state) do
-    Logger.info "Unhandled message: #{inspect msg}"
-    {:noreply, state}
+    unhandled_message(msg, state)
   end
 
-  ## Retrieve current solver results
-  def handle_call(:get_results, _from, state) do
-    {:reply, {:ok, state[:parser_state]}, state}
+
+  ## Retrieve current solver status
+  def handle_call(:solver_status, _from, state) do
+    {:reply, {:ok, get_solver_status(state)}, state}
+  end
+
+  def handle_call(msg, _from, state) do
+    unhandled_message(msg, state)
   end
 
   ## Same as above, but stop the solver
@@ -120,32 +123,15 @@ defmodule MinizincPort do
     finalize(:normal, state)
   end
 
-  ## Branching on the model
-  def handle_cast(
-        {:branch, constraints},
-        %{model: model_file} = state
-      ) do
-    Logger.debug "Request to branch..."
-    new_model = MinizincModel.make_model([model_file |
-                             Enum.map(constraints, fn c -> {:model_text, constraint(c)} end)])
-    branch(new_model)
-    {:noreply, state}
+  def handle_cast(msg, _from, state) do
+    unhandled_message(msg, state)
   end
 
+  ##############################################################################
 
   ## Helpers
-  def branch(pid, constraint_specs) do
-    GenServer.cast(pid, {:branch, constraint_specs})
-  end
-
-  def branch(_model) do
-    :todo
-  end
-
-  def get_results(pid) do
-    GenServer.call(pid, :get_results)
-  end
-
+  ##
+  ## Stop solver
   def stop(pid) do
     GenServer.cast(pid, :stop_solver)
   end
@@ -171,10 +157,10 @@ defmodule MinizincPort do
 
   defp finalize(
          exit_status,
-         %{solution_handler: solution_handler, parser_state: results} = state
+         %{solution_handler: solution_handler, parser_state: parser_state} = state
        )
        when exit_status == :normal do
-    handle_summary(solution_handler, results)
+    handle_summary(solution_handler, parser_state)
     new_state = state
                 |> Map.put(:exit_status, 0)
     {:stop, :normal, new_state}
@@ -182,33 +168,33 @@ defmodule MinizincPort do
 
   defp finalize(
          {:exit_status, abnormal_exit},
-         %{solution_handler: solution_handler, parser_state: results} = state
+         %{solution_handler: solution_handler, parser_state: parser_state} = state
        ) do
     Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
-    handle_minizinc_error(solution_handler, results)
+    handle_minizinc_error(solution_handler, parser_state)
     new_state = Map.put(state, :exit_status, abnormal_exit)
     {:stop, :normal, new_state}
   end
 
 
 
-  defp handle_solution(solution_handler, results) do
+  defp handle_solution(solution_handler, parser_state) do
     MinizincHandler.handle_solution(
-      MinizincParser.solution(results),
+      MinizincParser.solution(parser_state),
       solution_handler
     )
   end
 
-  defp handle_summary(solution_handler, results) do
+  defp handle_summary(solution_handler, parser_state) do
     MinizincHandler.handle_summary(
-      MinizincParser.summary(results),
+      MinizincParser.summary(parser_state),
       solution_handler
     )
   end
 
-  defp handle_minizinc_error(solution_handler, results) do
+  defp handle_minizinc_error(solution_handler, parser_state) do
     MinizincHandler.handle_minizinc_error(
-      MinizincParser.minizinc_error(results),
+      MinizincParser.minizinc_error(parser_state),
       solution_handler
     )
   end
@@ -248,4 +234,39 @@ defmodule MinizincPort do
                                  Map.put(:parser_state, new_parser_state)}
   end
 
+  defp get_solver_status(%{started_at: started_at, parser_state: parser_state} = _state) do
+    summary = MinizincParser.summary(parser_state)
+    now_ts = MinizincUtils.now(:microsecond)
+    running_time = DateTime.diff(now_ts, started_at, :microsecond)
+    {stage, solving_time} =
+    if summary[:compiled] do
+      {:solving, DateTime.diff(now_ts, summary[:compilation_timestamp], :microsecond)}
+    else
+      {:compiling, nil}
+    end
+
+    solution_count = summary[:solution_count]
+
+    time_since_last_solution =
+      case solution_count do
+        0 -> nil
+        _cnt ->
+          DateTime.diff(now_ts, summary[:last_solution][:timestamp], :microsecond)
+      end
+
+    %{
+      running_time: running_time,
+      stage: stage,
+      solving_time: solving_time,
+      time_since_last_solution: time_since_last_solution,
+      solution_count: solution_count
+    }
+  end
+
+
+  ## Unhandled port messages
+  defp unhandled_message(msg, state) do
+    Logger.info "Unhandled message: #{inspect msg}"
+    {:noreply, state}
+  end
 end

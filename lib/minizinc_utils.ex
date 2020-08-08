@@ -17,8 +17,8 @@ defmodule MinizincUtils do
     "constraint #{body};\n"
   end
 
-  def now(timeunit) do
-    DateTime.to_unix(DateTime.utc_now, timeunit)
+  def now(_timeunit) do
+    DateTime.utc_now()
   end
 
   @doc """
@@ -42,4 +42,12 @@ defmodule MinizincUtils do
     diff = sym_diff(a, b)
     Enum.map(diff, fn el -> {el, MapSet.member?(a, el)} end)
   end
+
+  ## Solver status
+  def solver_status(solver_pid) do
+    GenServer.call(solver_pid, :solver_status)
+  end
+
+
+
 end
