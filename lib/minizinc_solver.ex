@@ -13,7 +13,9 @@ defmodule MinizincSolver do
 
   @type solver_opts() :: list(solver_opt())
 
-  @default_args [
+  @type server_opts() :: GenServer.options()
+
+  @default_solver_opts [
     minizinc_executable: MinizincUtils.default_executable(),
     solver: "gecode",
     time_limit: 60 * 5 * 1000,
@@ -26,7 +28,7 @@ defmodule MinizincSolver do
   @stop_timeout 5000
 
   @doc false
-  def default_args, do: @default_args
+  def default_solver_opts, do: @default_solver_opts
 
   @doc """
   Shortcut for solve/2.
@@ -50,12 +52,13 @@ defmodule MinizincSolver do
     Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
 
-  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts()) :: {:ok, pid()}
+  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()}
 
-  def solve(model, data, opts \\ []) do
-    args = [model: model, data: data] ++
-           Keyword.merge(MinizincSolver.default_args, opts)
-    {:ok, _pid} = MinizincPort.start_link(args)
+
+  def solve(model, data, solver_opts \\ [], opts \\ []) do
+    solver_opts = [model: model, data: data] ++
+           Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
+    {:ok, _pid} = MinizincPort.start_link(solver_opts, opts)
   end
 
   @doc """
@@ -80,18 +83,18 @@ defmodule MinizincSolver do
     Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
   """
-  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts()) :: [any()]
+  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: [any()]
 
-  def solve_sync(model, data, opts \\ []) do
-    solution_handler = Keyword.get(opts, :solution_handler, MinizincHandler.DefaultSync)
+  def solve_sync(model, data, solver_opts \\ [], opts \\ []) do
+    solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.DefaultSync)
     # Plug sync_handler to have solver send the results back to us
     caller = self()
-    sync_opts = Keyword.put(
-      opts,
+    sync_solver_opts = Keyword.put(
+      solver_opts,
       :solution_handler,
       sync_handler(caller)
     )
-    {:ok, solver_pid} = solve(model, data, sync_opts)
+    {:ok, solver_pid} = solve(model, data, sync_solver_opts, opts)
     receive_events(solution_handler, solver_pid)
   end
 
@@ -193,6 +196,14 @@ defmodule MinizincSolver do
   ####################################################
 
 
+
+  @doc """
+    Get solver status
+  """
+  ## Solver status
+  def solver_status(solver_pid) do
+    GenServer.call(solver_pid, :solver_status)
+  end
 
   @doc """
   Stop solver process.

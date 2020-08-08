@@ -1,9 +1,9 @@
 defmodule GraphColoring do
-  @moduledoc """
-    Example: Graph Coloring
-  """
+  @moduledoc false
+
   require Logger
 
+  ## Example: Graph Coloring
   @gc_model "mzn/graph_coloring.mzn"
 
   def optimal_coloring(data, opts \\ [])

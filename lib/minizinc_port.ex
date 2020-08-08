@@ -8,15 +8,15 @@ defmodule MinizincPort do
 
 
   # GenServer API
-  def start_link(args, opts \\ []) do
-    GenServer.start_link(__MODULE__, args, opts)
+  def start_link(solver_opts, opts \\ []) do
+    GenServer.start_link(__MODULE__, solver_opts, opts)
   end
 
-  def init(args \\ []) do
+  def init(solver_opts \\ []) do
 
-    {:ok, solver} = MinizincSolver.lookup(args[:solver])
-    model_file = MinizincModel.make_model(args[:model])
-    dzn_file = MinizincData.make_dzn(args[:data])
+    {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
+    model_file = MinizincModel.make_model(solver_opts[:model])
+    dzn_file = MinizincData.make_dzn(solver_opts[:data])
     model_info = MinizincModel.model_info(model_file)
     case MinizincData.check_dzn(model_info, dzn_file) do
       :ok -> :ok
@@ -25,7 +25,7 @@ defmodule MinizincPort do
         throw dzn_error
     end
 
-    {:ok, pid, ospid} = run_minizinc(solver, model_file, dzn_file, args)
+    {:ok, pid, ospid} = run_minizinc(solver, model_file, dzn_file, solver_opts)
 
     {
       :ok,
@@ -34,7 +34,7 @@ defmodule MinizincPort do
         ospid: ospid,
         started_at: MinizincUtils.now(:microsecond),
         parser_state: MinizincParser.initial_state(),
-        solution_handler: args[:solution_handler],
+        solution_handler: solver_opts[:solution_handler],
         model: model_file,
         dzn: dzn_file
       }

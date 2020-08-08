@@ -52,10 +52,10 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 
 ## Features
 
-- Synchronous and asynchronous solving
-- Pluggable solution handlers 
-- Support for basic Minizinc types, arrays, sets and enums
-
+- [Synchronous and asynchronous solving](#usage)
+- [Pluggable solution handlers](#solution-handlers) 
+- [Support for basic Minizinc types, arrays, sets and enums](#support-for-minizinc-data-types)
+- [Monitoring the status of solving process](#monitoring-the-solving-process)
 
 ## Usage
 
@@ -64,17 +64,18 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 ```elixir
 # Asynchronous solving.
 # Creates a solver process and processes solutions as they come in.
-{:ok, solver_pid} = MinizincSolver.solve(model, data, opts)
+{:ok, solver_pid} = MinizincSolver.solve(model, data, solver_opts, server_opts)
 
 # Synchronous solving.
 # Starts the solver and gets the results (solutions and/or solver stats) once the solver finishes.
-solver_results = MinizincSolver.solve_sync(model, data, opts)
+solver_results = MinizincSolver.solve_sync(model, data, solver_opts, server_opts)
 
 ```
 , where 
 - ```model``` - [specification of Minizinc model](#model-specification);
 - ```data```  - [specification of data](#data-specification) passed to ```model```;
-- ```opts``` - [solver options](#solver-options).
+- ```solver_opts``` - [solver options](#solver-options).
+- ```server_opts``` - [GenServer options for solver process](https://hexdocs.pm/elixir/GenServer.html)
 
 ### Model specification
 
@@ -204,6 +205,70 @@ Data could be either:
     "Green" 
   ```
      
+### Monitoring and controlling the solving process
+
+The solving process communicates to the outside through API calls. First argument of these calls
+will be either PID of the process (returned by MinizincSolver.solve/4), or [the name of the GenServer process.](https://hexdocs.pm/elixir/GenServer.html#module-name-registration) 
+
+As of now, there are following external API calls:
+
+- **MinizincSolver.solver_status(pid_or_name)**
+- **MinizincSolver.stop_solver(pid_or_name)**
+ 
+```elixir
+## Start long-running solving process named Graph1000...
+{:ok, pid} = MinizincSolver.solve("mzn/graph_coloring.mzn", "mzn/gc_1000.dzn", [time_limit: 60*60*1000], name: Graph1000)
+```
+```
+{:ok, #PID<0.995.0>}
+```
+
+```elixir
+## ... and check for its status
+MinizincSolver.solver_status(Graph1000)                                                                                   
+```
+```
+{:ok,
+ %{
+   running_time: 2064190,
+   solution_count: 0,
+   solving_time: nil,
+   stage: :compiling,
+   time_since_last_solution: nil
+ }}
+ ```
+
+```elixir
+## It's compiling now.
+## Give it 5 mins or so and check again...
+MinizincSolver.solver_status(Graph1000)
+```
+
+```elixir
+{:ok,
+ %{
+   running_time: 327998354,
+   solution_count: 108,
+   solving_time: 323612671,
+   stage: :solving,
+   time_since_last_solution: 1322186
+ }}
+```
+
+```elixir
+## Stop it now
+MinizincSolver.stop_solver(Graph1000)  
+```
+
+```
+
+15:54:51.092 [debug] Request to stop the solver...
+:ok
+
+15:54:51.092 [debug] ** TERMINATE: :normal
+```
+
+
 
 ### Solver options
 
@@ -493,7 +558,7 @@ The API functions will always use `binary` strings whenever the function return 
 
 ## Under the hood
 
-Both **MinizincSolver.solve/3** and **MinizincSolver.solve_sync/3** use **MinizincPort.start_link/3**
+Both **MinizincSolver.solve/4** and **MinizincSolver.solve_sync/4** use **MinizincPort.start_link/3**
 to start *GenServer* process, which in turn spawns the external MiniZinc process, 
 and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers).
 
@@ -502,8 +567,6 @@ and then parses its text output into solver events and makes appropriate callbac
 ```
   Support LNS;
   Support Branch-and-Bound;
-  Provide API for peeking into a state of Minizinc process, such as time since last solution,
-  whether it's compiling or solving at the moment etc.
   Match minizinc-python functionality.
 ```  
 ## Credits

@@ -1,9 +1,9 @@
 defmodule Sudoku do
-  @moduledoc """
-    Example: Sudoku solver.
+  @moduledoc false
 
-    Sudoku puzzle is a string with elements of the puzzle in row-major order, where a blank entry is represented by "."
-  """
+  # Example: Sudoku solver.
+  # Sudoku puzzle is a string with elements of the puzzle in row-major order,
+  # where a blank entry is represented by "."
 
   require Logger
 

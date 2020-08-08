@@ -1,4 +1,6 @@
 defmodule ParserState do
+  @moduledoc false
+
   defstruct status: nil,
     fzn_stats: %{},
     fzn_output: "",

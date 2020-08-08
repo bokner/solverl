@@ -1,8 +1,7 @@
 defmodule NQueens do
-  @moduledoc """
-    Example: N-queens solver.
-  """
+  @moduledoc false
 
+  # Example: N-queens solver.
   require Logger
 
   @nqueens_model "mzn/nqueens.mzn"
