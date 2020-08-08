@@ -84,15 +84,15 @@ defmodule MinizincHandler.DefaultAsync do
   use MinizincHandler
 
   def handle_solution(solution) do
-    Logger.info "Solution: #{inspect solution}"
+    solution
   end
 
   def handle_summary(summary) do
-    Logger.info "Summary: #{inspect summary}"
+    summary
   end
 
   def handle_minizinc_error(error) do
-    Logger.info "Minizinc error: #{inspect error}"
+    error
   end
 end
 
