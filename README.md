@@ -59,7 +59,7 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 
 ## Usage
 
-[MinizincSolver](MinizincSolver.html) module provides functions both for synchronous and asynchronous solving. 
+[MinizincSolver](https://github.com/bokner/solverl/blob/master/lib/minizinc_solver.ex) module provides functions both for synchronous and asynchronous solving. 
 
 ```elixir
 # Asynchronous solving.
@@ -312,7 +312,7 @@ MinizincSolver.stop_solver(Graph1000)
   
   Solution handler is either 
   - a *function*, or
-  - a *module* that implements [MinizincHandler](MinizincHandler.html) behaviour.
+  - a *module* that implements [MinizincHandler](https://github.com/bokner/solverl/blob/master/lib/minizinc_handler.ex) behaviour.
   
   
   Solution handler code acts as a callback for the [solver events](#solver-events) emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
@@ -322,7 +322,7 @@ MinizincSolver.stop_solver(Graph1000)
   In case the solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
   denoting the [solver event](#solver-events) type (i.e., :solution, :summary, :minizinc_error), 2nd being the event-specific data of that event.
   
-  In case the solution handler is a module that implements [MinizincHandler](MinizincHandler.html) behaviour,
+  In case the solution handler is a module that implements [MinizincHandler](https://github.com/bokner/solverl/blob/master/lib/minizinc_handler.ex) behaviour,
   its functions `handle_solution/1`, `handle_summary/1`, `handle_minizinc_error/1` take an [event-specific data](#event-specific-data).   
   
 ### Solver events 
@@ -546,7 +546,7 @@ Output:
 
 ## Erlang interface
 
-[`minizinc` module](https://github.com/bokner/solverl/blob/master/src/minizinc.erl) mirrors all exported functions of [MinizincSolver module](MinizincSolver.html).
+[`minizinc` module](https://github.com/bokner/solverl/blob/master/src/minizinc.erl) mirrors all exported functions of [MinizincSolver module](https://github.com/bokner/solverl/blob/master/lib/minizinc_solver.ex).
 
 Once you manage to make `solverl` dependency part of your Erlang application build (for instance with [rebar_mix](https://github.com/Supersonido/rebar_mix)),
 you should be able to use its interface.
