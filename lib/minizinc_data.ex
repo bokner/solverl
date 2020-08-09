@@ -245,3 +245,41 @@ defmodule MinizincData do
     hd(String.split(String.trim(line), "%"))
   end
 end
+
+defmodule Minizinc.DznParser do
+  @moduledoc false
+
+  ## From minizinc-python code
+  ## TODO: rewrite to leex
+  ##
+  @dzn_grammar  """
+      items: [item (";" item)* ";"?]
+      item: ident "=" value | ident "=" unknown
+      ident: /([A-Za-z][A-Za-z0-9_]*)|(\'[^\']*\')/
+      value: array
+           | array2d
+           | set
+           | int
+           | float
+           | string
+           | "true"       -> true
+           | "false"      -> false
+      list: [value ("," value)* ","?]
+      array: "[" list "]"
+      array2d: "[" "|" [ list ("|" list)*] "|" "]"
+      set: "{" list "}"
+         | int ".." int
+
+      int: /-?((0o[0-7]+)|(0x[0-9A-Fa-f]+)|(\d+))/
+      float: /-?((\d+\.\d+[Ee][-+]?\d+)|(\d+[Ee][-+]?\d+)|(\d+\.\d+))/
+      string: ESCAPED_STRING
+
+      unknown: /[^[{;]+[^;]*/
+
+      %import common.ESCAPED_STRING
+      %import common.WS
+      %ignore WS
+      COMMENT: "%" /[^\n]/*
+      %ignore COMMENT
+  """
+end
