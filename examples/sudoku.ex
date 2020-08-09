@@ -131,7 +131,7 @@ defmodule Sudoku.SyncHandler do
 
   @doc false
   def handle_solution(%{index: _count, data: data})  do
-    # if count < 3, do: data, else: {:stop, data}
+    # if count < 3, do: data, else: {:break, data}
     data
   end
 

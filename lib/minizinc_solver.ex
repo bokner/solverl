@@ -159,9 +159,9 @@ defmodule MinizincSolver do
           case MinizincHandler.handle_solver_event(event, results, solution_handler) do
             :skip ->
               receive_events(solution_handler, pid, acc)
-            {:stop, data} ->
+            {:break, data} ->
               stop_solving(solution_handler, pid, add_solver_event(event, data, acc))
-            :stop ->
+            :break ->
               stop_solving(solution_handler, pid, acc)
             result when event in [:summary, :minizinc_error] ->
               add_solver_event(event, result, acc)

@@ -197,7 +197,7 @@ defmodule LimitSolutionsSync do
 
   @doc false
   def handle_solution(%{index: count, data: data})  do
-    if count < 100, do: data, else: {:stop, data}
+    if count < 100, do: data, else: {:break, data}
   end
 
   @doc false
@@ -213,7 +213,7 @@ defmodule SolverTest.LimitSolutionsSync do
 
   @doc false
   def handle_solution(%{index: count, data: data})  do
-    if count < 100, do: data, else: {:stop, data}
+    if count < 100, do: data, else: {:break, data}
   end
 
   @doc false

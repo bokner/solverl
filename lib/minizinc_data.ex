@@ -222,6 +222,8 @@ defmodule MinizincData do
     end
   end
 
+  ## Parsing dzn.
+  ## TODO: Replace by proper parser based on dzn grammar
   defp parse_dzn(nil) do
     []
   end

@@ -65,8 +65,8 @@ defmodule MinizincPort do
       fn text_line, acc ->
         {action, s} = parse_minizinc_data(out_stream, text_line, acc, solution_handler)
         case action do
-          :stop ->
-            {:halt, {:stop, s}}
+          :break ->
+            {:halt, {:break, s}}
           :ok ->
             {:cont, s}
         end
@@ -74,7 +74,7 @@ defmodule MinizincPort do
     )
 
     case res do
-      {:stop, new_state} ->
+      {:break, new_state} ->
         {:stop, :normal, new_state}
       new_state ->
         {:noreply, new_state}
@@ -225,12 +225,12 @@ defmodule MinizincPort do
           solution_res = handle_solution(solution_handler, new_parser_state)
           ## Deciding if the solver is to be stopped...
           case solution_res do
-            :stop ->
+            :break ->
               handle_summary(solution_handler, new_parser_state)
-              :stop
-            {:stop, _data} ->
+              :break
+            {:break, _data} ->
               handle_summary(solution_handler, new_parser_state)
-              :stop
+              :break
             _other ->
               :ok
           end
