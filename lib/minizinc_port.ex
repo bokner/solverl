@@ -110,6 +110,11 @@ defmodule MinizincPort do
     {:reply, {:ok, get_solver_status(state)}, state}
   end
 
+  ## To support Exexec ops on OS pid
+  def handle_call(:ospid, _from, %{ospid: ospid} = state) do
+    {:reply, ospid, state}
+  end
+
   def handle_call(msg, _from, state) do
     unhandled_message(msg, state)
   end
@@ -134,6 +139,11 @@ defmodule MinizincPort do
   ## Stop solver
   def stop(pid) do
     GenServer.cast(pid, :stop_solver)
+  end
+
+  ## Get OS pid of solving process
+  def ospid(pid) do
+    GenServer.call(pid, :ospid)
   end
 
   defp run_minizinc(solver, model_str, dzn_str, opts) do
