@@ -119,8 +119,9 @@ defmodule SolverlTest do
   test "Model with boolean vars" do
     conjunction_model = "var bool: x;\nvar bool: y;\nconstraint x /\\ y;\n"
     results = MinizincSolver.solve_sync({:model_text, conjunction_model})
-    data = Enum.at(MinizincResults.get_solutions(results), 0)[:data]
-    assert data["x"] and data["y"] == true
+    solution = Enum.at(MinizincResults.get_solutions(results), 0)
+    assert MinizincResults.get_solution_value(solution, "x") and
+           MinizincResults.get_solution_value(solution, "y") == true
   end
 
   test "Model with 2d array of vars" do
@@ -178,8 +179,10 @@ defmodule SolverlTest do
     assert length(MinizincResults.get_solution_value(last_solution, "q")) == 8
   end
 
-  test "Fix variable for LNS" do
-    assert MinizincSearch.lns_fix("var1", [1,2], 0.5, 2)
+  test "Fix decision variable (used for LNS)" do
+    solution = %{data: %{"var1"=> [1,2]}}
+    ## Randomly destruct values of "var1" variable by 50%
+    assert MinizincSearch.destruct_var(solution, "var1", 0.5, 2)
            in ["constraint var1[2] = 2;\n", "constraint var1[2] = 1;\n"]
   end
 

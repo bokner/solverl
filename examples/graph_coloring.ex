@@ -3,6 +3,8 @@ defmodule GraphColoring do
 
   require Logger
 
+  import MinizincSearch
+
   ## Example: Graph Coloring
   @gc_model "mzn/graph_coloring.mzn"
 
@@ -45,6 +47,17 @@ defmodule GraphColoring do
     |> show_results
   end
 
+  def do_lns(data, iterations, destruction_rate, opts \\ []) do
+    instance = MinizincInstance.new(@gc_model, data, Keyword.put(opts, :solution_handler, GraphColoring.LNSHandler))
+    lns(instance, iterations,
+       fn solution, method ->
+         [lns_objective_constraint(solution, "chromatic", method),
+         destruct_var(solution, "colors",
+           destruction_rate)]
+        end)
+  end
+
+
 end
 
 
@@ -61,8 +74,29 @@ defmodule  GraphColoring.SyncHandler do
     solution
   end
 
-  def handle_summary(summary) do
+
+end
+
+defmodule GraphColoring.LNSHandler do
+  @moduledoc false
+
+  require Logger
+
+  use MinizincHandler
+
+  def handle_solution(%{index: count} = solution)  do
+    Logger.info "Found coloring to #{MinizincResults.get_solution_objective(solution)} colors"
+    ## Break after first found solution
+    if count > 20, do: {:break, solution}, else: solution
+  end
+
+
+  def handle_summary(%{last_solution: solution, status: status} = summary) do
+
+    Logger.info "Objective: #{MinizincResults.get_solution_objective(solution)}"
+    Logger.info "Status: #{status}"
     summary
   end
+
 
 end
