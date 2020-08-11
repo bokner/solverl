@@ -54,6 +54,11 @@ defmodule MinizincModel do
     File.read!(model_file)
   end
 
+  ## Merge 2 models
+  def merge(model1, model2) do
+    MinizincUtils.merge_lists_or_elements(model1, model2)
+  end
+
   ## Model info
   ## 'model' is model file
   def model_info(model_file, minizinc_executable \\ default_executable()) when is_binary(model_file) do

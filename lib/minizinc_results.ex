@@ -38,4 +38,8 @@ defmodule MinizincResults do
     solver_results[:summary][:status]
   end
 
+  def get_method(solver_results) do
+    MinizincModel.model_method(solver_results[:summary])
+  end
+
 end

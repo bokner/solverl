@@ -252,5 +252,5 @@ defmodule MinizincSolver do
     end
   end
 
-
 end
+

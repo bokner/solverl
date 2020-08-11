@@ -43,6 +43,9 @@ defmodule MinizincUtils do
     Enum.map(diff, fn el -> {el, MapSet.member?(a, el)} end)
   end
 
-
+  ## Merge 2 elements and or lists into a flat list
+  def merge_lists_or_elements(thing1, thing2)  do
+    List.flatten([thing1, thing2])
+  end
 
 end
