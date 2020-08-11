@@ -8,24 +8,12 @@ defmodule MinizincPort do
 
 
   # GenServer API
-  def start_link(solver_opts, opts \\ []) do
-    GenServer.start_link(__MODULE__, solver_opts, opts)
+  def start_link(model, data, solver, solver_opts, opts) do
+    GenServer.start_link(__MODULE__, [model, data, solver, solver_opts], opts)
   end
 
-  def init(solver_opts \\ []) do
-
-    {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
-    model_file = MinizincModel.make_model(solver_opts[:model])
-    dzn_file = MinizincData.make_dzn(solver_opts[:data])
-    model_info = MinizincModel.model_info(model_file)
-    case MinizincData.check_dzn(model_info, dzn_file) do
-      :ok -> :ok
-      dzn_error ->
-        Logger.debug "dzn error: #{inspect dzn_error}"
-        throw dzn_error
-    end
-
-    {:ok, pid, ospid} = run_minizinc(solver, model_file, dzn_file, solver_opts)
+  def init([model, data, solver, solver_opts]) do
+    {:ok, pid, ospid} = run_minizinc(solver, model[:model_file], data, solver_opts)
 
     {
       :ok,
@@ -35,8 +23,8 @@ defmodule MinizincPort do
         started_at: MinizincUtils.now(:microsecond),
         parser_state: MinizincParser.initial_state(),
         solution_handler: solver_opts[:solution_handler],
-        model: model_file,
-        dzn: dzn_file
+        model: model,
+        dzn: data
       }
     }
   end
@@ -167,10 +155,10 @@ defmodule MinizincPort do
 
   defp finalize(
          exit_status,
-         %{solution_handler: solution_handler, parser_state: parser_state} = state
+         %{solution_handler: solution_handler, parser_state: parser_state, model: model_info} = state
        )
        when exit_status == :normal do
-    handle_summary(solution_handler, parser_state)
+    handle_summary(solution_handler, parser_state, model_info)
     new_state = state
                 |> Map.put(:exit_status, 0)
     {:stop, :normal, new_state}
@@ -195,9 +183,9 @@ defmodule MinizincPort do
     )
   end
 
-  defp handle_summary(solution_handler, parser_state) do
+  defp handle_summary(solution_handler, parser_state, model_info \\ false) do
     MinizincHandler.handle_summary(
-      MinizincParser.summary(parser_state),
+      MinizincParser.summary(parser_state, model_info),
       solution_handler
     )
   end

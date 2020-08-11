@@ -25,7 +25,7 @@ defmodule MinizincSearch do
         constraints = lns_constraints(
                       destruction_fun,
                       MinizincResults.get_last_solution(iteration_results),
-                      ## TODO: take 'method' from instance
+
                       MinizincResults.get_method(iteration_results)
                    )
         updated_instance = Map.put(instance, :lns_constraints, constraints)
@@ -44,8 +44,19 @@ defmodule MinizincSearch do
 
   def lns_objective_constraint(solution, objective_var, method) when method in [:maximize, :minimize] do
       objective_value = MinizincResults.get_solution_value(solution, objective_var)
-      inequality = if method == :maximize, do: ">", else: "<"
-      constraint("#{objective_var} #{inequality} #{objective_value}")
+      constraint("#{objective_var} #{objective_predicate(method)} #{objective_value}")
+  end
+
+  defp objective_predicate(:maximize) do
+    ">"
+  end
+
+  defp objective_predicate(:minimize) do
+    "<"
+  end
+
+  defp objective_predicate(other) do
+    throw {:non_optimization_method, other}
   end
 
   ## Randomly choose (1 - rate)th part of values

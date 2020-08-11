@@ -35,11 +35,23 @@ defmodule MinizincResults do
   end
 
   def get_status(solver_results) do
-    solver_results[:summary][:status]
+    status(MinizincResults.get_method(solver_results), solver_results[:summary][:status])
   end
 
   def get_method(solver_results) do
-    MinizincModel.model_method(solver_results[:summary])
+    MinizincModel.method(solver_results[:summary][:model_info])
+  end
+
+  def status(:satisfy, :all_solutions) do
+    :all_solutions
+  end
+
+  def status(method, :all_solutions) when method in [:minimize, :maximize] do
+    :optimal
+  end
+
+  def status(_method, status) do
+    status
   end
 
 end

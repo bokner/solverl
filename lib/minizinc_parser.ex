@@ -247,7 +247,7 @@ defmodule MinizincParser do
           minizinc_stderr: minizinc_stderr,
           unclassified_output: unclassified,
           time_elapsed: time_elapsed
-        } = results
+        } = results, model_info \\ nil
       ) do
     raw_summary = %{
       status: status,
@@ -262,8 +262,13 @@ defmodule MinizincParser do
       unclassified_output: unclassified,
       time_elapsed: time_elapsed
     }
-    ## Update status
-    Map.put(raw_summary, :status, get_status(raw_summary))
+    ## Update status and add model info
+    case model_info do
+      nil -> raw_summary
+      _info ->
+        raw_summary |> Map.put(:status, MinizincResults.status(model_info[:method], status)) |>
+          Map.put(:model_info, model_info)
+    end
   end
 
   ## This function is not intended to be called explicitly.
@@ -272,23 +277,6 @@ defmodule MinizincParser do
   ## TODO: actually parse in order to give more details on the error.
   def minizinc_error(%ParserState{minizinc_stderr: error}) do
     %{error: error}
-  end
-
-
-  ## Helpers
-
-  defp get_status(%{status: :all_solutions} = summary) do
-    if MinizincModel.model_method(summary) == :satisfy do
-      :all_solutions
-    else
-      :optimal
-    end
-  end
-
-  defp get_status(%{status: status} = _summary) do
-    status
-    |> Atom.to_string
-    |> String.to_atom
   end
 
 

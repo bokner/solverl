@@ -31,15 +31,6 @@ defmodule MinizincSolver do
   def default_solver_opts, do: @default_solver_opts
 
   @doc """
-  Shortcut for solve/2.
-  """
-  def solve(model) do
-    solve(model, [])
-  end
-
-
-
-  @doc """
   Solve (asynchronously) with model, data and options.
 
   ## Example:
@@ -55,19 +46,25 @@ defmodule MinizincSolver do
   @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()}
 
 
-  def solve(model, data, solver_opts \\ [], opts \\ []) do
-    solver_opts = [model: model, data: data] ++
-           Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
-    {:ok, _pid} = MinizincPort.start_link(solver_opts, opts)
+  def solve(model, data \\ [], solver_opts \\ [], opts \\ []) do
+    model_info = MinizincModel.make_model(model)
+    dzn_file = MinizincData.make_dzn(data)
+    case MinizincData.check_dzn(model_info, dzn_file) do
+      :ok ->
+        ## Merge with defaulits
+        solver_opts = Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
+        ## Lookup solver
+        {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
+        {:ok, _pid} = MinizincPort.start_link(model_info, dzn_file, solver, solver_opts, opts)
+      dzn_error ->
+        Logger.debug "dzn error: #{inspect dzn_error}"
+        dzn_error
+    end
+
+
   end
 
-  @doc """
-  Shortcut for solve_sync/2.
-  """
 
-  def solve_sync(model) do
-    solve_sync(model, [])
-  end
 
   @doc """
 
@@ -85,7 +82,7 @@ defmodule MinizincSolver do
   """
   @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: [any()]
 
-  def solve_sync(model, data, solver_opts \\ [], opts \\ []) do
+  def solve_sync(model, data \\ [], solver_opts \\ [], opts \\ []) do
     solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.DefaultSync)
     # Plug sync_handler to have solver send the results back to us
     caller = self()

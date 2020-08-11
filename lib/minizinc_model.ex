@@ -35,7 +35,7 @@ defmodule MinizincModel do
              read_model(m),
              @submodel_footer], "\n"), [:append])
     end
-    target_file
+    model_info(target_file)
   end
 
   ## Single model
@@ -64,12 +64,15 @@ defmodule MinizincModel do
   def model_info(model_file, minizinc_executable \\ default_executable()) when is_binary(model_file) do
     model_json = cmd("#{minizinc_executable} #{model_file} --model-interface-only")
     {:ok, model_info} = Jason.decode(model_json)
+
+    [{:model_file, model_file} |
     Enum.map(model_info,
       fn {"input", v} ->  {:pars,v};
          {"output", v} -> {:vars, v};
          {"method", method_name} -> {:method, translate_method(method_name)};
          {k, v} -> {String.to_atom(k), v}
       end)
+    ]
   end
 
   defp translate_method("sat") do
@@ -84,9 +87,8 @@ defmodule MinizincModel do
     :minimize
   end
 
-  def model_method(%{fzn_stats: stats} = _summary) do
-    Map.get(stats, :method, "undefined")
-    |> String.to_atom()
+  def method(model) do
+    model[:method]
   end
 
   ## Add constraints to the model.

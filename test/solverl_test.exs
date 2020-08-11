@@ -52,15 +52,10 @@ defmodule SolverlTest do
 
   test "Checking dzn against the model: mismatch between declared and factual input parameter names" do
     ## The model expects to have 'n' par as input, but gets 'm' par instead.
-    Process.flag(:trap_exit, true)
-    error_msg = "{:error, {:bad_return_value, {:error, {:mismatch, [{\"m\", :not_in_model}, {\"n\", :not_in_dzn}]}}}}"
-    assert_raise MatchError,
-             #"{:error, {:bad_return_value, {:error, {:mismatch, [{\"m\", :not_in_model}, {\"n\", :not_in_dzn}]}}}",
-                 "no match of right hand side value: #{error_msg}",
-               fn ->
-                  MinizincSolver.solve_sync("mzn/nqueens.mzn", %{m: 2})
-                end
-  end
+    dzn = MinizincData.make_dzn(%{m: 4})
+    model_info = MinizincModel.make_model("mzn/nqueens.mzn")
+    assert MinizincData.check_dzn(model_info, dzn) ==
+             {:error, {:mismatch, [{"m", :not_in_model}, {"n", :not_in_dzn}]}}  end
 
   test "Unsatisfiable sync" do
     unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})

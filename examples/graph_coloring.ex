@@ -110,7 +110,7 @@ defmodule GraphColoring.LNSHandler do
 
   use MinizincHandler
 
-  def handle_solution(%{index: count} = solution)  do
+  def handle_solution(%{index: _count} = solution)  do
     Logger.info "Found #{MinizincResults.get_solution_objective(solution)}-coloring"
     ## Break after first found solution
     #if count > 10, do: {:break, solution}, else: solution
