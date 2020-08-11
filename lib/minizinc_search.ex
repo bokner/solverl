@@ -6,27 +6,40 @@ defmodule MinizincSearch do
   ## Given a function that 'destructs' parts of values
   ## of the solution's decision variables obtained in a previous iteration;
   ## run the solver on a
-  def lns(solver_instance, iterations, destruction_fun) when iterations > 0 do
-    last_iteration_instance = Enum.reduce(:lists.seq(1, iterations - 1),
-      solver_instance,
-      fn _i, instance ->
-        results = MinizincInstance.run(instance)
-        ## TODO: take 'method' from instance
-        method = MinizincResults.get_method(results)
-        last_solution = MinizincResults.get_last_solution(results)
-        updated_model = add_lns_constraints(solver_instance[:model], destruction_fun, last_solution, method)
-        Map.put(instance, :model, updated_model)
-      end
-    )
-    ## Last iteration
-    MinizincInstance.run(last_iteration_instance)
+  def lns(instance, iterations, destruction_fun) do
+    lns(Map.put(instance, :lns_constraints, []), iterations, destruction_fun, nil)
   end
 
-  ## Apply destruction function and add the resulting model chunk to the model
-  def add_lns_constraints(model, destruction_fun, solution, method) do
-    MinizincModel.merge(model,
+
+  def lns(_instance, 0, _destruction_fun, acc_results) do
+    acc_results
+  end
+
+  def lns(%{model: model, lns_constraints: constraints} = instance, iterations, destruction_fun, acc_results) when iterations > 0 do
+    ## Run iteration
+    lns_model = MinizincModel.merge(model, constraints)
+    iteration_results = MinizincInstance.run(%{instance | model: lns_model})
+    case MinizincResults.get_status(iteration_results) do
+      status when status in [:satisfied, :optimal] ->
+        ## Add LNS constraints
+        constraints = lns_constraints(
+                      destruction_fun,
+                      MinizincResults.get_last_solution(iteration_results),
+                      ## TODO: take 'method' from instance
+                      MinizincResults.get_method(iteration_results)
+                   )
+        updated_instance = Map.put(instance, :lns_constraints, constraints)
+        lns(updated_instance, iterations - 1, destruction_fun, iteration_results)
+      _no_solution ->
+        acc_results
+    end
+  end
+
+
+  ## Apply destruction function and create a text representation of LNS constraints
+  def lns_constraints(destruction_fun, solution, method) do
       Enum.map(destruction_fun.(solution, method),
-        fn c -> {:model_text, c} end))
+        fn c -> {:model_text, c} end)
   end
 
   def lns_objective_constraint(solution, objective_var, method) when method in [:maximize, :minimize] do
@@ -38,7 +51,7 @@ defmodule MinizincSearch do
   ## Randomly choose (1 - rate)th part of values
   ## and return them keyed with their indices.
   ##
-  def destruct(values, rate, offset) when is_list(values) do
+  def destruct(values, rate, offset \\ 0) when is_list(values) do
     Enum.take_random(Enum.with_index(values, offset),
       round(length(values) * (1 - rate)))
   end
@@ -48,16 +61,17 @@ defmodule MinizincSearch do
   ## The destruction_rate (a value between 0 and 1) states the percentage of the variables in the
   ## the array that should be 'dropped'.
   ##
-  def destruct_var(solution, varname, destruction_rate, offset \\0) when is_binary(varname) do
-    ## Randomly choose (1 - destruction_rate)th part of vardata to fix...
-    vardata = MinizincResults.get_solution_value(solution, varname)
-    fixed_data = destruct(vardata, destruction_rate, offset)
+  def destruct_var(variable_name, values, destruction_rate, offset \\0) when is_binary(variable_name) do
+    ## Randomly choose (1 - destruction_rate)th part of values to fix...
     ## Generate constraints
-    Enum.join(
-      Enum.map(fixed_data,
-              fn {d, idx} -> lns_constraint(varname, idx, d) end))
+    list_to_lns_constraints(variable_name, destruct(values, destruction_rate, offset))
   end
 
+  def list_to_lns_constraints(variable_name, values) do
+    Enum.join(
+      Enum.map(values,
+        fn {d, idx} -> lns_constraint(variable_name, idx, d) end))
+  end
 
   defp lns_constraint(varname, idx, val) do
     constraint("#{varname}[#{idx}] = #{val}")
