@@ -181,7 +181,7 @@ defmodule SolverlTest do
 
   test "Fix decision variable (used for LNS)" do
     ## Randomly destruct values of "var1" variable by 50%
-    assert MinizincSearch.destruct_var("var1", [1,2], 0.5, 2)
+    assert MinizincSearch.destroy_var("var1", [1,2], 0.5, 2)
            in ["constraint var1[2] = 1;\n", "constraint var1[3] = 2;\n"]
   end
 

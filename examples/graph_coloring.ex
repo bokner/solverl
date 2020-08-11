@@ -52,13 +52,13 @@ defmodule GraphColoring do
     lns(instance, iterations,
        fn solution, method ->
          [lns_objective_constraint(solution, "chromatic", method),
-         destruct_colors(solution[:data]["colors"],
+          destroy_colors(solution[:data]["colors"],
            destruction_rate)]
         end)
   end
 
-  def destruct_colors(coloring, rate) do
-    vertices = destruct(coloring, rate)
+  def destroy_colors(coloring, rate) do
+    vertices = destroy(coloring, rate)
     ## Normalize colors
     new_colors = normalize_colors(Enum.map(vertices, fn {c, _v} -> c end))
     ## Update reduced coloring with new colors
@@ -77,7 +77,7 @@ defmodule GraphColoring do
   ## Due to how the model we use works,
   ## the colors assigned to vertices are not sequentially enumerated.
   ## For example, the only 2 colors could have numbers 6 and 11.
-  ## To avoid clashes with model's objective, we will renumerate colors as
+  ## To avoid clashes with model's objective, we will renumerate colors
   ## [6, 11] -> [0, 1]
   def normalize_colors(colors) do
     color_set = MapSet.new(colors) |> MapSet.to_list
@@ -113,7 +113,8 @@ defmodule GraphColoring.LNSHandler do
   def handle_solution(%{index: count} = solution)  do
     Logger.info "Found #{MinizincResults.get_solution_objective(solution)}-coloring"
     ## Break after first found solution
-    if count > 10, do: {:break, solution}, else: solution
+    #if count > 10, do: {:break, solution}, else: solution
+    solution
   end
 
 

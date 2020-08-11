@@ -3,7 +3,7 @@ defmodule MinizincSearch do
 
   import MinizincUtils
 
-  ## Given a function that 'destructs' parts of values
+  ## Given a function that 'destroys' parts of values
   ## of the solution's decision variables obtained in a previous iteration;
   ## run the solver on a
   def lns(instance, iterations, destruction_fun) do
@@ -51,7 +51,7 @@ defmodule MinizincSearch do
   ## Randomly choose (1 - rate)th part of values
   ## and return them keyed with their indices.
   ##
-  def destruct(values, rate, offset \\ 0) when is_list(values) do
+  def destroy(values, rate, offset \\ 0) when is_list(values) do
     Enum.take_random(Enum.with_index(values, offset),
       round(length(values) * (1 - rate)))
   end
@@ -61,10 +61,10 @@ defmodule MinizincSearch do
   ## The destruction_rate (a value between 0 and 1) states the percentage of the variables in the
   ## the array that should be 'dropped'.
   ##
-  def destruct_var(variable_name, values, destruction_rate, offset \\0) when is_binary(variable_name) do
+  def destroy_var(variable_name, values, destruction_rate, offset \\0) when is_binary(variable_name) do
     ## Randomly choose (1 - destruction_rate)th part of values to fix...
     ## Generate constraints
-    list_to_lns_constraints(variable_name, destruct(values, destruction_rate, offset))
+    list_to_lns_constraints(variable_name, destroy(values, destruction_rate, offset))
   end
 
   def list_to_lns_constraints(variable_name, values) do
