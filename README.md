@@ -374,11 +374,11 @@ Currently, there are following types of solver events:
   
   The return of the solution handler callback could be one of:
     
-- `:break)`
+- `:break`
    
    Solution handler stops receiving solver events and asks solver to stop execution.
 
-- `{:break), data}`
+- `{:break, data}`
    
    Same as above, but in case of synchronous solving, `data` will be added to [solver results](#solver-results).
 
