@@ -415,6 +415,7 @@ The exception value will be added to [solver results](#solver-results) under `:h
  - [N-Queens](#n-queens)
  - [Sudoku](#sudoku)
  - [Graph Coloring](#graph-coloring)
+ - [Find first k solutions](#find-first-k-solutions)
  - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
@@ -543,6 +544,40 @@ Output:
 22:43:01.328 [info]  Color 2 -> vertices: 1
 ```
 
+### Find first k solutions
+```elixir
+## We use Sudoku code from the example above, but now with the built-in handler 
+## that limits the number of solutions.
+##
+## The puzzle below has 5 solutions...
+sudoku_puzzle = "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
+## ...but we only want 3
+Sudoku.solve(sudoku_puzzle, 
+  solution_handler: MinizincSearch.find_k_handler(3, Sudoku.AsyncHandler))
+```
+Partial output (last solution and a final line only):
+```
+ 
+18:36:13.716 [info]  
++-------+-------+-------+
+| 8 1 4 | 6 3 7 | 9 2 5 | 
+| 3 2 5 | 1 4 9 | 6 8 7 | 
+| 7 9 6 | 8 2 5 | 3 1 4 | 
++-------+-------+-------+
+| 9 5 7 | 3 1 8 | 4 6 2 | 
+| 2 4 1 | 9 5 6 | 8 7 3 | 
+| 6 3 8 | 2 7 4 | 5 9 1 | 
++-------+-------+-------+
+| 4 6 2 | 7 9 3 | 1 5 8 | 
+| 5 7 9 | 4 8 1 | 2 3 6 | 
+| 1 8 3 | 5 6 2 | 7 4 9 | 
++-------+-------+-------+
+
+
+18:36:13.716 [info]  Solutions found: 3
+
+```
+ 
 
 ## Erlang interface
 
