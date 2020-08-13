@@ -80,7 +80,7 @@ defmodule SolverlTest do
     final_data = MinizincSolver.solve_sync(
       "mzn/nqueens.mzn",
       %{n: 50},
-      [solution_handler: SolverTest.LimitSolutionsSync]
+      [solution_handler: MinizincSearch.find_k_handler(100, MinizincHandler.DefaultSync)]
     )
     assert length(MinizincResults.get_solutions(final_data)) == 100
     assert MinizincResults.get_status(final_data) == :satisfied
@@ -189,37 +189,9 @@ defmodule SolverlTest do
   end
 end
 
-defmodule LimitSolutionsSync do
-  use MinizincHandler
-
-  @doc false
-  def handle_solution(%{index: count, data: data})  do
-    if count < 100, do: data, else: {:break, data}
-  end
-
-  @doc false
-  def handle_summary(summary) do
-    summary
-  end
-
-end
-
-
-defmodule SolverTest.LimitSolutionsSync do
-  use MinizincHandler
-
-  @doc false
-  def handle_solution(%{index: count, data: data})  do
-    if count < 100, do: data, else: {:break, data}
-  end
-
-  @doc false
-  def handle_summary(summary) do
-    summary
-  end
-
-end
-
+####################
+## Helper modules ##
+####################
 defmodule SolverTest.EveryOtherSync do
   use MinizincHandler
 

@@ -48,7 +48,7 @@ defmodule MinizincSearch do
       constraint("#{objective_var} #{objective_predicate(method)} #{objective_value}")
   end
 
-  def find_k_handler(k, solution_handler) do
+  def find_k_handler(k, solution_handler \\ MinizincHandler.DefaultSync) do
     fn
       ## Intercept the solution handler and force no more than k solutions.
       (:solution, %{index: count} = _solution) when count > k ->
