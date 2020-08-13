@@ -1,6 +1,6 @@
 defmodule FindK do
   @moduledoc false
-  
+
   require Logger
 
   ## Mirror of the 'find_k_solution' Minizinc example:

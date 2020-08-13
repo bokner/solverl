@@ -13,17 +13,16 @@ defmodule Sudoku do
   @doc """
     Solve asynchronously using Sudoku.AsyncHandler as a solution handler.
   """
-  def solve(puzzle, args \\ [])  do
+  def solve(puzzle, solver_opts \\ [solution_handler: Sudoku.AsyncHandler])  do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle:"
     Logger.info print_grid(sudoku_array)
 
-    opts = Keyword.put(args, :solution_handler, Sudoku.AsyncHandler)
     {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
       %{"S": 3, start: sudoku_array},
-      opts
+      solver_opts
     )
   end
 
@@ -39,15 +38,14 @@ defmodule Sudoku do
       end)
   ```
   """
-  def solve_sync(puzzle) do
+  def solve_sync(puzzle, solver_opts \\ [solution_handler: Sudoku.SyncHandler]) do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle (solved synchronously)"
     Logger.info print_grid(sudoku_array)
     MinizincSolver.solve_sync(
       "mzn/sudoku.mzn",
-      %{"S": 3, start: sudoku_array},
-      [solution_handler: Sudoku.SyncHandler]
+      %{"S": 3, start: sudoku_array}, solver_opts
     )
   end
 
