@@ -155,10 +155,10 @@ defmodule MinizincPort do
 
   defp finalize(
          exit_status,
-         %{solution_handler: solution_handler, parser_state: parser_state, model: model_info} = state
+         state
        )
        when exit_status == :normal do
-    handle_summary(solution_handler, parser_state, model_info)
+    handle_summary(state)
     new_state = state
                 |> Map.put(:exit_status, 0)
     {:stop, :normal, new_state}
@@ -183,9 +183,13 @@ defmodule MinizincPort do
     )
   end
 
-  defp handle_summary(solution_handler, parser_state, model_info \\ false) do
+  defp handle_summary(
+         %{
+           solution_handler: solution_handler,
+           parser_state: parser_state,
+           model: model_info} = _state) do
     MinizincHandler.handle_summary(
-      MinizincParser.summary(parser_state, model_info),
+     MinizincParser.summary(parser_state, model_info),
       solution_handler
     )
   end
@@ -204,7 +208,11 @@ defmodule MinizincPort do
 
   ## Parse data from external Minizinc process
   defp parse_minizinc_data(out_stream, data, %{parser_state: parser_state} = state, solution_handler) do
+
     {parser_event, new_parser_state} = MinizincParser.parse_output(out_stream, data, parser_state)
+
+    new_state = Map.put(state, :last_event_timestamp, MinizincUtils.now(:microsecond)) |>
+      Map.put(:parser_state, new_parser_state)
 
     next_action =
       case parser_event do
@@ -214,10 +222,10 @@ defmodule MinizincPort do
           ## Deciding if the solver is to be stopped...
           case solution_res do
             :break ->
-              handle_summary(solution_handler, new_parser_state)
+              handle_summary(new_state)
               :break
             {:break, _data} ->
-              handle_summary(solution_handler, new_parser_state)
+              handle_summary(new_state)
               :break
             _other ->
               :ok
@@ -228,8 +236,7 @@ defmodule MinizincPort do
         _other ->
           :ok
       end
-    {next_action, Map.put(state, :last_event_timestamp, MinizincUtils.now(:microsecond)) |>
-                                 Map.put(:parser_state, new_parser_state)}
+    {next_action, new_state}
   end
 
   defp get_solver_status(%{started_at: started_at, parser_state: parser_state} = _state) do
