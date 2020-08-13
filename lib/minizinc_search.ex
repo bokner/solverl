@@ -2,6 +2,7 @@ defmodule MinizincSearch do
   @moduledoc false
 
   import MinizincUtils
+  import MinizincHandler
 
   ## Given a function that 'destroys' parts of values
   ## of the solution's decision variables obtained in a previous iteration;
@@ -46,6 +47,20 @@ defmodule MinizincSearch do
       objective_value = MinizincResults.get_solution_value(solution, objective_var)
       constraint("#{objective_var} #{objective_predicate(method)} #{objective_value}")
   end
+
+  def find_k_handler(k, solution_handler) do
+    fn
+      ## Intercept the solution handler and force no more than k solutions.
+      (:solution, %{index: count} = _solution) when count > k ->
+        :break;
+
+      ## Use the original handler for processing otherwise
+      (event, data) ->
+        handle_solver_event(event, data, solution_handler)
+    end
+  end
+
+
 
   defp objective_predicate(:maximize) do
     ">"
