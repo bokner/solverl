@@ -264,10 +264,11 @@ defmodule MinizincParser do
     }
     ## Update status and add model info
     case model_info do
-      nil -> raw_summary
-      _info ->
+      _info when is_list(model_info) ->
         raw_summary |> Map.put(:status, MinizincResults.status(model_info[:method], status)) |>
           Map.put(:model_info, model_info)
+      _no_model_info ->
+        raw_summary
     end
   end
 
