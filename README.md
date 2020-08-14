@@ -415,7 +415,7 @@ The exception value will be added to [solver results](#solver-results) under `:h
  - [N-Queens](#n-queens)
  - [Sudoku](#sudoku)
  - [Graph Coloring](#graph-coloring)
- - [Find first k solutions](#find-first-k-solutions)
+ - [Finding the first k solutions](#finding-the-first-k-solutions)
  - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
@@ -544,7 +544,7 @@ Output:
 22:43:01.328 [info]  Color 2 -> vertices: 1
 ```
 
-### Find first k solutions
+### Finding the first k solutions
 ```elixir
 ## We use Sudoku code from the example above, but now with the built-in handler 
 ## that limits the number of solutions.
