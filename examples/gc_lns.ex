@@ -7,14 +7,29 @@ defmodule LNS.GraphColoring do
 
   @gc_model "mzn/graph_coloring.mzn"
 
-  def do_lns(data, iterations, destruction_rate, opts \\ []) do
-    instance = MinizincInstance.new(@gc_model, data, Keyword.put(opts, :solution_handler, GraphColoring.LNSHandler))
-    lns(instance, iterations,
-      fn solution, method ->
+  ## Find optimal solution for Graph Coloring instance using Randomized LNS.
+  ## 'destruction_rate' is a fraction of the vertex coloring (represented in the model
+  ## by 'colors' var) that will be 'destroyed' for the next iteration.
+  ##
+  def do_lns(data, iterations, destruction_rate, solver_opts \\ [], opts \\ []) do
+    ## Default solution handler is the same as we use for GraphColoring.
+    ##
+    #solver_opts = Keyword.merge([solution_handler: GraphColoring.SyncHandler], solver_opts)
+    instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
+    result = lns(instance, iterations,
+      fn solution, method, iteration ->
+        Logger.info "Iteration #{iteration}: #{MinizincResults.get_solution_objective(solution)}-coloring"
         [lns_objective_constraint(solution, "chromatic", method),
           destroy_colors(solution[:data]["colors"],
             destruction_rate)]
       end)
+
+    Logger.info "LNS final: #{get_objective(result)}-coloring"
+  end
+
+  defp get_objective(result) do
+    MinizincResults.get_solution_objective(
+      MinizincResults.get_last_solution(result))
   end
 
   def destroy_colors(coloring, rate) do
@@ -26,19 +41,15 @@ defmodule LNS.GraphColoring do
 
     new_coloring = Enum.zip(new_colors, v)
     ## Generate constraints for the partial coloring
-
-    Logger.debug "Original coloring: #{length(coloring)}, fixed coloring: #{length(vertices)}"
-    Logger.debug "Normalized coloring: #{Enum.max(new_colors)} colors"
-    Logger.debug "New coloring constraints: #{length(new_coloring)}"
     list_to_lns_constraints("colors", new_coloring)
 
   end
 
-  ## Due to how the model we use works,
+  ## Because of the way the model we use works,
   ## the colors assigned to vertices are not sequentially enumerated.
   ## For example, the only 2 colors could have numbers 6 and 11.
-  ## To avoid clashes with model's objective, we will renumerate colors
-  ## [6, 11] -> [0, 1]
+  ## To avoid clashes with model's objective, we will relabel colors,
+  ## i.e., [6, 11] -> [0, 1]
   def normalize_colors(colors) do
     color_set = MapSet.new(colors) |> MapSet.to_list
     Enum.map(colors, fn c -> Enum.find_index(color_set, fn x -> x == c end)  end)
@@ -47,27 +58,3 @@ defmodule LNS.GraphColoring do
 end
 
 
-defmodule GraphColoring.LNSHandler do
-  @moduledoc false
-
-  require Logger
-
-  use MinizincHandler
-
-  def handle_solution(%{index: _count} = solution)  do
-    Logger.info "Found #{MinizincResults.get_solution_objective(solution)}-coloring"
-    ## Break after first found solution
-    #if count > 10, do: {:break, solution}, else: solution
-    solution
-  end
-
-
-  def handle_summary(%{last_solution: solution, status: status} = summary) do
-
-    Logger.info "Objective: #{MinizincResults.get_solution_objective(solution)}"
-    Logger.info "Status: #{status}"
-    summary
-  end
-
-
-end
