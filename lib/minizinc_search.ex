@@ -1,5 +1,7 @@
 defmodule MinizincSearch do
-  @moduledoc false
+  @moduledoc """
+  Meta-search, such as LNS, find_k_solutions, BAB (todo)...
+"""
 
   import MinizincUtils
   import MinizincHandler
@@ -7,7 +9,7 @@ defmodule MinizincSearch do
   ## Run LNS on the problem instance for given number of iterations;
   ## 'destruction_fun' produces additional constraints based on the obtained solutions and a model method.
   def lns(instance, iterations, destruction_fun) when is_integer(iterations) and is_function(destruction_fun) do
-    lns_impl(Map.put(instance, :lns_constraints, []), iterations, 0, destruction_fun, nil)
+    lns_impl(Map.put(instance, :lns_constraints, []), iterations, 1, destruction_fun, nil)
   end
 
 
@@ -18,13 +20,12 @@ defmodule MinizincSearch do
   end
 
 
-  def lns_impl(_instance, 0, _iterations, _destruction_fun, acc_results) do
+  defp lns_impl(_instance, 0, _iterations, _destruction_fun, acc_results) do
     acc_results
   end
 
-  def lns_impl(%{model: model, lns_constraints: constraints} = instance, iterations, iter_number, destruction_fun, acc_results) when iterations > 0 do
+  defp lns_impl(%{model: model, lns_constraints: constraints} = instance, iterations, iter_number, destruction_fun, acc_results) when iterations > 0 do
     ## Run iteration
-    iter_number = iter_number + 1
     lns_model = MinizincModel.merge(model, constraints)
     iteration_results = MinizincInstance.run(%{instance | model: lns_model})
     case MinizincResults.get_status(iteration_results) do
@@ -37,7 +38,7 @@ defmodule MinizincSearch do
                       iter_number
                    )
         updated_instance = Map.put(instance, :lns_constraints, constraints)
-        lns_impl(updated_instance, iterations - 1, iter_number, destruction_fun, iteration_results)
+        lns_impl(updated_instance, iterations - 1, iter_number + 1, destruction_fun, iteration_results)
       _no_solution ->
         acc_results
     end
@@ -47,7 +48,7 @@ defmodule MinizincSearch do
 
 
   ## Apply destruction function and create a text representation of LNS constraints
-  def lns_constraints(destruction_fun, solution, method, iteration \\ nil) do
+  defp lns_constraints(destruction_fun, solution, method, iteration) do
       Enum.map(destruction_fun.(solution, method, iteration),
         fn c -> {:model_text, c} end)
   end

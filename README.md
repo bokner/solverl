@@ -14,7 +14,7 @@ Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
     - [Support for Minizinc data types](#support-for-minizinc-data-types)
     - [Configuring the solver](#solver-options)
     - [Solution handlers: customizing results and controlling execution](#solution-handlers)    
-- [Examples](#model-solving-examples)
+- [Examples](#examples)
      - [N-Queens](#n-queens)
      - [Sudoku](#sudoku)
      - [Graph Coloring](#graph-coloring)
@@ -411,28 +411,26 @@ to make sure that the solver process is gracefully shut down. Moreover, in case 
 MinizincSolver preserves the solver results accumulated before the exception, and returns them to the calling process.
 The exception value will be added to [solver results](#solver-results) under `:handler_exception` key.
 
-
-
-## Model solving examples
- - [N-Queens](#n-queens)
- - [Sudoku](#sudoku)
- - [Graph Coloring](#graph-coloring)
- - [Large Neighbourhood Search](#randomized-lns)
- - [Finding the first k solutions](#finding-the-first-k-solutions)
- - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
+## Examples
+- [N-Queens](#n-queens)
+- [Sudoku](#sudoku)
+- [Graph Coloring](#graph-coloring)
+- [Large Neighbourhood Search](#randomized-lns)
+- [Finding the first k solutions](#finding-the-first-k-solutions)
+- [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/nqueens.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/nqueens.mzn)
 
-   The following code solves [N-queens](https://developers.google.com/optimization/cp/queens) puzzle for N = 4:
+The following code solves [N-queens](https://developers.google.com/optimization/cp/queens) puzzle for N = 4:
+
+```elixir
+NQueens.solve(4, [solution_handler: &NQueens.solution_handler/2])
+```
    
-   ```elixir
-   NQueens.solve(4, [solution_handler: &NQueens.solution_handler/2])
-   ```
-   
-   Output: 
+Output: 
 ``` 
 17:16:53.073 [warn]  Command: /Applications/MiniZincIDE.app/Contents/Resources/minizinc --allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a  --solver org.gecode.gecode --time-limit 300000 /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.vFlJER37.mzn /var/folders/rn/_39sx1c12ws1x5k66n_cjjh00000gn/T/tmp.rxTZq96j.dzn
 {:ok, #PID<0.766.0>}
@@ -466,7 +464,6 @@ iex(75)>
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/sudoku.mzn)
 
 ```elixir
-
 Sudoku.solve("85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4.")
 ```
 The output:
@@ -534,7 +531,7 @@ vertices = 4
 GraphColoring.do_coloring({vertices, edges}, [time_limit: 1*1000])   
 ```
 Output:
-```erlang
+```
 
 22:43:01.318 [info]  Found coloring to 2 colors
  
@@ -551,7 +548,7 @@ Output:
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
 
 It's a Graph Coloring again, but here we run a problem instance the graph with 1000 vertices.
-We use [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins) LNS with 3 iterations and destruction rate of 0.8, with each iteration running for 1 minute:
+We use [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins) with 3 iterations and destruction rate of 0.8, with each iteration running for 1 minute:
 ```elixir
 LNS.GraphColoring.do_lns("mzn/gc_1000.dzn", 3, 0.8, time_limit: 60*1000) 
 ```
@@ -627,11 +624,10 @@ and then parses its text output into solver events and makes appropriate callbac
 
 ## Roadmap
 
-```
-  Support LNS;
-  Support Branch-and-Bound;
-  Match minizinc-python functionality.
-```  
+- Match Minizinc Python and MiniSearch functionality
+- Distributed solving 
+- Better error and exception handling 
+
 ## Credits
 
 The project extensively uses ideas and code examples from [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).

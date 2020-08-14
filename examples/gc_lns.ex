@@ -12,9 +12,6 @@ defmodule LNS.GraphColoring do
   ## by 'colors' var) that will be 'destroyed' for the next iteration.
   ##
   def do_lns(data, iterations, destruction_rate, solver_opts \\ [], opts \\ []) do
-    ## Default solution handler is the same as we use for GraphColoring.
-    ##
-    #solver_opts = Keyword.merge([solution_handler: GraphColoring.SyncHandler], solver_opts)
     instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
     result = lns(instance, iterations,
       fn solution, method, iteration ->
