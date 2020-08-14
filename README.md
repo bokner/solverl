@@ -15,10 +15,12 @@ Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
     - [Configuring the solver](#solver-options)
     - [Solution handlers: customizing results and controlling execution](#solution-handlers)    
 - [Examples](#model-solving-examples)
-    - [N-Queens](#n-queens)
-    - [Sudoku](#sudoku)
-    - [Graph Coloring](#graph-coloring)
-    - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
+     - [N-Queens](#n-queens)
+     - [Sudoku](#sudoku)
+     - [Graph Coloring](#graph-coloring)
+     - [Large Neighbourhood Search](#randomized-lns)
+     - [Finding the first k solutions](#finding-the-first-k-solutions)
+     - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
 
 - [Erlang interface](#erlang-interface)
 - [Roadmap](#roadmap)
@@ -415,6 +417,7 @@ The exception value will be added to [solver results](#solver-results) under `:h
  - [N-Queens](#n-queens)
  - [Sudoku](#sudoku)
  - [Graph Coloring](#graph-coloring)
+ - [Large Neighbourhood Search](#randomized-lns)
  - [Finding the first k solutions](#finding-the-first-k-solutions)
  - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
@@ -543,6 +546,25 @@ Output:
 
 22:43:01.328 [info]  Color 2 -> vertices: 1
 ```
+### Randomized LNS 
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
+
+It's a Graph Coloring again, but here we run a problem instance the graph with 1000 vertices.
+We use [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins) LNS with 3 iterations and destruction rate of 0.8, with each iteration running for 1 minute:
+```elixir
+LNS.GraphColoring.do_lns("mzn/gc_1000.dzn", 3, 0.8, time_limit: 60*1000) 
+```
+Output:
+```
+14:20:27.990 [info]  Iteration 1: 480-coloring
+  
+14:21:31.168 [info]  Iteration 2: 433-coloring
+  
+14:22:34.130 [info]  Iteration 3: 380-coloring
+ 
+14:22:34.131 [info]  LNS final: 380-coloring
+```
 
 ### Finding the first k solutions
 ```elixir
@@ -577,7 +599,8 @@ Partial output (last solution and a final line only):
 18:36:13.716 [info]  Solutions found: 3
 
 ```
- 
+
+
 
 ## Erlang interface
 
