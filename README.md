@@ -316,12 +316,12 @@ MinizincSolver.stop_solver(Graph1000)
   Example:
   ```elixir
   ## Solve "mzn/nqueens.mzn" for n = 4, using Gecode solver,
-  ## time limit of 1 sec, NQueens.SyncHandler as a solution handler.
+  ## time limit of 1 sec, NQueens.Handler as a solution handler.
   ## Extra flags: -O4 --verbose-compilation  
   MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, 
     [solver: "gecode", 
      time_limit: 1000, 
-     solution_handler: NQueens.SyncHandler, 
+     solution_handler: NQueens.Handler, 
      extra_flags: "-O4 --verbose-compilation"])
   ```
   
@@ -646,8 +646,9 @@ and then parses its text output into solver events and makes appropriate callbac
 ## Roadmap
 
 - Match Minizinc Python and MiniSearch functionality
-- Distributed solving 
-- Better error and exception handling 
+- API for parallel and distributed solving 
+- Better error and exception handling
+ 
 
 ## Credits
 

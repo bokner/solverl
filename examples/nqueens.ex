@@ -13,7 +13,7 @@ defmodule NQueens do
     MinizincSolver.solve(@nqueens_model, %{n: n}, opts)
   end
 
-  def solve_sync(n, opts \\ [solution_handler: NQueens.SyncHandler]) do
+  def solve_sync(n, opts \\ [solution_handler: NQueens.Handler]) do
     MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
   end
 
@@ -62,7 +62,7 @@ end
 
 
 
-defmodule NQueens.SyncHandler do
+defmodule NQueens.Handler do
   @behaviour MinizincHandler
   @moduledoc false
   require Logger

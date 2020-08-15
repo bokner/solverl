@@ -19,7 +19,7 @@ defmodule MinizincSolver do
     minizinc_executable: MinizincUtils.default_executable(),
     solver: "gecode",
     time_limit: 60 * 5 * 1000,
-    solution_handler: MinizincHandler.DefaultAsync
+    solution_handler: MinizincHandler.Default
   ]
 
   ## How long to wait after :stop_solver message had been sent to a solver port, and
@@ -83,7 +83,7 @@ defmodule MinizincSolver do
   @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: [any()]
 
   def solve_sync(model, data \\ [], solver_opts \\ [], opts \\ []) do
-    solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.DefaultSync)
+    solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
     # Plug sync_handler to have solver send the results back to us
     caller = self()
     sync_solver_opts = Keyword.put(

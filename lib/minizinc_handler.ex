@@ -16,13 +16,13 @@ defmodule MinizincHandler do
     quote do
       @behaviour MinizincHandler
       def handle_solution(solution) do
-        MinizincHandler.DefaultAsync.handle_solution(solution)
+        MinizincHandler.Default.handle_solution(solution)
       end
       def handle_summary(summary) do
-        MinizincHandler.DefaultAsync.handle_summary(summary)
+        MinizincHandler.Default.handle_summary(summary)
       end
       def handle_minizinc_error(error) do
-        MinizincHandler.DefaultAsync.handle_minizinc_error(error)
+        MinizincHandler.Default.handle_minizinc_error(error)
       end
       defoverridable MinizincHandler
     end
@@ -77,7 +77,7 @@ defmodule MinizincHandler do
 
 end
 
-defmodule MinizincHandler.DefaultAsync do
+defmodule MinizincHandler.Default do
   @moduledoc false
 
   require Logger
@@ -96,23 +96,4 @@ defmodule MinizincHandler.DefaultAsync do
   end
 end
 
-defmodule MinizincHandler.DefaultSync do
-  @behaviour MinizincHandler
-  @moduledoc false
-
-  require Logger
-  require Record
-
-  def handle_solution(solution)  do
-    solution
-  end
-
-  def handle_summary(summary)  do
-    summary
-  end
-
-  def handle_minizinc_error(error)  do
-    error
-  end
-end
 

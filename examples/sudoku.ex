@@ -11,9 +11,9 @@ defmodule Sudoku do
   @sample_sudoku_5_solutions "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
 
   @doc """
-    Solve asynchronously using Sudoku.AsyncHandler as a solution handler.
+    Solve asynchronously using Sudoku.Handler as a solution handler.
   """
-  def solve(puzzle, solver_opts \\ [solution_handler: Sudoku.AsyncHandler])  do
+  def solve(puzzle, solver_opts \\ [solution_handler: Sudoku.Handler])  do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle:"
@@ -38,7 +38,7 @@ defmodule Sudoku do
       end)
   ```
   """
-  def solve_sync(puzzle, solver_opts \\ [solution_handler: Sudoku.SyncHandler]) do
+  def solve_sync(puzzle, solver_opts \\ [solution_handler: Sudoku.Handler]) do
     # Turn a string into 9x9 grid
     sudoku_array = sudoku_string_to_grid(puzzle)
     Logger.info "Sudoku puzzle (solved synchronously)"
@@ -98,7 +98,7 @@ defmodule Sudoku do
 end
 
 
-defmodule Sudoku.AsyncHandler do
+defmodule Sudoku.Handler do
   @behaviour MinizincHandler
   @moduledoc false
   require Logger
@@ -122,26 +122,3 @@ defmodule Sudoku.AsyncHandler do
 end
 
 
-defmodule Sudoku.SyncHandler do
-  @behaviour MinizincHandler
-  @moduledoc false
-  require Logger
-
-  @doc false
-  def handle_solution(%{index: _count, data: data})  do
-    # if count < 3, do: data, else: {:break, data}
-    data
-  end
-
-  @doc false
-  def handle_summary(summary) do
-    summary
-  end
-
-  @doc false
-  def handle_minizinc_error(error) do
-    Logger.info "Minizinc error: #{error}"
-    error
-  end
-
-end

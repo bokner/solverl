@@ -80,14 +80,14 @@ defmodule SolverlTest do
     final_data = MinizincSolver.solve_sync(
       "mzn/nqueens.mzn",
       %{n: 50},
-      [solution_handler: MinizincSearch.find_k_handler(100, MinizincHandler.DefaultSync)]
+      [solution_handler: MinizincSearch.find_k_handler(100, MinizincHandler.Default)]
     )
     assert length(MinizincResults.get_solutions(final_data)) == 100
     assert MinizincResults.get_status(final_data) == :satisfied
   end
 
   test "Sync solving: solution handler that skips every other solution" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.EveryOtherSync])
+    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.EveryOther])
     ## 92 results for the nqueens.mzn model, but we drop every other one...
     assert length(MinizincResults.get_solutions(results)) == div(92, 2)
   end
@@ -164,7 +164,7 @@ defmodule SolverlTest do
   end
 
   test "Get last solution from summary, drop other solutions" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.SummaryOnlySync])
+    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.SummaryOnly])
     ## We dropped all solutions...
     assert length(MinizincResults.get_solutions(results)) == 0
     ## ... but the solution count is still correct...
@@ -192,7 +192,7 @@ end
 ####################
 ## Helper modules ##
 ####################
-defmodule SolverTest.EveryOtherSync do
+defmodule SolverTest.EveryOther do
   use MinizincHandler
 
   @doc false
@@ -211,7 +211,7 @@ defmodule SolverTest.EveryOtherSync do
 
 end
 
-defmodule SolverTest.SummaryOnlySync do
+defmodule SolverTest.SummaryOnly do
   use MinizincHandler
 
   @doc false
