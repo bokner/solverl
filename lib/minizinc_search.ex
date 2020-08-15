@@ -24,34 +24,58 @@ defmodule MinizincSearch do
     acc_results
   end
 
-  defp lns_impl(%{model: model, lns_constraints: constraints} = instance, iterations, iter_number, destruction_fun, acc_results) when iterations > 0 do
+  defp lns_impl(%{model: model, lns_constraints: constraints} = instance,
+         iterations, iter_number, destruction_fun, acc_results) when iterations > 0 do
     ## Run iteration
     lns_model = MinizincModel.merge(model, constraints)
     iteration_results = MinizincInstance.run(%{instance | model: lns_model})
-    case MinizincResults.get_status(iteration_results) do
+    results = case MinizincResults.get_status(iteration_results) do
       status when status in [:satisfied, :optimal] ->
-        ## Add LNS constraints
-        constraints = lns_constraints(
-                      destruction_fun,
-                      MinizincResults.get_last_solution(iteration_results),
-                      MinizincResults.get_method(iteration_results),
-                      iter_number
-                   )
-        updated_instance = Map.put(instance, :lns_constraints, constraints)
-        lns_impl(updated_instance, iterations - 1, iter_number + 1, destruction_fun, iteration_results)
+        iteration_results
       _no_solution ->
+        ## Use last known results
+        ## TODO: handle 'no results'
         acc_results
     end
+
+    lns_constraints =  add_lns_constraints(results, destruction_fun, iter_number)
+    updated_instance = Map.put(instance, :lns_constraints, lns_constraints)
+    lns_impl(updated_instance, iterations - 1, iter_number + 1, destruction_fun, results)
+
   end
 
 
-
-
-  ## Apply destruction function and create a text representation of LNS constraints
-  defp lns_constraints(destruction_fun, solution, method, iteration) do
-      Enum.map(destruction_fun.(solution, method, iteration),
-        fn c -> {:model_text, c} end)
+  defp add_lns_constraints(results, destruction_fun, iteration) do
+    ## Add LNS constraints
+    solution =  MinizincResults.get_last_solution(results)
+    method = MinizincResults.get_method(results)
+    Enum.map(destruction_fun.(solution, method, iteration),
+      fn c -> {:model_text, c} end)
   end
+
+  def iterative(instance, iterations, step_fun) do
+    iterative_impl(instance, iterations, 1, step_fun, nil)
+  end
+  
+  defp iterative_impl(instance, iterations, iter_number, step_fun, prev_results) when iterations > 0 do
+    ## Run iteration
+    iteration_results = MinizincInstance.run(instance)
+    results = case MinizincResults.get_status(iteration_results) do
+      status when status in [:satisfied, :optimal] ->
+        iteration_results
+      _no_solution ->
+        ## Use last known results
+        ## TODO: handle 'no results'
+        prev_results
+    end
+
+    updated_instance = step_fun.(instance, results, iter_number)
+    iterative_impl(updated_instance, iterations - 1, iter_number + 1, step_fun, results)
+
+
+  end
+
+
 
   def lns_objective_constraint(solution, objective_var, method) when method in [:maximize, :minimize] do
       objective_value = MinizincResults.get_solution_value(solution, objective_var)

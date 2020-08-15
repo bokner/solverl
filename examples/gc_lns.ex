@@ -28,8 +28,8 @@ defmodule LNS.GraphColoring do
     instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
     result = lns(instance, iterations,
      fn solution, method, iteration ->
-       destruction_rate = initial_rate + iteration * delta
-      Logger.info "Iteration #{iteration}: #{MinizincResults.get_solution_objective(solution)}-coloring"
+       destruction_rate = initial_rate + (iteration - 1 ) * delta
+      Logger.info "Iteration #{iteration}: #{MinizincResults.get_solution_objective(solution)}-coloring, rate: #{destruction_rate}"
       [lns_objective_constraint(solution, "chromatic", method),
         destroy_colors(solution[:data]["colors"],
           destruction_rate)]
