@@ -21,7 +21,7 @@ defmodule GraphColoring do
   end
 
   defp solve_sync(data, opts) do
-    MinizincSolver.solve_sync(@gc_model, data, Keyword.put_new(opts, :solution_handler, GraphColoring.SyncHandler))
+    MinizincSolver.solve_sync(@gc_model, data, Keyword.put_new(opts, :solution_handler, GraphColoring.Handler))
   end
 
   def show_results(gc_results) do
@@ -48,7 +48,7 @@ defmodule GraphColoring do
 
 end
 
-defmodule  GraphColoring.SyncHandler do
+defmodule  GraphColoring.Handler do
 
   @moduledoc false
 

@@ -216,9 +216,22 @@ will be either PID of the process (returned by MinizincSolver.solve/4), or [the 
 
 As of now, there are following external API calls:
 
-- **MinizincSolver.solver_status(pid_or_name)**
-- **MinizincSolver.stop_solver(pid_or_name)**
- 
+
+```elixir
+## Get runtime solver status
+MinizincSolver.solver_status(pid_or_name)
+```
+```elixir
+## Update solution handler at runtime
+MinizincSolver.update_solution_handler(pid_or_name, solution_handler) 
+```
+
+```elixir
+## Stop the solver gracefully (it'll produce a summary before shutting down)
+MinizincSolver.stop_solver(pid_or_name)
+```
+
+Here is a sample flow that shows usage of API calls:
 ```elixir
 ## Start long-running solving process named Graph1000...
 {:ok, pid} = MinizincSolver.solve("mzn/graph_coloring.mzn", "mzn/gc_1000.dzn", 
@@ -260,6 +273,14 @@ MinizincSolver.solver_status(Graph1000)
    time_since_last_solution: 1322186
  }}
 ```
+```elixir
+## Replace current solution handler with the one that logs intermittent results...
+MinizincSolver.update_solution_handler(Graph1000, GraphColoring.Handler)
+
+### and watch it now logging 'Found XXX-coloring' messages...
+
+```
+
 
 ```elixir
 ## Stop it now
@@ -547,7 +568,7 @@ Output:
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
 
-It's a Graph Coloring again, but here we run a problem instance the graph with 1000 vertices.
+It's a Graph Coloring again, now on a graph with 1000 vertices.
 We use [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins) with 3 iterations and destruction rate of 0.8, with each iteration running for 1 minute:
 ```elixir
 LNS.GraphColoring.do_lns("mzn/gc_1000.dzn", 3, 0.8, time_limit: 60*1000) 
@@ -630,4 +651,4 @@ and then parses its text output into solver events and makes appropriate callbac
 
 ## Credits
 
-The project extensively uses ideas and code examples from [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
+The project extensively uses ideas and code examples from [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html) and [MiniSearch](https://github.com/MiniZinc/libminizinc/tree/feature/minisearch).
