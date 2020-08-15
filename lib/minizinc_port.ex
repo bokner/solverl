@@ -116,6 +116,14 @@ defmodule MinizincPort do
     finalize(:normal, state)
   end
 
+  ## Same as above, but stop the solver
+  def handle_cast(
+        {:update_handler, handler},
+        state
+      ) do
+    {:noreply, Map.put(state, :solution_handler, handler)}
+  end
+
   def handle_cast(msg, _from, state) do
     unhandled_message(msg, state)
   end
@@ -132,6 +140,10 @@ defmodule MinizincPort do
   ## Get OS pid of solving process
   def ospid(pid) do
     GenServer.call(pid, :ospid)
+  end
+
+  def update_solution_hanldler(pid, handler) do
+    GenServer.cast(pid, {:update_handler, handler})
   end
 
   defp run_minizinc(solver, model_str, dzn_str, opts) do

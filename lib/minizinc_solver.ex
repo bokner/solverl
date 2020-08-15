@@ -209,6 +209,9 @@ defmodule MinizincSolver do
     MinizincPort.stop(pid)
   end
 
+  def update_solution_handler(pid, handler) do
+    MinizincPort.update_solution_hanldler(pid, handler)
+  end
 
   @doc """
   Get list of descriptions for solvers available to MinizincSolver.
