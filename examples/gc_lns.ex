@@ -24,6 +24,22 @@ defmodule LNS.GraphColoring do
     Logger.info "LNS final: #{get_objective(result)}-coloring"
   end
 
+  def do_adaptive_lns(data, iterations, initial_rate, delta, solver_opts \\ [], opts \\ []) do
+    instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
+    result = lns(instance, iterations,
+     fn solution, method, iteration ->
+       destruction_rate = initial_rate + iteration * delta
+      Logger.info "Iteration #{iteration}: #{MinizincResults.get_solution_objective(solution)}-coloring"
+      [lns_objective_constraint(solution, "chromatic", method),
+        destroy_colors(solution[:data]["colors"],
+          destruction_rate)]
+    end)
+
+    Logger.info "LNS final: #{get_objective(result)}-coloring"
+  end
+
+
+
   defp get_objective(result) do
     MinizincResults.get_solution_objective(
       MinizincResults.get_last_solution(result))
