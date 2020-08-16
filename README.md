@@ -1,8 +1,8 @@
 # Solverl
 
-Erlang/Elixir interface to [Minizinc](https://www.minizinc.org).
+Erlang/Elixir interface to [MiniZinc](https://www.minizinc.org).
 
-Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
+Inspired by [MiniZinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
 **Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
 
@@ -11,7 +11,7 @@ Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
 - [Usage](#usage)
     - [Model specification](#model-specification)
     - [Data specification](#data-specification)
-    - [Support for Minizinc data types](#support-for-minizinc-data-types)
+    - [Support for MiniZinc data types](#support-for-minizinc-data-types)
     - [Configuring the solver](#solver-options)
     - [Solution handlers: customizing results and controlling execution](#solution-handlers)    
 - [Examples](#examples)
@@ -28,11 +28,11 @@ Inspired by [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
 
 ## Installation
 
-You will need to install Minizinc. Please refer to https://www.minizinc.org/software.html for details.
+You will need to install MiniZinc. Please refer to https://www.minizinc.org/software.html for details.
 
 ###### **Note**:
  
-The code was only tested on macOS Catalina and Ubuntu 18.04 with Minizinc v2.4.3.
+The code was only tested on macOS Catalina and Ubuntu 18.04 with MiniZinc v2.4.3.
 
 ###### **Note**:
 
@@ -56,7 +56,7 @@ The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl
 
 - [Synchronous and asynchronous solving](#usage)
 - [Pluggable solution handlers](#solution-handlers) 
-- [Support for basic Minizinc types, arrays, sets and enums](#support-for-minizinc-data-types)
+- [Support for basic MiniZinc types, arrays, sets and enums](#support-for-minizinc-data-types)
 - [Monitoring and controlling the solving process](#monitoring-and-controlling-the-solving-process)
 
 ## Usage
@@ -74,7 +74,7 @@ solver_results = MinizincSolver.solve_sync(model, data, solver_opts, server_opts
 
 ```
 , where 
-- ```model``` - [specification of Minizinc model](#model-specification);
+- ```model``` - [specification of MiniZinc model](#model-specification);
 - ```data```  - [specification of data](#data-specification) passed to ```model```;
 - ```solver_opts``` - [solver options](#solver-options).
 - ```server_opts``` - [GenServer options for solver process](https://hexdocs.pm/elixir/GenServer.html)
@@ -83,7 +83,7 @@ solver_results = MinizincSolver.solve_sync(model, data, solver_opts, server_opts
 
 Model could be either:
 
-- a string, in which case it represents a path for a file containing Minizinc model. 
+- a string, in which case it represents a path for a file containing MiniZinc model. 
 
     **Example:** "mzn/sudoku.mzn"
     
@@ -109,7 +109,7 @@ Model could be either:
 
 Data could be either:
 
-- a string, in which case it represents a path for a Minizinc data file. 
+- a string, in which case it represents a path for a MiniZinc data file. 
 
     **Example:** "mzn/sudoku.dzn"
 
@@ -121,14 +121,14 @@ Data could be either:
      ```  
        
 - or a (mixed) list of the above. The code will build a data file by mapping elements of the list
-    to bodies of data files and/or data maps, serialized as described in [Support for Minizinc data types](#support-for-minizinc-data-types),
+    to bodies of data files and/or data maps, serialized as described in [Support for MiniZinc data types](#support-for-minizinc-data-types),
      then concatenating the elements of the list, each with a trailing line break. 
     
     **Example:**
     ```elixir
     ["mzn/test_data1.dzn", "mzn/test_data2.dzn", %{x: 2, y: -3, z: true}]
     ```
-### Support for Minizinc data types
+### Support for MiniZinc data types
 
 - #### Arrays
 
@@ -136,7 +136,7 @@ Data could be either:
     The code determines dimensions of the array based on its nested structure.
     Each level of nested list has to contain elements of the same length, or the exception 
     `{:irregular_array, array}` will be thrown.
-    6 levels of nesting are currently supported, in line with Minizinc.
+    6 levels of nesting are currently supported, in line with MiniZinc current limit.
     
     By default, the indices of the dimensions are 1-based.
     
@@ -168,7 +168,7 @@ Data could be either:
       
 - #### Sets
 
-    Minizinc `set` type corresponds to [MapSet](https://hexdocs.pm/elixir/MapSet.html).
+    MiniZinc `set` type corresponds to [MapSet](https://hexdocs.pm/elixir/MapSet.html).
     
     Example:
     ```elixir
@@ -180,7 +180,7 @@ Data could be either:
     ```
 - #### Enums
 
-     Minizinc `enum` type corresponds to [Tuple](https://hexdocs.pm/elixir/Tuple.html).
+     MiniZinc `enum` type corresponds to [Tuple](https://hexdocs.pm/elixir/Tuple.html).
      Tuple elements have to be either of strings, charlists or atoms.
      
      Example 1 (using strings, atoms and charlists for enum entries):
@@ -299,13 +299,13 @@ MinizincSolver.stop_solver(Graph1000)
 
 ### Solver options
 
-  - `solver`: Solver id supported by your Minizinc configuration. 
+  - `solver`: Solver id supported by your MiniZinc configuration. 
  
     Default: "gecode".
-  - `time_limit`: Time in msecs given to Minizinc to find a solution. 
+  - `time_limit`: Time in msecs given to MiniZinc to find a solution. 
   
     Default: 300000 (5 mins). Use `[time_limit: nil]` for unlimited time.
-  - `minizinc_executable`: Full path to Minizinc executable (you'd need it if `minizinc` executable cannot be located by your system).
+  - `minizinc_executable`: Full path to MiniZinc executable (you'd need it if `minizinc` executable cannot be located by your system).
   - `solution_handler`: Module or function that controls processing of solutions and/or metadata. 
   
     Default: MinizincHandler.DefaultAsync.
@@ -339,7 +339,7 @@ MinizincSolver.stop_solver(Graph1000)
   
   
   Solution handler code acts as a callback for the [solver events](#solver-events) emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
-  which is a wrapper process for Minizinc executable (see [Under the hood](#under-the-hood) for more details).
+  which is a wrapper process for MiniZinc executable (see [Under the hood](#under-the-hood) for more details).
   
   
   In case the solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
@@ -356,7 +356,7 @@ Currently, there are following types of solver events:
 
 - `:solution` - the new solution detected;
 - `:summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
-- `:minizinc_error` - the wrapper detected Minizinc runtime error.
+- `:minizinc_error` - the wrapper detected MiniZinc runtime error.
 
 #### Event-specific data
   - **For `:solution` event:** 
@@ -377,15 +377,15 @@ Currently, there are following types of solver events:
       solver_stats: solver_stats,       # Map of solver statistics values keyed with the field names
       solution_count: solution_count,   # Total number of solutions found
       last_solution: solution,          # Data for last :solution event (see above)
-      minizinc_output: minizinc_output, # Minizinc errors and warnings
-      time_elapsed: time_elapsed        # Time elapsed, verbatim as reported by Minizinc 
+      minizinc_output: minizinc_output, # MiniZinc errors and warnings
+      time_elapsed: time_elapsed        # Time elapsed, verbatim as reported by MiniZinc 
       }
   ```
   
   - **For `:minizinc_error` event:**
   ```elixir
       %{
-        error: error     # Minizinc output accompanied by runtime error 
+        error: error     # MiniZinc output accompanied by runtime error 
       }
   ```
   
@@ -645,11 +645,11 @@ and then parses its text output into solver events and makes appropriate callbac
 
 ## Roadmap
 
-- Match Minizinc Python and MiniSearch functionality
+- Match MiniZinc Python and MiniSearch functionality
 - API for parallel and distributed solving 
 - Better error and exception handling
  
 
 ## Credits
 
-The project extensively uses ideas and code examples from [Minizinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html) and [MiniSearch](https://github.com/MiniZinc/libminizinc/tree/feature/minisearch).
+The project extensively uses ideas and code examples from [MiniZinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html) and [MiniSearch](https://github.com/MiniZinc/libminizinc/tree/feature/minisearch).
