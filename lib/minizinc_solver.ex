@@ -91,8 +91,12 @@ defmodule MinizincSolver do
       :solution_handler,
       sync_handler(caller)
     )
-    {:ok, solver_pid} = solve(model, data, sync_solver_opts, opts)
-    receive_events(solution_handler, solver_pid)
+    case solve(model, data, sync_solver_opts, opts) do
+      {:ok, solver_pid} ->
+        receive_events(solution_handler, solver_pid)
+        error -> error
+    end
+
   end
 
   ####################################################
