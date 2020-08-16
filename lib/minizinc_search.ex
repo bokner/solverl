@@ -8,8 +8,15 @@ defmodule MinizincSearch do
 
   ## Run LNS on the problem instance for given number of iterations;
   ## 'destruction_fun' produces additional constraints based on the obtained solutions and a model method.
-  def lns(instance, iterations, destruction_fun) when is_integer(iterations) and is_function(destruction_fun) do
-    lns_impl(Map.put(instance, :lns_constraints, []), iterations, 1, destruction_fun, nil)
+  def lns(%{model: model} = instance, iterations, destruction_fun) when is_integer(iterations) and is_function(destruction_fun) do
+
+    iterative(instance, iterations,
+      fn _instance, results, iter_number ->
+        lns_constraints =  add_lns_constraints(results, destruction_fun, iter_number)
+        ## Add LNS constraints to the initial model
+        Map.put(instance, :model, MinizincModel.merge(lns_constraints, model))
+      end
+    )
   end
 
 
@@ -18,32 +25,6 @@ defmodule MinizincSearch do
       MinizincInstance.new(model, data, solver_opts, server_opts),
       iterations, destruction_fun)
   end
-
-
-  defp lns_impl(_instance, 0, _iterations, _destruction_fun, acc_results) do
-    acc_results
-  end
-
-  defp lns_impl(%{model: model, lns_constraints: constraints} = instance,
-         iterations, iter_number, destruction_fun, acc_results) when iterations > 0 do
-    ## Run iteration
-    lns_model = MinizincModel.merge(model, constraints)
-    iteration_results = MinizincInstance.run(%{instance | model: lns_model})
-    results = case MinizincResults.get_status(iteration_results) do
-      status when status in [:satisfied, :optimal] ->
-        iteration_results
-      _no_solution ->
-        ## Use last known results
-        ## TODO: handle 'no results'
-        acc_results
-    end
-
-    lns_constraints =  add_lns_constraints(results, destruction_fun, iter_number)
-    updated_instance = Map.put(instance, :lns_constraints, lns_constraints)
-    lns_impl(updated_instance, iterations - 1, iter_number + 1, destruction_fun, results)
-
-  end
-
 
   defp add_lns_constraints(results, destruction_fun, iteration) do
     ## Add LNS constraints
@@ -56,7 +37,11 @@ defmodule MinizincSearch do
   def iterative(instance, iterations, step_fun) do
     iterative_impl(instance, iterations, 1, step_fun, nil)
   end
-  
+
+  defp iterative_impl(_instance, 0, _iterations, _destruction_fun, acc_results) do
+    acc_results
+  end
+
   defp iterative_impl(instance, iterations, iter_number, step_fun, prev_results) when iterations > 0 do
     ## Run iteration
     iteration_results = MinizincInstance.run(instance)
