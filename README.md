@@ -592,12 +592,12 @@ Output:
 ```
 ### Large Neighbourhood Search
 
-#### Randomized LNS 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
 
+#### Randomized LNS 
 It's a Graph Coloring again, now on a graph with 1000 vertices.
-We will use `MinizincSearch.lns/5` built-in which implements [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins)
+We will use `MinizincSearch.lns/5` built-in to implement [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins)
 
 The following call runs 3 iterations with destruction rate of 0.8, and iteration time limit of 1 minute:
 ```elixir
@@ -615,10 +615,8 @@ Output:
 ```
 
 #### Adaptive LNS 
-- [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
 
-For the same graph with 1000 vertices, we will use `MinizincSearch.lns/5` built-in which implements a flavour of [Adaptive LNS](https://www.minizinc.org/minisearch/documentation.html#builtins).
+For the same graph with 1000 vertices, we will use `MinizincSearch.lns/5` built-in to implement a flavour of [Adaptive LNS](https://www.minizinc.org/minisearch/documentation.html#builtins).
 
 The following call runs 5 iterations with initial destruction rate of 0.7, increment of 0.05 and iteration time limit of 1 minute:
 
