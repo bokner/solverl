@@ -11,6 +11,10 @@ defmodule MinizincResults do
     solver_results[:summary][:last_solution]
   end
 
+  def get_solution_count(solver_results) do
+    solver_results[:summary][:solution_count]
+  end
+
   def get_solution_objective(solution) do
     get_solution_value(solution, "_objective")
   end

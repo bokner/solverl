@@ -1,20 +1,26 @@
 defmodule MinizincSearch do
   @moduledoc """
-  Meta-search, such as LNS, find_k_solutions, BAB (todo)...
-"""
+    Meta-search, such as LNS, find_k_solutions, BAB (todo)...
+  """
 
   import MinizincUtils
   import MinizincHandler
 
   ## Run LNS on the problem instance for given number of iterations;
   ## 'destruction_fun' produces additional constraints based on the obtained solutions and a model method.
-  def lns(%{model: model} = instance, iterations, destruction_fun) when is_integer(iterations) and is_function(destruction_fun) do
+  def lns(%{model: model} = instance, iterations, destruction_fun)
+      when is_integer(iterations) and is_function(destruction_fun) do
 
-    iterative(instance, iterations,
-      fn _instance, results, iter_number ->
-        lns_constraints =  add_lns_constraints(results, destruction_fun, iter_number)
-        ## Add LNS constraints to the initial model
-        Map.put(instance, :model, MinizincModel.merge(lns_constraints, model))
+    iterative(
+      instance,
+      iterations,
+      fn
+        _instance, nil, _iter_number ->
+          :break
+        _instance, results, iter_number ->
+          lns_constraints = add_lns_constraints(results, destruction_fun, iter_number)
+          ## Add LNS constraints to the initial model
+          {:ok, Map.put(instance, :model, MinizincModel.merge(lns_constraints, model))}
       end
     )
   end
@@ -23,15 +29,19 @@ defmodule MinizincSearch do
   def lns(model, data \\ [], solver_opts \\ [], server_opts \\ [], iterations, destruction_fun) do
     lns(
       MinizincInstance.new(model, data, solver_opts, server_opts),
-      iterations, destruction_fun)
+      iterations,
+      destruction_fun
+    )
   end
 
   defp add_lns_constraints(results, destruction_fun, iteration) do
     ## Add LNS constraints
-    solution =  MinizincResults.get_last_solution(results)
+    solution = MinizincResults.get_last_solution(results)
     method = MinizincResults.get_method(results)
-    Enum.map(destruction_fun.(solution, method, iteration),
-      fn c -> {:model_text, c} end)
+    Enum.map(
+      destruction_fun.(solution, method, iteration),
+      fn c -> {:model_text, c} end
+    )
   end
 
   def iterative(instance, iterations, step_fun) do
@@ -45,26 +55,24 @@ defmodule MinizincSearch do
   defp iterative_impl(instance, iterations, iter_number, step_fun, prev_results) when iterations > 0 do
     ## Run iteration
     iteration_results = MinizincInstance.run(instance)
-    results = case MinizincResults.get_status(iteration_results) do
-      status when status in [:satisfied, :optimal] ->
-        iteration_results
-      _no_solution ->
-        ## Use last known results
-        ## TODO: handle 'no results'
-        prev_results
+    results = case MinizincResults.get_solution_count(iteration_results) do
+      0 -> prev_results
+      _solution_count -> iteration_results
     end
 
-    updated_instance = step_fun.(instance, results, iter_number)
-    iterative_impl(updated_instance, iterations - 1, iter_number + 1, step_fun, results)
-
+    case step_fun.(instance, results, iter_number) do
+      :break -> results
+      {:ok, updated_instance} ->
+        iterative_impl(updated_instance, iterations - 1, iter_number + 1, step_fun, results)
+    end
 
   end
 
 
 
   def lns_objective_constraint(solution, objective_var, method) when method in [:maximize, :minimize] do
-      objective_value = MinizincResults.get_solution_value(solution, objective_var)
-      constraint("#{objective_var} #{objective_predicate(method)} #{objective_value}")
+    objective_value = MinizincResults.get_solution_value(solution, objective_var)
+    constraint("#{objective_var} #{objective_predicate(method)} #{objective_value}")
   end
 
   def find_k_handler(k, solution_handler \\ MinizincHandler.Default) do
@@ -97,8 +105,10 @@ defmodule MinizincSearch do
   ## and return them keyed with their indices.
   ##
   def destroy(values, rate, offset \\ 0) when is_list(values) do
-    Enum.take_random(Enum.with_index(values, offset),
-      round(length(values) * (1 - rate)))
+    Enum.take_random(
+      Enum.with_index(values, offset),
+      round(length(values) * (1 - rate))
+    )
   end
 
   ## Takes the name and solution for an array of decision variables and
@@ -106,7 +116,7 @@ defmodule MinizincSearch do
   ## The destruction_rate (a value between 0 and 1) states the percentage of the variables in the
   ## the array that should be 'dropped'.
   ##
-  def destroy_var(variable_name, values, destruction_rate, offset \\0) when is_binary(variable_name) do
+  def destroy_var(variable_name, values, destruction_rate, offset \\ 0) when is_binary(variable_name) do
     ## Randomly choose (1 - destruction_rate)th part of values to fix...
     ## Generate constraints
     list_to_lns_constraints(variable_name, destroy(values, destruction_rate, offset))
@@ -114,8 +124,11 @@ defmodule MinizincSearch do
 
   def list_to_lns_constraints(variable_name, values) do
     Enum.join(
-      Enum.map(values,
-        fn {d, idx} -> lns_constraint(variable_name, idx, d) end))
+      Enum.map(
+        values,
+        fn {d, idx} -> lns_constraint(variable_name, idx, d) end
+      )
+    )
   end
 
   defp lns_constraint(varname, idx, val) do
