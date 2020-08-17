@@ -11,6 +11,7 @@ View docs [here](https://hexdocs.pm/solverl).
 - [Installation](#installation)
 - [Features](#features)
 - [Usage](#usage)
+    - [API](#api)
     - [Model specification](#model-specification)
     - [Data specification](#data-specification)
     - [Support for MiniZinc data types](#support-for-minizinc-data-types)
@@ -58,12 +59,15 @@ end
 - [Pluggable solution handlers](#solution-handlers) 
 - [Support for basic MiniZinc types, arrays, sets and enums](#support-for-minizinc-data-types)
 - [Monitoring and controlling the solving process](#monitoring-and-controlling-the-solving-process)
-
+- [Support for meta-search](#meta-search)
 ## Usage
 
-[MinizincSolver](https://github.com/bokner/solverl/blob/master/lib/minizinc_solver.ex) module provides functions both for synchronous and asynchronous solving. 
-
+### API
 ```elixir
+#################
+# Solving       
+#################
+#
 # Asynchronous solving.
 # Creates a solver process and processes solutions as they come in.
 {:ok, solver_pid} = MinizincSolver.solve(model, data, solver_opts, server_opts)
@@ -75,9 +79,30 @@ solver_results = MinizincSolver.solve_sync(model, data, solver_opts, server_opts
 ```
 , where 
 - ```model``` - [specification of MiniZinc model](#model-specification);
-- ```data```  - [specification of data](#data-specification) passed to ```model```;
-- ```solver_opts``` - [solver options](#solver-options).
-- ```server_opts``` - [GenServer options for solver process](https://hexdocs.pm/elixir/GenServer.html)
+- ```data (optional)```  - [specification of data](#data-specification) passed to ```model```;
+- ```solver_opts (optional)``` - [solver options](#solver-options).
+- ```server_opts (optional)``` - [GenServer options for solver process](https://hexdocs.pm/elixir/GenServer.html)
+
+
+```elixir
+############################
+# Monitoring and controlling 
+# the solving process at runtime
+############################
+#
+## Get runtime solver status
+MinizincSolver.solver_status(pid_or_name)
+```
+```elixir
+## Update solution handler at runtime
+MinizincSolver.update_solution_handler(pid_or_name, solution_handler) 
+```
+
+```elixir
+## Stop the solver gracefully (it'll produce a summary before shutting down)
+MinizincSolver.stop_solver(pid_or_name)
+```
+, where `pid_or_name` is either a PID or a registered (for instance, through GenServer `:name` option) name of the solver process.
 
 ### Model specification
 
@@ -214,24 +239,6 @@ Data could be either:
 The solving process communicates to the outside through API calls. First argument of these calls
 will be either PID of the process (returned by MinizincSolver.solve/4), or [the name of the GenServer process.](https://hexdocs.pm/elixir/GenServer.html#module-name-registration) 
 
-As of now, there are following external API calls:
-
-
-```elixir
-## Get runtime solver status
-MinizincSolver.solver_status(pid_or_name)
-```
-```elixir
-## Update solution handler at runtime
-MinizincSolver.update_solution_handler(pid_or_name, solution_handler) 
-```
-
-```elixir
-## Stop the solver gracefully (it'll produce a summary before shutting down)
-MinizincSolver.stop_solver(pid_or_name)
-```
-
-Here is a sample flow that shows usage of API calls:
 ```elixir
 ## Start long-running solving process named Graph1000...
 {:ok, pid} = MinizincSolver.solve("mzn/graph_coloring.mzn", "mzn/gc_1000.dzn", 
@@ -308,7 +315,7 @@ MinizincSolver.stop_solver(Graph1000)
   - `minizinc_executable`: Full path to MiniZinc executable (you'd need it if `minizinc` executable cannot be located by your system).
   - `solution_handler`: Module or function that controls processing of solutions and/or metadata. 
   
-    Default: MinizincHandler.DefaultAsync.
+    Default: MinizincHandler.Default
   
     Check out [Solution handlers](#solution-handlers) for more details. 
   - `extra_flags`: A string of command line flags supported by the solver. 
@@ -431,6 +438,25 @@ Solution handler is a pluggable code that is typically created by a user. Minizi
 to make sure that the solver process is gracefully shut down. Moreover, in case of synchronous solving,
 MinizincSolver preserves the solver results accumulated before the exception, and returns them to the calling process.
 The exception value will be added to [solver results](#solver-results) under `:handler_exception` key.
+
+## Meta-search
+
+```elixir
+################################
+# Meta-search built-ins        #
+################################
+## Create a solution handler that will limit the number of solutions to `k`.
+## It can then be used by solving API. 
+MinizincSearch.find_k_handler(k, solution_handler)
+```
+```elixir
+## Run LNS on a problem instance for a number of iterations, using a destruction function.
+## Instance is a container that has arguments for calling solving API.
+## Destruction function applies to a current model and the solutions found in a previous
+## iteration and tailors the model for the next iteration.
+MinizincSearch.lns(instance, iterations, destruction_fun) 
+```
+
 
 ## Examples
 - [N-Queens](#n-queens)
@@ -624,7 +650,7 @@ Output:
 sudoku_puzzle = "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
 ## ...but we only want 3
 Sudoku.solve(sudoku_puzzle, 
-  solution_handler: MinizincSearch.find_k_handler(3, Sudoku.AsyncHandler))
+  solution_handler: MinizincSearch.find_k_handler(3, Sudoku.Handler))
 ```
 Partial output (last solution and a final line only):
 ```
@@ -672,7 +698,9 @@ The API functions will always use `binary` strings whenever the function return 
 
 Both **MinizincSolver.solve/4** and **MinizincSolver.solve_sync/4** use **MinizincPort.start_link/2**
 to start *GenServer* process, which in turn spawns the external MiniZinc process, 
-and then parses its text output into solver events and makes appropriate callback function calls as described [here](#solution-handlers).
+and then parses its text output into solver events and makes appropriate callbacks as described [here](#solution-handlers).
+Note that because the invocation of Minizinc is a GenServer process, the solving is always asynchronous, even though **MinizincSolver.solve_sync/4**
+is a blocking call that will wait for it to terminate. This allows to control the solving process from outside regardless of whether solve/4 or solve_sync/4 is being used, as long as the PID or registered name of the process is known.
 
 ## Roadmap
 
