@@ -11,7 +11,7 @@ defmodule MinizincSearch do
   def lns(%{model: model} = instance, iterations, destruction_fun)
       when is_integer(iterations) and is_function(destruction_fun) do
 
-    iterative(
+   {_final_instance, final_results} = iterative(
       instance,
       iterations,
       fn
@@ -23,6 +23,8 @@ defmodule MinizincSearch do
           {:ok, Map.put(instance, :model, MinizincModel.merge(lns_constraints, model))}
       end
     )
+
+    final_results
   end
 
 
@@ -45,28 +47,26 @@ defmodule MinizincSearch do
   end
 
   def iterative(instance, iterations, step_fun) do
-    iterative_impl(instance, iterations, 1, step_fun, nil)
+    {_final_instance, _final_results} = Enum.reduce_while(
+      :lists.seq(1, iterations),
+      {instance, nil},
+      fn i, {prev_instance, prev_results} ->
+        iteration_results = MinizincInstance.run(prev_instance)
+        results = case MinizincResults.get_solution_count(iteration_results) do
+          0 -> prev_results
+          _solution_count -> iteration_results
+        end
+        case step_fun.(prev_instance, results, i) do
+          :break ->
+            {:halt, {prev_instance, results}}
+          {:ok, updated_instance} ->
+            {:cont, {updated_instance, results}}
+        end
+
+      end
+    )
   end
 
-  defp iterative_impl(_instance, 0, _iterations, _destruction_fun, acc_results) do
-    acc_results
-  end
-
-  defp iterative_impl(instance, iterations, iter_number, step_fun, prev_results) when iterations > 0 do
-    ## Run iteration
-    iteration_results = MinizincInstance.run(instance)
-    results = case MinizincResults.get_solution_count(iteration_results) do
-      0 -> prev_results
-      _solution_count -> iteration_results
-    end
-
-    case step_fun.(instance, results, iter_number) do
-      :break -> results
-      {:ok, updated_instance} ->
-        iterative_impl(updated_instance, iterations - 1, iter_number + 1, step_fun, results)
-    end
-
-  end
 
 
 
