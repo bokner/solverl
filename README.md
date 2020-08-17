@@ -4,6 +4,8 @@ Erlang/Elixir interface to [MiniZinc](https://www.minizinc.org).
 
 Inspired by [MiniZinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/index.html).
 
+View docs [here](https://hexdocs.pm/solverl).
+
 **Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
 
 - [Installation](#installation)
@@ -18,7 +20,7 @@ Inspired by [MiniZinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
      - [N-Queens](#n-queens)
      - [Sudoku](#sudoku)
      - [Graph Coloring](#graph-coloring)
-     - [Large Neighbourhood Search](#randomized-lns)
+     - [Large Neighbourhood Search](#large-neighbourhood-search)
      - [Finding the first k solutions](#finding-the-first-k-solutions)
      - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
 
@@ -49,8 +51,6 @@ def deps do
   ]
 end
 ```
-
-The docs can be found at [https://hexdocs.pm/solverl](https://hexdocs.pm/solverl).
 
 ## Features
 
@@ -436,7 +436,7 @@ The exception value will be added to [solver results](#solver-results) under `:h
 - [N-Queens](#n-queens)
 - [Sudoku](#sudoku)
 - [Graph Coloring](#graph-coloring)
-- [Large Neighbourhood Search](#randomized-lns)
+- [Large Neighbourhood Search](#large-neighbourhood-search)
 - [Finding the first k solutions](#finding-the-first-k-solutions)
 - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
@@ -564,12 +564,16 @@ Output:
 
 22:43:01.328 [info]  Color 2 -> vertices: 1
 ```
-### Randomized LNS 
+### Large Neighbourhood Search
+
+#### Randomized LNS 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
 
 It's a Graph Coloring again, now on a graph with 1000 vertices.
-We use [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins) with 3 iterations and destruction rate of 0.8, with each iteration running for 1 minute:
+We will use `MinizincSearch.lns/5` built-in which implements [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins)
+
+The following call runs 3 iterations with destruction rate of 0.8, and iteration time limit of 1 minute:
 ```elixir
 LNS.GraphColoring.do_lns("mzn/gc_1000.dzn", 3, 0.8, time_limit: 60*1000) 
 ```
@@ -582,6 +586,33 @@ Output:
 14:22:34.130 [info]  Iteration 3: 380-coloring
  
 14:22:34.131 [info]  LNS final: 380-coloring
+```
+
+#### Adaptive LNS 
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
+
+For the same graph with 1000 vertices, we will use `MinizincSearch.lns/5` built-in which implements a flavour of [Adaptive LNS](https://www.minizinc.org/minisearch/documentation.html#builtins).
+
+The following call runs 5 iterations with initial destruction rate of 0.7, increment of 0.05 and iteration time limit of 1 minute:
+
+```elixir
+LNS.GraphColoring.do_adaptive_lns("mzn/gc_1000.dzn", 5, 0.7, 0.05, time_limit: 60*1000) 
+```
+Output:
+```
+23:07:59.956 [info]  Iteration 1: 486-coloring, rate: 0.7
+ 
+23:09:02.905 [info]  Iteration 2: 432-coloring, rate: 0.75
+ 
+23:10:06.097 [info]  Iteration 3: 387-coloring, rate: 0.8
+ 
+23:11:09.239 [info]  Iteration 4: 355-coloring, rate: 0.85
+ 
+23:12:12.373 [info]  Iteration 5: 321-coloring, rate: 0.9
+ 
+23:12:12.374 [info]  LNS final: 321-coloring
+:ok
 ```
 
 ### Finding the first k solutions

@@ -24,6 +24,9 @@ defmodule LNS.GraphColoring do
     Logger.info "LNS final: #{get_objective(result)}-coloring"
   end
 
+  ## Find optimal solution for Graph Coloring instance using adaptive LNS.
+  ## It's the same as Randomized LNS, but the destruction rate gets increased by 'delta' with every iteration.
+  ##
   def do_adaptive_lns(data, iterations, initial_rate, delta, solver_opts \\ [], opts \\ []) do
     instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
     result = lns(instance, iterations,
