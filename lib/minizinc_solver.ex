@@ -94,7 +94,7 @@ defmodule MinizincSolver do
     case solve(model, data, sync_solver_opts, opts) do
       {:ok, solver_pid} ->
         receive_events(solution_handler, solver_pid)
-        error -> error
+      error -> error
     end
 
   end
@@ -190,7 +190,8 @@ defmodule MinizincSolver do
       :solutions,
       fn
         nil -> {nil, [data]};
-        current -> {nil, [data | current]} end
+        current -> {nil, [data | current]}
+      end
     )
     newacc
   end

@@ -2,19 +2,19 @@ defmodule ParserState do
   @moduledoc false
 
   defstruct status: nil,
-    fzn_stats: %{},
-    fzn_output: "",
-    compiled: false,
-    compilation_timestamp: nil,
-    solver_stats: %{},
-    mzn_stats: %{},
-    solution_data: %{},
-    time_elapsed: nil,
-    minizinc_stderr: "",
-    unclassified_output: "",
-    timestamp: nil,
-    solution_count: 0,
-    json_buffer: ""
+            fzn_stats: %{},
+            fzn_output: "",
+            compiled: false,
+            compilation_timestamp: nil,
+            solver_stats: %{},
+            mzn_stats: %{},
+            solution_data: %{},
+            time_elapsed: nil,
+            minizinc_stderr: "",
+            unclassified_output: "",
+            timestamp: nil,
+            solution_count: 0,
+            json_buffer: ""
 end
 
 
@@ -128,7 +128,8 @@ defmodule MinizincParser do
   @doc false
   # Update parser with the line produced by Minizinc port.
   defp update_state(%ParserState{solution_count: sc} = results, {:status, :satisfied}) do
-    %{results |
+    %{
+      results |
       status: :satisfied,
       timestamp: MinizincUtils.now(:microsecond),
       solution_count: sc + 1
@@ -141,9 +142,9 @@ defmodule MinizincParser do
 
   # Solution status update
   defp update_state(
-        %ParserState{mzn_stats: stats} = results,
-        {:solution_stats, {key, val}}
-      ) do
+         %ParserState{mzn_stats: stats} = results,
+         {:solution_stats, {key, val}}
+       ) do
     %{results | mzn_stats: add_key_value(stats, key, val)}
   end
 
@@ -156,17 +157,17 @@ defmodule MinizincParser do
   ##
   # FlatZinc stats
   defp update_state(
-        %ParserState{fzn_stats: stats, compiled: false} = results,
-        {:solver_stats, {key, val}}
+         %ParserState{fzn_stats: stats, compiled: false} = results,
+         {:solver_stats, {key, val}}
        ) do
     %{results | fzn_stats: add_key_value(stats, key, val)}
   end
 
   # Solver stats (occurs only after solver outputs its last solution).
   defp update_state(
-        %ParserState{solver_stats: stats} = results,
-        {:solver_stats, {key, val}}
-      ) do
+         %ParserState{solver_stats: stats} = results,
+         {:solver_stats, {key, val}}
+       ) do
     %{results | solver_stats: add_key_value(stats, key, val)}
   end
 
@@ -174,9 +175,10 @@ defmodule MinizincParser do
   defp update_state(%ParserState{compiled: false} = results, :stats_end) do
     ## flag the completion of compilation and make output to be FZN output
     ## Return extended event and a parser state
-    {:compiled,
-    %{results | compiled: true, compilation_timestamp: MinizincUtils.now(:microsecond)}
-   }
+    {
+      :compiled,
+      %{results | compiled: true, compilation_timestamp: MinizincUtils.now(:microsecond)}
+    }
   end
 
   defp update_state(%ParserState{compiled: true} = results, :stats_end) do
@@ -194,7 +196,8 @@ defmodule MinizincParser do
     {:ok, solution_data} = Jason.decode(
       buff <> "}"
     )
-    %{results |
+    %{
+      results |
       json_buffer: "",
       solution_data: MinizincData.output_to_elixir(solution_data)
     }
@@ -202,9 +205,9 @@ defmodule MinizincParser do
 
   ## Collecting JSON data
   defp update_state(
-        %ParserState{json_buffer: "{" <> _jbuffer = buff} = results,
-        json_chunk
-      ) when is_binary(json_chunk) do
+         %ParserState{json_buffer: "{" <> _jbuffer = buff} = results,
+         json_chunk
+       ) when is_binary(json_chunk) do
     %{results | json_buffer: buff <> json_chunk}
   end
 
@@ -223,8 +226,9 @@ defmodule MinizincParser do
     %{results | fzn_output: u <> "\n" <> new_line}
   end
 
- # Unclassified
-  defp update_state(%ParserState{unclassified_output: u, compiled: true} = results, new_line) when is_binary(new_line) do
+  # Unclassified
+  defp update_state(%ParserState{unclassified_output: u, compiled: true} = results, new_line)
+       when is_binary(new_line) do
     %{results | unclassified_output: u <> "\n" <> new_line}
   end
 
@@ -247,7 +251,8 @@ defmodule MinizincParser do
           minizinc_stderr: minizinc_stderr,
           unclassified_output: unclassified,
           time_elapsed: time_elapsed
-        } = results, model_info \\ nil
+        } = results,
+        model_info \\ nil
       ) do
     raw_summary = %{
       status: status,
@@ -265,8 +270,9 @@ defmodule MinizincParser do
     ## Update status and add model info
     case model_info do
       _info when is_list(model_info) ->
-        raw_summary |> Map.put(:status, MinizincResults.status(model_info[:method], status)) |>
-          Map.put(:model_info, model_info)
+        raw_summary
+        |> Map.put(:status, MinizincResults.status(model_info[:method], status))
+        |> Map.put(:model_info, model_info)
       _no_model_info ->
         raw_summary
     end
@@ -287,13 +293,13 @@ defmodule MinizincParser do
   end
 
   defp add_key_value(map, key, value) when is_map(map) do
-  {nil, new_map} = Map.get_and_update(
+    {nil, new_map} = Map.get_and_update(
       map,
       key,
       fn
         nil -> {nil, value};
-        current when is_list(current)   -> {nil, [value | current]}
-        current  -> {nil, [value, current]}
+        current when is_list(current) -> {nil, [value | current]}
+        current -> {nil, [value, current]}
       end
     )
     new_map

@@ -29,11 +29,18 @@ defmodule MinizincModel do
   def make_model(model, target) when is_list(model) do
     target_file = String.replace_suffix(target, ".mzn", "") <> ".mzn"
     for m <- model do
-      File.write(target_file,
-        Enum.join([
-             @submodel_header,
-             read_model(m),
-             @submodel_footer], "\n"), [:append])
+      File.write(
+        target_file,
+        Enum.join(
+          [
+            @submodel_header,
+            read_model(m),
+            @submodel_footer
+          ],
+          "\n"
+        ),
+        [:append]
+      )
     end
     model_info(target_file)
   end
@@ -65,13 +72,17 @@ defmodule MinizincModel do
     model_json = cmd("#{minizinc_executable} #{model_file} --model-interface-only")
     {:ok, model_info} = Jason.decode(model_json)
 
-    [{:model_file, model_file} |
-    Enum.map(model_info,
-      fn {"input", v} ->  {:pars,v};
-         {"output", v} -> {:vars, v};
-         {"method", method_name} -> {:method, translate_method(method_name)};
-         {k, v} -> {String.to_atom(k), v}
-      end)
+    [
+      {:model_file, model_file} |
+      Enum.map(
+        model_info,
+        fn
+          {"input", v} -> {:pars, v};
+          {"output", v} -> {:vars, v};
+          {"method", method_name} -> {:method, translate_method(method_name)};
+          {k, v} -> {String.to_atom(k), v}
+        end
+      )
     ]
   end
 
@@ -98,7 +109,9 @@ defmodule MinizincModel do
   ## 'model' is a string representation of a model, i.e. text, and NOT a model file.
   ##
   def add_constraints(model, constraints) when is_binary(model) and is_list(constraints) do
-    Enum.reduce(constraints, model,
+    Enum.reduce(
+      constraints,
+      model,
       fn c, acc ->
         acc <> constraint(c)
       end

@@ -34,7 +34,7 @@ defmodule MinizincUtils do
 
   ## Symmetric difference of 2 sets
   def sym_diff(a, b) do
-    MapSet.difference(MapSet.union(a,b), MapSet.intersection(a,b))
+    MapSet.difference(MapSet.union(a, b), MapSet.intersection(a, b))
   end
 
   ## Details on symmetric difference

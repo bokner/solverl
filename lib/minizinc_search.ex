@@ -11,7 +11,7 @@ defmodule MinizincSearch do
   def lns(%{model: model} = instance, iterations, destruction_fun)
       when is_integer(iterations) and is_function(destruction_fun) do
 
-   {_final_instance, final_results} = iterative(
+    {_final_instance, final_results} = iterative(
       instance,
       iterations,
       fn

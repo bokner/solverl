@@ -10,9 +10,15 @@ defmodule FindK do
     ## Get the original solution handler
     solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
     ## Use find_k_handler for solving
-    MinizincSolver.solve(model, data,
-      Keyword.put(solver_opts, :solution_handler,
-        MinizincSearch.find_k_handler(k, solution_handler)))
+    MinizincSolver.solve(
+      model,
+      data,
+      Keyword.put(
+        solver_opts,
+        :solution_handler,
+        MinizincSearch.find_k_handler(k, solution_handler)
+      )
+    )
   end
 
 

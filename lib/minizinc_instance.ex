@@ -4,7 +4,7 @@ defmodule MinizincInstance do
   def new(model, data \\ [], solver_opts \\ [], server_opts \\ []) do
     %{
       model: model,
-      data:  data,
+      data: data,
       solver_opts: solver_opts,
       server_opts: server_opts
     }
@@ -14,12 +14,15 @@ defmodule MinizincInstance do
     run(instance, true)
   end
 
-  def run(%{
-      model: model,
-      data:  data,
-      solver_opts: solver_opts,
-      server_opts: server_opts
-    } = instance, sync) when is_map(instance) and is_boolean(sync) do
+  def run(
+        %{
+          model: model,
+          data: data,
+          solver_opts: solver_opts,
+          server_opts: server_opts
+        } = instance,
+        sync
+      ) when is_map(instance) and is_boolean(sync) do
 
     if sync do
       MinizincSolver.solve_sync(model, data, solver_opts, server_opts)

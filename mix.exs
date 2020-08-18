@@ -4,7 +4,7 @@ defmodule Solverl.MixProject do
   def project do
     [
       app: :solverl,
-      version: "0.1.6",
+      version: "1.0.0",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: ["lib", "examples"],
@@ -35,7 +35,7 @@ defmodule Solverl.MixProject do
   end
 
   defp description() do
-    "Elixir/Erlang interface to Minizinc (https://www.minizinc.org/)."
+    "Elixir/Erlang interface to MiniZinc (https://www.minizinc.org/)."
   end
 
   defp docs do

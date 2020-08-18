@@ -13,15 +13,25 @@ defmodule LNS.GraphColoring do
   ##
   def do_lns(data, iterations, destruction_rate, solver_opts \\ [], opts \\ []) do
     instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
-    result = lns(instance, iterations,
+    result = lns(
+      instance,
+      iterations,
       fn solution, method, iteration ->
-        Logger.info "Iteration #{iteration}: #{MinizincResults.get_solution_objective(solution)}-coloring"
-        [lns_objective_constraint(solution, "chromatic", method),
-          destroy_colors(solution[:data]["colors"],
-            destruction_rate)]
-      end)
+        objective = MinizincResults.get_solution_objective(solution)
+        Logger.info "Iteration #{iteration}: #{objective}-coloring"
+        [
+          lns_objective_constraint(solution, "chromatic", method),
+          destroy_colors(
+            solution[:data]["colors"],
+            destruction_rate
+          )
+        ]
+      end
+    )
 
     Logger.info "LNS final: #{get_objective(result)}-coloring"
+
+    result
   end
 
   ## Find optimal solution for Graph Coloring instance using adaptive LNS.
@@ -29,23 +39,34 @@ defmodule LNS.GraphColoring do
   ##
   def do_adaptive_lns(data, iterations, initial_rate, delta, solver_opts \\ [], opts \\ []) do
     instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
-    result = lns(instance, iterations,
-     fn solution, method, iteration ->
-       destruction_rate = initial_rate + (iteration - 1 ) * delta
-      Logger.info "Iteration #{iteration}: #{MinizincResults.get_solution_objective(solution)}-coloring, rate: #{destruction_rate}"
-      [lns_objective_constraint(solution, "chromatic", method),
-        destroy_colors(solution[:data]["colors"],
-          destruction_rate)]
-    end)
+    result = lns(
+      instance,
+      iterations,
+      fn solution, method, iteration ->
+        destruction_rate = initial_rate + (iteration - 1) * delta
+        objective = MinizincResults.get_solution_objective(solution)
+        Logger.info "Iteration #{iteration}: #{objective}-coloring, rate: #{destruction_rate}"
+        [
+          lns_objective_constraint(solution, "chromatic", method),
+          destroy_colors(
+            solution[:data]["colors"],
+            destruction_rate
+          )
+        ]
+      end
+    )
 
     Logger.info "LNS final: #{get_objective(result)}-coloring"
+
+    result
   end
 
 
 
   defp get_objective(result) do
     MinizincResults.get_solution_objective(
-      MinizincResults.get_last_solution(result))
+      MinizincResults.get_last_solution(result)
+    )
   end
 
   def destroy_colors(coloring, rate) do
@@ -67,7 +88,8 @@ defmodule LNS.GraphColoring do
   ## To avoid clashes with model's objective, we will relabel colors,
   ## i.e., [6, 11] -> [0, 1]
   def normalize_colors(colors) do
-    color_set = MapSet.new(colors) |> MapSet.to_list
+    color_set = MapSet.new(colors)
+                |> MapSet.to_list
     Enum.map(colors, fn c -> Enum.find_index(color_set, fn x -> x == c end)  end)
   end
 

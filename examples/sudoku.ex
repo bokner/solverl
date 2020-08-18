@@ -45,7 +45,8 @@ defmodule Sudoku do
     Logger.info print_grid(sudoku_array)
     MinizincSolver.solve_sync(
       "mzn/sudoku.mzn",
-      %{"S": 3, start: sudoku_array}, solver_opts
+      %{"S": 3, start: sudoku_array},
+      solver_opts
     )
   end
 

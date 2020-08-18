@@ -199,9 +199,11 @@ defmodule MinizincPort do
          %{
            solution_handler: solution_handler,
            parser_state: parser_state,
-           model: model_info} = _state) do
+           model: model_info
+         } = _state
+       ) do
     MinizincHandler.handle_summary(
-     MinizincParser.summary(parser_state, model_info),
+      MinizincParser.summary(parser_state, model_info),
       solution_handler
     )
   end
@@ -223,8 +225,8 @@ defmodule MinizincPort do
 
     {parser_event, new_parser_state} = MinizincParser.parse_output(out_stream, data, parser_state)
 
-    new_state = Map.put(state, :last_event_timestamp, MinizincUtils.now(:microsecond)) |>
-      Map.put(:parser_state, new_parser_state)
+    new_state = Map.put(state, :last_event_timestamp, MinizincUtils.now(:microsecond))
+                |> Map.put(:parser_state, new_parser_state)
 
     next_action =
       case parser_event do
@@ -243,8 +245,8 @@ defmodule MinizincPort do
               :ok
           end
         :compiled ->
-            handle_compiled(solution_handler, new_parser_state)
-            :ok
+          handle_compiled(solution_handler, new_parser_state)
+          :ok
         _other ->
           :ok
       end
@@ -256,11 +258,11 @@ defmodule MinizincPort do
     now_ts = MinizincUtils.now(:microsecond)
     running_time = DateTime.diff(now_ts, started_at, :microsecond)
     {stage, solving_time} =
-    if summary[:compiled] do
-      {:solving, DateTime.diff(now_ts, summary[:compilation_timestamp], :microsecond)}
-    else
-      {:compiling, nil}
-    end
+      if summary[:compiled] do
+        {:solving, DateTime.diff(now_ts, summary[:compilation_timestamp], :microsecond)}
+      else
+        {:compiling, nil}
+      end
 
     solution_count = summary[:solution_count]
 

@@ -44,10 +44,10 @@ defmodule SolverlTest do
   test "Minizinc error" do
     ## Unrecognized Minizinc option
     assert %{
-      minizinc_error: %{
-        error: _error
-      }
-    } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2}, extra_flags: "--fake-flag")
+             minizinc_error: %{
+               error: _error
+             }
+           } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2}, extra_flags: "--fake-flag")
   end
 
   test "Checking dzn against the model: mismatch between declared and factual input parameter names" do
@@ -155,10 +155,13 @@ defmodule SolverlTest do
       var COLOR: bigger_color;
       constraint bigger_color > some_color;
     """
-    results = MinizincSolver.solve_sync({:model_text, enum_model},
-      %{'COLOR': {"White", "Black", "Red", "Blue", "Green"},
+    results = MinizincSolver.solve_sync(
+      {:model_text, enum_model},
+      %{
+        'COLOR': {"White", "Black", "Red", "Blue", "Green"},
         some_color: "Blue"
-      })
+      }
+    )
     solution = Enum.at(MinizincResults.get_solutions(results), 0)
     assert MinizincResults.get_solution_value(solution, "bigger_color") == "Green"
   end
@@ -176,7 +179,7 @@ defmodule SolverlTest do
 
   test "Fix decision variable (used for LNS)" do
     ## Randomly destruct values of "var1" variable by 50%
-    assert MinizincSearch.destroy_var("var1", [1,2], 0.5, 2)
+    assert MinizincSearch.destroy_var("var1", [1, 2], 0.5, 2)
            in ["constraint var1[2] = 1;\n", "constraint var1[3] = 2;\n"]
   end
 

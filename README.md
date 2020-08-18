@@ -9,7 +9,7 @@ View docs [here](https://hexdocs.pm/solverl).
 **Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
 
 - [Installation](#installation)
-- [Features](#features)
+
 - [Usage](#usage)
     - [API](#api)
     - [Model specification](#model-specification)
@@ -48,18 +48,11 @@ The package can be installed by adding `solverl` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:solverl, "~> 0.1.6"}
+    {:solverl, "~> 1.0.0"}
   ]
 end
 ```
 
-## Features
-
-- [Synchronous and asynchronous solving](#usage)
-- [Pluggable solution handlers](#solution-handlers) 
-- [Support for basic MiniZinc types, arrays, sets and enums](#support-for-minizinc-data-types)
-- [Monitoring and controlling the solving process](#monitoring-and-controlling-the-solving-process)
-- [Support for meta-search](#meta-search)
 ## Usage
 
 ### API
@@ -450,7 +443,8 @@ The exception value will be added to [solver results](#solver-results) under `:h
 MinizincSearch.find_k_handler(k, solution_handler)
 ```
 ```elixir
-## Run LNS on a problem instance for a number of iterations, using a destruction function.
+## Run LNS on a problem instance for a number of iterations, using a 
+## user-defined destruction function.
 ## Instance is a container that has arguments for calling solving API.
 ## Destruction function applies to a current model and the solutions found in a previous
 ## iteration and tailors the model for the next iteration.
@@ -597,7 +591,7 @@ Output:
 
 #### Randomized LNS 
 It's a Graph Coloring again, now on a graph with 1000 vertices.
-We will use `MinizincSearch.lns/5` built-in to implement [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins)
+We will use `MinizincSearch.lns/5` built-in to implement [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins).
 
 The following call runs 3 iterations with destruction rate of 0.8, and iteration time limit of 1 minute:
 ```elixir
