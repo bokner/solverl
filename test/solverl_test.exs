@@ -222,10 +222,6 @@ defmodule SolverTest.SummaryOnly do
     :skip
   end
 
-  @doc false
-  def handle_summary(summary) do
-    summary
-  end
 end
 
 ## For testing throws within a solution handler
@@ -239,10 +235,6 @@ defmodule SolverTest.ThrowAfter100 do
     data
   end
 
-  @doc false
-  def handle_summary(summary) do
-    summary
-  end
 end
 
 
