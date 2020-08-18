@@ -1,5 +1,5 @@
 enum COLOR;
-COLOR: some_color = Green;
+int: some_color ;
 var COLOR: color;
 constraint color = max(COLOR);
 

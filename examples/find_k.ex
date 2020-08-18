@@ -8,7 +8,7 @@ defmodule FindK do
   ##
   def run(k, model, data, solver_opts) do
     ## Get the original solution handler
-    solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
+    solution_handler = Keyword.get(solver_opts, :solution_handler)
     ## Use find_k_handler for solving
     MinizincSolver.solve(
       model,

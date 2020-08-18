@@ -15,7 +15,7 @@
 %------------------------------------------------------------------------%
 
 include "globals.mzn";
-include "minisearch.mzn"; % include the search minisearch lite
+%include "minisearch.mzn"; % include the search minisearch lite
 
 int: m = 10;
 int: n = m*m;
@@ -36,17 +36,18 @@ constraint alldifferent(differences);
     % Symmetry breaking
 constraint differences[1] < differences[(m*(m-1)) div 2];
 
-function ann: mybab(var int: obj) =
-       repeat(
-           if next() then
-               print("Intermediate solution with objective \(sol(obj))\n") /\
-               commit() /\ post(obj < sol(obj))
-           else break endif
-       );
+%function ann: mybab(var int: obj) =
+%       repeat(
+%           if next() then
+%               print("Intermediate solution with objective \(sol(obj))\n") /\
+%               commit() /\ post(obj < sol(obj))
+%           else break endif
+%       );
 
 % solve using minimizing branch & bound
 solve :: int_search(mark, input_order, indomain, complete)
+    minimize obj;
 %  search mybab(obj) /\ print();
-  search time_limit(3000, mybab(obj)) /\ if hasSol() then print() else print("No solution found\n") endif;
+%  search time_limit(3000, mybab(obj)) /\ if hasSol() then print() else print("No solution found\n") endif;
 
 output ["golomb ", show(obj), "\n", show(mark), "\n"];

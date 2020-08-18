@@ -20,13 +20,14 @@ View docs [here](https://hexdocs.pm/solverl).
     - [Meta-search](#meta-search)
     
 - [Examples](#examples)
-     - [N-Queens](#n-queens)
-     - [Sudoku](#sudoku)
-     - [Graph Coloring](#graph-coloring)
-     - [Large Neighbourhood Search](#large-neighbourhood-search)
-     - [Finding the first k solutions](#finding-the-first-k-solutions)
-     - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
-
+    - [N-Queens](#n-queens)
+    - [Sudoku](#sudoku)
+    - [Graph Coloring](#graph-coloring)
+    - [Large Neighbourhood Search](#large-neighbourhood-search-examples)
+    - [Finding the first k solutions](#finding-the-first-k-solutions)
+    - [Branch-and-Bound example](#branch-and-bound-example)
+    - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
+ 
 - [Erlang interface](#erlang-interface)
 - [Roadmap](#roadmap)
 - [Credits](#credits)
@@ -439,31 +440,45 @@ The exception value will be added to [solver results](#solver-results) under `:h
 
 ## Meta-search
 
+### Meta-search built-ins 
+##### Find the first k solutions
 ```elixir
-################################
-# Meta-search built-ins        #
-################################
 ## For any given solution handler, limit the number of solutions to `k`.
 ## This is done by 'wrapping' a handler into built-in MinizincSearch.find_k_handler/2.
 ## The resulting handler can then be used by the solving API. 
+
 MinizincSearch.find_k_handler(k, solution_handler)
 ```
+##### Large Neighbourhood Search
 ```elixir
 ## Run LNS on a problem instance for a number of iterations, using a 
 ## user-defined destruction function.
 ## Instance is a container that 'packs' arguments needed for calling the solving API.
 ## Destruction function applies to a current model and the solutions found in a previous
-## iteration and tailors the model for the next iteration.
+## iteration and modifies the model by refining its constraints for the objective 
+## and decision varables according to user-defined LNS strategy.
+
 MinizincSearch.lns(instance, iterations, destruction_fun) 
 ```
+##### Branch-and-Bound
+```elixir
+## Run BAB on a problem instance, using user-defined branch function.
+## The model will be refined with the new objective constraint for every new iteration, 
+## until the objective couldn't be improved.
+## (which will result in UNSATISFIABLE outcome).
+## Branch function applies to a model and it's first solution found in a previous
+## iteration and modifies the model for the next iteration by refining its objective constraint.
 
+MinizincSearch.bab(instance, branch_fun)
+```
 
 ## Examples
 - [N-Queens](#n-queens)
 - [Sudoku](#sudoku)
 - [Graph Coloring](#graph-coloring)
-- [Large Neighbourhood Search](#large-neighbourhood-search)
+- [Large Neighbourhood Search](#large-neighbourhood-search-examples)
 - [Finding the first k solutions](#finding-the-first-k-solutions)
+- [Branch-and-Bound example](#branch-and-bound-example)
 - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
@@ -590,12 +605,12 @@ Output:
 
 22:43:01.328 [info]  Color 2 -> vertices: 1
 ```
-### Large Neighbourhood Search
+### Large Neighbourhood Search examples
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
 
-#### Randomized LNS 
+#### Randomized LNS example
 It's a Graph Coloring again, now on a graph with 1000 vertices.
 We will use `MinizincSearch.lns/5` built-in to implement [Randomized LNS](https://www.minizinc.org/minisearch/documentation.html#builtins).
 
@@ -614,7 +629,7 @@ Output:
 14:22:34.131 [info]  LNS final: 380-coloring
 ```
 
-#### Adaptive LNS 
+#### Adaptive LNS example
 
 For the same graph with 1000 vertices, we will use `MinizincSearch.lns/5` built-in to implement a flavour of [Adaptive LNS](https://www.minizinc.org/minisearch/documentation.html#builtins).
 
@@ -640,10 +655,8 @@ Output:
 ```
 
 ### Finding the first k solutions
+We use Sudoku code from the example above, but now with the built-in handler that limits the number of solutions.
 ```elixir
-## We use Sudoku code from the example above, but now with the built-in handler 
-## that limits the number of solutions.
-##
 ## The puzzle below has 5 solutions...
 sudoku_puzzle = "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
 ## ...but we only want 3
@@ -673,7 +686,32 @@ Partial output (last solution and a final line only):
 
 ```
 
+### Branch-and-Bound example
 
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/golomb_mybab.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/mzn/golomb_mybab.mzn)
+
+This is an implementation of [Golomb Ruler example from MiniSearch distribution](https://github.com/MiniZinc/libminizinc/blob/feature/minisearch/tests/minisearch/regression_tests/golomb_mybab.mzn)
+```elixir
+GolombBAB.solve()   
+```
+Output:
+```
+17:24:34.726 [info]  Intermediate solution with objective 75
+ 
+17:24:34.994 [info]  Intermediate solution with objective 72
+ 
+17:24:35.276 [info]  Intermediate solution with objective 68
+ 
+17:24:35.563 [info]  Intermediate solution with objective 62
+ 
+17:24:36.483 [info]  Intermediate solution with objective 55
+ 
+17:24:38.146 [info]  golomb 55
+:ok
+
+17:24:38.146 [info]  [0, 1, 6, 10, 23, 26, 34, 41, 53, 55]
+```
 
 ## Erlang interface
 

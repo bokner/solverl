@@ -1,6 +1,6 @@
 test_data1 = 1000;
 
-test_data2 = 10000;
+test_data3 = 10000;
 
 test_set = {1,2,3};
 

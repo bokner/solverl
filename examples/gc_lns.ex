@@ -20,7 +20,7 @@ defmodule LNS.GraphColoring do
         objective = MinizincResults.get_solution_objective(solution)
         Logger.info "Iteration #{iteration}: #{objective}-coloring"
         [
-          lns_objective_constraint(solution, "chromatic", method),
+          better_objective_constraint(solution, "chromatic", method),
           destroy_colors(
             solution[:data]["colors"],
             destruction_rate
@@ -47,7 +47,7 @@ defmodule LNS.GraphColoring do
         objective = MinizincResults.get_solution_objective(solution)
         Logger.info "Iteration #{iteration}: #{objective}-coloring, rate: #{destruction_rate}"
         [
-          lns_objective_constraint(solution, "chromatic", method),
+          better_objective_constraint(solution, "chromatic", method),
           destroy_colors(
             solution[:data]["colors"],
             destruction_rate
