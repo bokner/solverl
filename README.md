@@ -688,12 +688,12 @@ Partial output (last solution and a final line only):
 
 ### Branch-and-Bound example
 
-- [Source code](https://github.com/bokner/solverl/blob/master/examples/golomb_mybab.ex)
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/golomb_bab.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/golomb_mybab.mzn)
 
 This is an implementation of [Golomb Ruler example from MiniSearch distribution](https://github.com/MiniZinc/libminizinc/blob/feature/minisearch/tests/minisearch/regression_tests/golomb_mybab.mzn)
 ```elixir
-GolombBAB.solve()   
+GolombBAB.solve(time_limit: 3000)  
 ```
 Output:
 ```
