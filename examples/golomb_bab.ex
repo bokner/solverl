@@ -23,9 +23,7 @@ defmodule GolombBAB do
     )
 
     last_solution = MinizincResults.get_last_solution(results)
-    Logger.info "golomb #{MinizincResults.get_solution_objective(last_solution)}"
-    Logger.info "#{inspect MinizincResults.get_solution_value(last_solution, "mark")}"
-#  results
-
+    Logger.info "#{MinizincResults.get_solution_output(last_solution)}"
+    
   end
 end
