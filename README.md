@@ -346,7 +346,7 @@ MinizincSolver.stop_solver(Graph1000)
   
   
   In case the solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
-  denoting the [solver event](#solver-events) type (i.e., :solution, :summary, :minizinc_error), 2nd being the event-specific data of that event.
+  denoting the [solver event](#solver-events) type (i.e., :solution, :summary, :minizinc_error), 2nd being the [event-specific data](#event-specific-data) of that event.
   
   In case the solution handler is a module that implements [MinizincHandler](https://github.com/bokner/solverl/blob/master/lib/minizinc_handler.ex) behaviour,
   its functions `handle_solution/1`, `handle_summary/1`, `handle_minizinc_error/1` take an [event-specific data](#event-specific-data).   
@@ -361,7 +361,7 @@ Currently, there are following types of solver events:
 - `:summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
 - `:minizinc_error` - the wrapper detected MiniZinc runtime error.
 
-#### Event-specific data
+### Event-specific data
   - **For `:solution` event**, data is a map with following keys: 
 
 ```elixir
@@ -655,7 +655,7 @@ Output:
 ```
 
 ### Finding the first k solutions
-We use Sudoku code from the example above, but now with the built-in handler that limits the number of solutions.
+We use the Sudoku code from the example above, but now with the built-in handler that limits the number of solutions.
 ```elixir
 ## The puzzle below has 5 solutions...
 sudoku_puzzle = "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
@@ -691,7 +691,7 @@ Partial output (last solution and a final line only):
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/golomb_bab.ex)
 - [Model](https://github.com/bokner/solverl/blob/master/mzn/golomb_mybab.mzn)
 
-This is an implementation of [Golomb Ruler example from MiniSearch distribution](https://github.com/MiniZinc/libminizinc/blob/feature/minisearch/tests/minisearch/regression_tests/golomb_mybab.mzn)
+This is an implementation of [Golomb Ruler example from MiniSearch distribution](https://github.com/MiniZinc/libminizinc/blob/feature/minisearch/tests/minisearch/regression_tests/golomb_mybab.mzn).
 ```elixir
 GolombBAB.solve(time_limit: 3000)  
 ```
