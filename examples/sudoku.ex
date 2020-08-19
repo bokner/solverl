@@ -106,19 +106,22 @@ defmodule Sudoku.Handler do
 
   ## Handle no more than 3 solutions, print the final one.
   @doc false
-  def handle_solution(%{index: count, data: data}) do
+  def handle_solution(%{index: count, data: data} = solution) do
     Sudoku.print_solution(data, count)
+    MinizincHandler.Default.handle_solution(solution)
   end
 
   @doc false
   def handle_summary(summary) do
     Logger.info "Status: #{summary[:status]}"
     Logger.info "Solver statistics:\n #{inspect summary[:solver_stats]}"
+    MinizincHandler.Default.handle_summary(summary)
   end
 
   @doc false
   def handle_minizinc_error(error) do
     Logger.info "Minizinc error: #{error}"
+    MinizincHandler.Default.handle_minizinc_error(error)
   end
 end
 

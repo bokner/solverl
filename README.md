@@ -697,20 +697,31 @@ GolombBAB.solve(time_limit: 3000)
 ```
 Output:
 ```
-17:24:34.726 [info]  Intermediate solution with objective 75
+22:20:03.791 [info]  Intermediate solution with objective 80
  
-17:24:34.994 [info]  Intermediate solution with objective 72
+22:20:04.043 [info]  Intermediate solution with objective 75
  
-17:24:35.276 [info]  Intermediate solution with objective 68
+22:20:04.290 [info]  Intermediate solution with objective 73
  
-17:24:35.563 [info]  Intermediate solution with objective 62
+22:20:04.537 [info]  Intermediate solution with objective 72
  
-17:24:36.483 [info]  Intermediate solution with objective 55
+22:20:04.800 [info]  Intermediate solution with objective 70
  
-17:24:38.146 [info]  golomb 55
+22:20:05.060 [info]  Intermediate solution with objective 68
+ 
+22:20:05.323 [info]  Intermediate solution with objective 66
+ 
+22:20:05.588 [info]  Intermediate solution with objective 62
+ 
+22:20:05.941 [info]  Intermediate solution with objective 60
+ 
+22:20:06.773 [info]  Intermediate solution with objective 55
+ 
+22:20:08.295 [info]  golomb 55
+ 
+22:20:08.295 [info]  [0, 1, 6, 10, 23, 26, 34, 41, 53, 55]
 :ok
 
-17:24:38.146 [info]  [0, 1, 6, 10, 23, 26, 34, 41, 53, 55]
 ```
 
 ## Erlang interface

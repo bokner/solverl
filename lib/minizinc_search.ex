@@ -6,6 +6,8 @@ defmodule MinizincSearch do
   import MinizincUtils
   import MinizincHandler
 
+  require Logger
+
   @doc """
   Make a handler that breaks after k solutions found by a given solution handler.
 """
@@ -19,8 +21,9 @@ defmodule MinizincSearch do
   def find_k_handler(k, solution_handler) do
     fn
       ## Intercept the solution handler and force no more than k solutions.
-      (:solution, %{index: count} = _solution) when count > k ->
-        :break;
+      (:solution, %{index: count} = solution) when count == k ->
+        sol = handle_solver_event(:solution, solution, solution_handler)
+        {:break, sol}
 
       ## Use the original handler for processing otherwise
       (event, data) ->
