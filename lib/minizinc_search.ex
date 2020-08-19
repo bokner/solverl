@@ -140,7 +140,7 @@ Branch-and-bound
     )
   end
 
-  def better_objective_constraint(solution, objective_var, method) when method in [:maximize, :minimize] do
+  def better_objective_constraint(solution, objective_var, method) do
     objective_value = MinizincResults.get_solution_value(solution, objective_var)
     constraint("#{objective_var} #{objective_predicate(method)} #{objective_value}")
   end
