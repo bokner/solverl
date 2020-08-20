@@ -11,28 +11,21 @@ defmodule MinizincData do
   @max_dimensions 6
 
   ## Merges list of dzn files and/or maps and writes the result to a (temporary by default) target file.
-  ## TODO: validate content?
-  def make_dzn(data, target \\ nil)
 
-  def make_dzn([], _) do
+  def make_dzn([]) do
     nil
   end
 
-  def make_dzn(data, nil) do
-    make_dzn(data, String.trim(MinizincUtils.cmd("mktemp")))
+
+  def make_dzn(data) when is_list(data) do
+     Enum.reduce(data, "",
+      fn d, acc ->
+        acc <> read_dzn(d) <> "\n"
+      end)
   end
 
-
-  def make_dzn(data, target) when is_list(data) do
-    target_file = String.replace_suffix(target, ".dzn", "") <> ".dzn"
-    for d <- data do
-      File.write(target_file, read_dzn(d) <> "\n", [:append])
-    end
-    target_file
-  end
-
-  def make_dzn(data, target) when is_binary(data) or is_map(data) do
-    make_dzn([data], target)
+  def make_dzn(data) when is_binary(data) or is_map(data) do
+    make_dzn([data])
   end
 
 
@@ -192,58 +185,17 @@ defmodule MinizincData do
     Enum.reverse(acc)
   end
 
-  ## Check dzn file against the model info
-  ## Currently only checking for mismatch between
-  ## a list of assigned pars in dzn file
-  ## and a list of pars required to be assigned
-  ## according to a model info
+  ## Check dzn against the model info.
+  ## Currently only checking for unassigned pars
   ##
-  def check_dzn(model_info, dzn_file) do
-    dzn_pars = MapSet.new(parse_dzn(dzn_file))
-    ## Check if dzn pars match model pars
+  def check_dzn(model_info) do
     model_pars = MapSet.new(Map.keys(model_info[:pars]))
-    if model_pars == dzn_pars do
+    if Enum.empty?(model_pars) do
       :ok
     else
-      {
-        :error,
-        {
-          :mismatch,
-          Enum.map(
-            MinizincUtils.sym_diff_details(model_pars, dzn_pars),
-            fn
-              {par, true} -> {par, :not_in_dzn};
-              {par, false} -> {par, :not_in_model}
-            end
-          )
-        }
-
-      }
+      {:error, {:unassigned_pars, model_pars}}
     end
   end
 
-  ## Parsing dzn.
-  ## TODO: Replace by proper parser based on dzn grammar
-  defp parse_dzn(nil) do
-    []
-  end
 
-  defp parse_dzn(dzn_file) do
-    assignments = String.split(File.read!(dzn_file), ";", trim: true)
-    Enum.reduce(
-      assignments,
-      [],
-      fn assignment, acc ->
-        trimmed = String.trim(drop_comments(assignment))
-        case String.split(trimmed, "=", trim: true, parts: 2) do
-          [par, _val] -> [String.trim(par) | acc]
-          _nonmatching -> acc
-        end
-      end
-    )
-  end
-
-  defp drop_comments(line) do
-    hd(String.split(String.trim(line), "%"))
-  end
 end

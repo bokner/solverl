@@ -50,12 +50,19 @@ defmodule SolverlTest do
            } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2}, extra_flags: "--fake-flag")
   end
 
-  test "Checking dzn against the model: mismatch between declared and factual input parameter names" do
+  test "Checking dzn against the model: undefined identifier" do
     ## The model expects to have 'n' par as input, but gets 'm' par instead.
-    dzn = MinizincData.make_dzn(%{m: 4})
-    model_info = MinizincModel.make_model("mzn/nqueens.mzn")
-    assert MinizincData.check_dzn(model_info, dzn) ==
-             {:error, {:mismatch, [{"m", :not_in_model}, {"n", :not_in_dzn}]}}  end
+    dzn = %{m: 4}
+    {:error, error} = MinizincModel.mzn_dzn_info("mzn/nqueens.mzn", dzn)
+    assert String.contains?(error, "type error: undefined identifier `m'")
+  end
+
+  test "Checking dzn against the model: unassigned parameter" do
+    ## Add new par description to the model
+    par_descr = "int: k;"
+    model_info = MinizincModel.mzn_dzn_info(["mzn/nqueens.mzn", {:model_text, par_descr}] , %{n: 4})
+    assert MinizincData.check_dzn(model_info) == {:error, {:unassigned_pars, MapSet.new(["k"])}}
+  end
 
   test "Unsatisfiable sync" do
     unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})
@@ -166,7 +173,7 @@ defmodule SolverlTest do
     assert MinizincResults.get_solution_value(solution, "bigger_color") == "Green"
   end
 
-  test "Get last solution from summary, drop other solutions" do
+  test "Get last solution from summary, drop intermediate solutions" do
     results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.SummaryOnly])
     ## We dropped all solutions...
     assert length(MinizincResults.get_solutions(results)) == 0

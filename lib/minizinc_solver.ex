@@ -47,22 +47,24 @@ defmodule MinizincSolver do
 
 
   def solve(model, data \\ [], solver_opts \\ [], opts \\ []) do
-    model_info = MinizincModel.make_model(model)
-    dzn_file = MinizincData.make_dzn(data)
-    case MinizincData.check_dzn(model_info, dzn_file) do
-      :ok ->
-        ## Merge with defaulits
-        solver_opts = Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
-        ## Lookup solver
-        {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
-        {:ok, _pid} = MinizincPort.start_link(model_info, dzn_file, solver, solver_opts, opts)
-      dzn_error ->
-        Logger.debug "dzn error: #{inspect dzn_error}"
-        dzn_error
+    ## Merge with defaults
+    solver_opts = Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
+    case MinizincModel.mzn_dzn_info(model, data, solver_opts[:minizinc_executable]) do
+      {:error, error} ->
+        {:error, error}
+      model_info ->
+        case MinizincData.check_dzn(model_info) do
+          :ok ->
+            ## Lookup solver
+            {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
+            {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, opts)
+          dzn_error ->
+            Logger.debug "model error: #{inspect dzn_error}"
+            dzn_error
+        end
     end
-
-
   end
+
 
 
 
@@ -98,6 +100,7 @@ defmodule MinizincSolver do
     end
 
   end
+
 
   ####################################################
   # Support for synchronous handling of results.

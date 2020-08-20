@@ -8,12 +8,12 @@ defmodule MinizincPort do
 
 
   # GenServer API
-  def start_link(model, data, solver, solver_opts, opts) do
-    GenServer.start_link(__MODULE__, [model, data, solver, solver_opts], opts)
+  def start_link(model_info,  solver, solver_opts, opts) do
+    GenServer.start_link(__MODULE__, [model_info, solver, solver_opts], opts)
   end
 
-  def init([model, data, solver, solver_opts]) do
-    {:ok, pid, ospid} = run_minizinc(solver, model[:model_file], data, solver_opts)
+  def init([model_info, solver, solver_opts]) do
+    {:ok, pid, ospid} = run_minizinc(solver, model_info[:model_file], solver_opts)
 
     {
       :ok,
@@ -23,8 +23,7 @@ defmodule MinizincPort do
         started_at: MinizincUtils.now(:microsecond),
         parser_state: MinizincParser.initial_state(),
         solution_handler: solver_opts[:solution_handler],
-        model: model,
-        dzn: data
+        model: model_info
       }
     }
   end
@@ -146,7 +145,7 @@ defmodule MinizincPort do
     GenServer.cast(pid, {:update_handler, handler})
   end
 
-  defp run_minizinc(solver, model_str, dzn_str, opts) do
+  defp run_minizinc(solver, model_str, opts) do
     solver_str = "--solver #{solver["id"]}"
     time_limit = opts[:time_limit]
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
@@ -155,7 +154,7 @@ defmodule MinizincPort do
       [
         opts[:minizinc_executable],
         "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a ",
-        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{dzn_str}"
+        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str}"
       ],
       " "
     )
