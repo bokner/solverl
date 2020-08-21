@@ -66,7 +66,7 @@ defmodule MinizincModel do
                     String.trim(MinizincUtils.cmd("mktemp")),
                     ".mzn", "") <> ".mzn"
     model_body = MinizincModel.make_model(model)
-    dzn_body = MinizincData.make_dzn(data)
+    dzn_body = MinizincData.to_dzn(data)
     File.write(target_file,
       Enum.join(
         [model_body, @dzn_header, dzn_body, @dzn_footer], "\n"))

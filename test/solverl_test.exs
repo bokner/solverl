@@ -114,8 +114,9 @@ defmodule SolverlTest do
   end
 
   test "Throws exception if the array is not regular" do
-    bad_arr = [1, [2, 3]]
-    assert catch_throw(MinizincData.elixir_to_dzn(bad_arr)) == {:irregular_array, bad_arr}
+    bad_array = [1, [2, 3]]
+    data = %{bad_arr: bad_array}
+    assert catch_throw(MinizincData.to_dzn(data)) == {:irregular_array, bad_array}
   end
 
   test "Model with boolean vars" do

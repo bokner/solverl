@@ -125,6 +125,16 @@ defmodule MinizincParser do
   end
 
 
+    defp map_to_elixir(map) do
+      Enum.reduce(
+        map,
+        %{},
+        fn ({k, v}, acc) ->
+          Map.put(acc, k, MinizincData.to_elixir(v))
+        end
+      )
+    end
+
   @doc false
   # Update parser with the line produced by Minizinc port.
   defp update_state(%ParserState{solution_count: sc} = results, {:status, :satisfied}) do
@@ -199,9 +209,11 @@ defmodule MinizincParser do
     %{
       results |
       json_buffer: "",
-      solution_data: MinizincData.output_to_elixir(solution_data)
+      solution_data: map_to_elixir(solution_data)
     }
   end
+
+
 
   ## Collecting JSON data
   defp update_state(

@@ -170,21 +170,21 @@ Data could be either:
       [0, 1, 0, 1, 0],
       [0, 1, 0, 1, 0]
     ]
-    MinizincData.elixir_to_dzn(arr2d)
+    MinizincData.to_dzn(%{a: arr2d})
     ```
     Output:
     ```
-    "array2d(1..5,1..5,[0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0])"
+    "a = array2d(1..5,1..5,[0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0]);\n"
     ```
      
      You can explicitly specify bases for each dimension:
      ```elixir
      # Let 1st dimension be 0-based, 2nd dimension be 1-based
-     MinizincData.elixir_to_dzn({[0, 1], arr2d})
+     MinizincData.to_dzn(%{a: {[0, 1], arr2d}})
      ```
      Output:
      ```
-     "array2d(0..4,1..5,[0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0,0,1,0,1,0])" 
+     "a = array2d(0..4,1..5,[0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0]);\n"
      ```
       
 - #### Sets
@@ -193,11 +193,11 @@ Data could be either:
     
     Example:
     ```elixir
-    MinizincData.elixir_to_dzn(MapSet.new([2, 1, 6]))
+    MinizincData.to_dzn(%{set1: MapSet.new([2, 1, 6])})
     ```
     Output:
     ```elixir
-    "{1,2,6}"
+    "set1 = {1, 2, 6};\n"
     ```
 - #### Enums
 
@@ -206,11 +206,11 @@ Data could be either:
      
      Example 1 (using strings, atoms and charlists for enum entries):
      ```elixir
-     MinizincData.elixir_to_dzn({"blue", :BLACK, 'GREEN'})
+     MinizincData.to_dzn(%{colors: {"blue", :BLACK, 'GREEN'}})
      ```
      Output:
      ```elixir
-     "{blue, BLACK, GREEN}"
+     "colors = {blue, BLACK, GREEN};\n"
      ```
   Example 2 (solving for `enum` variable):
   ```elixir

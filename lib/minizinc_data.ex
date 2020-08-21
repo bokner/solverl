@@ -10,22 +10,25 @@ defmodule MinizincData do
   @default_array_base 1
   @max_dimensions 6
 
-  ## Merges list of dzn files and/or maps and writes the result to a (temporary by default) target file.
+  @doc """
+  Merge list of dzn files and/or maps into a single text that corresponds to a format of .dzn file.
+  """
 
-  def make_dzn([]) do
-    nil
+  @spec to_dzn(mzn_data()) :: binary()
+
+  def to_dzn([]) do
+    ""
   end
 
-
-  def make_dzn(data) when is_list(data) do
+  def to_dzn(data) when is_list(data) do
      Enum.reduce(data, "",
       fn d, acc ->
-        acc <> read_dzn(d) <> "\n"
+        acc <> read_dzn(d)
       end)
   end
 
-  def make_dzn(data) when is_binary(data) or is_map(data) do
-    make_dzn([data])
+  def to_dzn(data) when is_binary(data) or is_map(data) do
+    to_dzn([data])
   end
 
 
@@ -39,6 +42,8 @@ defmodule MinizincData do
     map_to_dzn(data)
   end
 
+
+
   # Convert map to the list of strings in .dzn format
   defp map_to_dzn(data) do
     Enum.reduce(
@@ -50,19 +55,12 @@ defmodule MinizincData do
     )
   end
 
-  def output_to_elixir(data_dict) do
-    Enum.reduce(
-      data_dict,
-      %{},
-      fn ({k, v}, acc) ->
-        Map.put(acc, k, dzn_to_elixir(v))
-      end
-    )
-  end
+  @doc """
+  Serialize output produced by MinizincParser to Elixir data.
+"""
+  @spec to_elixir(any()) :: binary()
 
-  defp dzn_to_elixir(el) when is_map(el) do
-    #s = el["set"]
-    #if s == [], do: MapSet.new(s), else: MapSet.new(hd(s))
+  def to_elixir(el) when is_map(el) do
     [map_type] = Map.keys(el)
     case map_type do
       "set" ->
@@ -75,11 +73,11 @@ defmodule MinizincData do
 
   end
 
-  defp dzn_to_elixir(el) when is_list(el) do
-    Enum.map(el, fn e -> dzn_to_elixir(e) end)
+  def to_elixir(el) when is_list(el) do
+    Enum.map(el, fn e -> to_elixir(e) end)
   end
 
-  defp dzn_to_elixir(el) do
+  def to_elixir(el) do
     el
   end
 
@@ -89,24 +87,24 @@ defmodule MinizincData do
   # Convert element to .dzn string
   #############################################
 
-  def elixir_to_dzn(array) when is_list(array) do
+  defp elixir_to_dzn(array) when is_list(array) do
     array_to_dzn(array, @default_array_base)
   end
 
   # Support optional list of index bases for array dimensions.
   #
-  def elixir_to_dzn({bases, array}) when is_list(array) do
+  defp elixir_to_dzn({bases, array}) when is_list(array) do
     array_to_dzn(array, bases)
   end
 
   #
   # Sets
   #
-  def elixir_to_dzn(map) when is_map(map) do
+  defp elixir_to_dzn(map) when is_map(map) do
     "{" <> Enum.join(map, @element_separator) <> "}"
   end
 
-  def elixir_to_dzn(enum) when is_tuple(enum) do
+  defp elixir_to_dzn(enum) when is_tuple(enum) do
     enum_list = Tuple.to_list(enum)
     "{" <> Enum.join(
              Enum.map(enum_list, fn e -> "#{e}" end),
@@ -114,7 +112,7 @@ defmodule MinizincData do
            ) <> "}"
   end
 
-  def elixir_to_dzn(el) do
+  defp elixir_to_dzn(el) do
     el
   end
 
@@ -158,11 +156,12 @@ defmodule MinizincData do
 
   end
 
+
+  @doc false
   ## Dimensions of a nested list of lists.
   ## The lengths of sublists within a dimension have to be the same,
   ## for results, think of a proper matrix, where each row has the same number of columns etc.
 
-  @doc false
   def dimensions(array) when is_list(array) do
     dimensions(array, [])
   end
@@ -185,9 +184,13 @@ defmodule MinizincData do
     Enum.reverse(acc)
   end
 
-  ## Check dzn against the model info.
-  ## Currently only checking for unassigned pars
-  ##
+  @doc """
+  Check dzn against the model info.
+  Currently only checking for unassigned pars.
+  """
+
+  @spec check_dzn(map()) :: :ok | {:error, any()}
+
   def check_dzn(model_info) do
     model_pars = MapSet.new(Map.keys(model_info[:pars]))
     if Enum.empty?(model_pars) do

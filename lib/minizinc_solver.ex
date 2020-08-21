@@ -43,7 +43,7 @@ defmodule MinizincSolver do
     Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
 
-  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()}
+  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()} | {:error, any()}
 
 
   def solve(model, data \\ [], solver_opts \\ [], opts \\ []) do
@@ -59,7 +59,7 @@ defmodule MinizincSolver do
             {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
             {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, opts)
           dzn_error ->
-            Logger.debug "model error: #{inspect dzn_error}"
+            Logger.debug "model/dzn error: #{inspect dzn_error}"
             dzn_error
         end
     end
