@@ -52,7 +52,7 @@ The package can be installed by adding `solverl` to your list of dependencies in
 ```elixir
 def deps do
   [
-    {:solverl, "~> 1.0.0"}
+    {:solverl, ">= 1.0.0"}
   ]
 end
 ```
