@@ -337,8 +337,8 @@ MinizincSolver.stop_solver(Graph1000)
   
   **Solution handler** is specified by `solution_handler` [option](#solver-options).
   
-  Solution handler is either 
-  - a *function*, or
+  Solution handler is either one of:
+  - a *function*
   - a *module* that implements [MinizincHandler](https://github.com/bokner/solverl/blob/master/lib/minizinc_handler.ex) behaviour.
   
   
