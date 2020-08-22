@@ -26,6 +26,7 @@ View docs [here](https://hexdocs.pm/solverl).
     - [Large Neighbourhood Search](#large-neighbourhood-search-examples)
     - [Finding the first k solutions](#finding-the-first-k-solutions)
     - [Branch-and-Bound example](#branch-and-bound-example)
+    - [Solver Race](#solver-race)
     - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 - [Erlang interface](#erlang-interface)
@@ -479,6 +480,7 @@ MinizincSearch.bab(instance, branch_fun)
 - [Large Neighbourhood Search](#large-neighbourhood-search-examples)
 - [Finding the first k solutions](#finding-the-first-k-solutions)
 - [Branch-and-Bound example](#branch-and-bound-example)
+- [Solver Race](#solver-race)
 - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
 ### N-Queens
@@ -722,6 +724,71 @@ Output:
 
 ```
 Note that the model's output (last 2 rows) is being used, to show that it is present in the solver results.
+
+### Solver Race
+
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/solver_race.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/mzn/nqueens.mzn)
+
+We will simultaneously run Gecode and Chuffed on the same model. The results will be collected by the parent process, which will do logging of intermediate results and the final standing.
+
+```elixir
+SolverRace.run(["chuffed", "gecode"])
+```
+Output:
+```
+21:14:21.408 [info]  chuffed started...
+ 
+21:14:21.562 [info]  gecode started...
+ 
+21:14:21.565 [info]  chuffed: 80
+ 
+21:14:21.566 [info]  chuffed: 75
+ 
+21:14:21.571 [info]  chuffed: 73
+ 
+21:14:21.578 [info]  chuffed: 72
+ 
+21:14:21.592 [info]  chuffed: 70
+ 
+21:14:21.603 [info]  chuffed: 68
+ 
+21:14:21.627 [info]  chuffed: 66
+ 
+21:14:21.642 [info]  chuffed: 62
+ 
+21:14:21.696 [info]  gecode: 80
+ 
+21:14:21.697 [info]  gecode: 75
+ 
+21:14:21.698 [info]  gecode: 73
+ 
+21:14:21.700 [info]  gecode: 72
+ 
+21:14:21.709 [info]  gecode: 70
+ 
+21:14:21.712 [info]  gecode: 68
+ 
+21:14:21.722 [info]  gecode: 66
+ 
+21:14:21.728 [info]  gecode: 62
+ 
+21:14:21.833 [info]  gecode: 60
+ 
+21:14:21.857 [info]  chuffed: 60
+ 
+21:14:22.370 [info]  gecode: 55
+ 
+21:14:23.062 [info]  chuffed: 55
+ 
+21:14:23.531 [info]  Solver gecode finished with objective 55, status: optimal
+ 
+21:14:32.575 [info]  Solver chuffed finished with objective 55, status: optimal
+ 
+21:14:32.575 [info]  Race results: [{"gecode", 55}, {"chuffed", 55}]
+
+```
+
 
 ## Erlang interface
 
