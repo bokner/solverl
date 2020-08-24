@@ -321,13 +321,15 @@ MinizincSolver.stop_solver(Graph1000)
   Example:
   ```elixir
   ## Solve "mzn/nqueens.mzn" for n = 4, using Gecode solver,
-  ## time limit of 1 sec, NQueens.Handler as a solution handler.
-  ## Extra flags: -O4 --verbose-compilation  
+  ## time limit of 1 sec, NQueens.Handler as a solution handler,
+  ## checker model at "mzn/nqueens.mzc.mzn".
+  ## Extra flags: -O1 --verbose-compilation  
   MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 4}, 
     [solver: "gecode", 
      time_limit: 1000, 
-     solution_handler: NQueens.Handler, 
-     extra_flags: "-O4 --verbose-compilation"])
+     solution_handler: NQueens.Handler,
+     checker: "mzn/nqueens.mzc.mzn", 
+     extra_flags: "-O1 --verbose-compilation"])
   ```
   
 
@@ -340,7 +342,7 @@ MinizincSolver.stop_solver(Graph1000)
   
   Solution handler is either one of:
   - a *function*
-  - a *module* that implements [MinizincHandler](https://github.com/bokner/solverl/blob/master/lib/minizinc_handler.ex) behaviour.
+  - or, a *module* that implements [MinizincHandler](https://github.com/bokner/solverl/blob/master/lib/minizinc_handler.ex) behaviour.
   
   
   Solution handler code acts as a callback for the [solver events](#solver-events) emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
