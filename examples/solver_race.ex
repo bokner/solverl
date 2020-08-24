@@ -62,6 +62,9 @@ defmodule SolverRace do
           end
         )
         receive_results(still_running, [{solver, objective} | standing])
+      {solver, :compiled, _info} ->
+        Logger.info "#{solver}: Compiled!"
+        receive_results(solvers, standing)
       {solver, error, error_msg} ->
         Logger.info "Solver #{solver} failed with #{error}. Message: #{error_msg}"
         receive_results(List.delete(solvers, solver), standing)
@@ -72,8 +75,8 @@ defmodule SolverRace do
     String.to_atom(solver)
   end
 
-#  defp solver_process_name("chuffed") do
-#    Chuffed
-#  end
+  #  defp solver_process_name("chuffed") do
+  #    Chuffed
+  #  end
 
 end

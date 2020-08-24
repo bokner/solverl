@@ -214,9 +214,11 @@ defmodule MinizincPort do
     )
   end
 
-  def handle_compiled(_solution_handler, _parser_state) do
-    :todo
-    :ok
+  defp handle_compiled(solution_handler, parser_state) do
+    MinizincHandler.on_compiled(
+      MinizincParser.compilation_info(parser_state),
+      solution_handler
+    )
   end
 
   ## Parse data from external Minizinc process

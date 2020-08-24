@@ -319,6 +319,18 @@ defmodule MinizincParser do
     %{error: error}
   end
 
+  def compilation_info(%ParserState{
+    fzn_stats: fzn_stats,
+    fzn_output: fzn_output,
+    compiled: compiled,
+    compilation_timestamp: compilation_timestamp}) do
+    %{
+      fzn_stats: fzn_stats,
+      fzn_output: fzn_output,
+      compiled: compiled,
+      compilation_timestamp: compilation_timestamp}
+  end
+
 
 
   defp key_value(key, value) do

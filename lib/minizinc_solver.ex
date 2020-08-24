@@ -183,10 +183,6 @@ defmodule MinizincSolver do
     end
   end
 
-  defp add_solver_event(event, data, acc) when event in [:summary, :minizinc_error] do
-    Map.put(acc, event, data)
-  end
-
   defp add_solver_event(:solution, data, acc) do
     {nil, newacc} = Map.get_and_update(
       acc,
@@ -197,6 +193,10 @@ defmodule MinizincSolver do
       end
     )
     newacc
+  end
+
+  defp add_solver_event(event, data, acc) do
+    Map.put(acc, event, data)
   end
   ####################################################
 

@@ -5,11 +5,13 @@ defmodule MinizincHandler do
 
 
   @callback handle_solution(solution :: map())
-            :: :break | {:break, any()} | any()
+            :: :break | {:break, any()} | :skip | any()
 
   @callback handle_summary(summary :: map()) :: any()
 
   @callback handle_minizinc_error(mzn_error :: map()) :: any()
+
+  @callback on_compiled(compilation_info :: map()) :: any()
 
   ## Provide stubs for MinizincHandler behaviour
   defmacro __using__(_) do
@@ -24,6 +26,11 @@ defmodule MinizincHandler do
       def handle_minizinc_error(error) do
         MinizincHandler.Default.handle_minizinc_error(error)
       end
+
+      def on_compiled(compilation_info) do
+        MinizincHandler.Default.on_compiled(compilation_info)
+      end
+
       defoverridable MinizincHandler
     end
   end
@@ -42,6 +49,10 @@ defmodule MinizincHandler do
 
   def handle_solver_event(:minizinc_error, error, solution_handler) do
     handle_minizinc_error(error, solution_handler)
+  end
+
+  def handle_solver_event(:compiled, compilation_info, solution_handler) do
+    on_compiled(compilation_info, solution_handler)
   end
 
   # The solution handler can be either a function, or a callback module.
@@ -74,6 +85,13 @@ defmodule MinizincHandler do
     solution_handler.handle_minizinc_error(error)
   end
 
+  def on_compiled(compilation_info, solution_handler) when is_function(solution_handler) do
+    solution_handler.(:compiled, compilation_info)
+  end
+
+  def on_compiled(compilation_info, solution_handler) do
+    solution_handler.on_compiled(compilation_info)
+  end
 
 end
 
@@ -94,6 +112,11 @@ defmodule MinizincHandler.Default do
   def handle_minizinc_error(error) do
     error
   end
+
+  def on_compiled(compilation_info) do
+    compilation_info
+  end
+
 end
 
 
