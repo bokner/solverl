@@ -63,10 +63,10 @@ end
 
 
 defmodule NQueens.Handler do
-  @behaviour MinizincHandler
   @moduledoc false
   require Logger
   import NQueens
+  use MinizincHandler
 
   @doc false
   def handle_solution(%{data: data} = solution)  do

@@ -100,9 +100,10 @@ end
 
 
 defmodule Sudoku.Handler do
-  @behaviour MinizincHandler
   @moduledoc false
+
   require Logger
+  use MinizincHandler
 
   ## Handle no more than 3 solutions, print the final one.
   @doc false
