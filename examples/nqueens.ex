@@ -41,8 +41,12 @@ defmodule NQueens do
     solution
   end
 
+  def solution_handler(event, data) do
+    MinizincHandler.handle_solver_event(event, data, MinizincHandler.Default)
+  end
+
   @doc false
-  ## quuens[i] = j <=> row i has a queen in position j.
+  ## queens[i] = j <=> row i has a queen in position j.
   def print_board(queens) do
     n = length(queens)
     "\n" <> Enum.join(
