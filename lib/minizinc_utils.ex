@@ -48,4 +48,23 @@ defmodule MinizincUtils do
     List.flatten([thing1, thing2])
   end
 
+  ## Shortcuts for 'undefined' data.
+  ## Usually is used for omitted cmd params.
+  ##
+  def undefined(nil) do
+    true
+  end
+
+  def undefined("") do
+    true
+  end
+
+  def undefined([]) do
+    true
+  end
+
+  def undefined(_other) do
+    false
+  end
+
 end

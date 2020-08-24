@@ -16,7 +16,7 @@ defmodule MinizincData do
 
   @spec to_dzn(mzn_data()) :: binary()
 
-  def to_dzn([]) do
+  def to_dzn(nil) do
     ""
   end
 

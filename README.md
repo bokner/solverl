@@ -315,6 +315,7 @@ MinizincSolver.stop_solver(Graph1000)
     Default: MinizincHandler.Default
   
     Check out [Solution handlers](#solution-handlers) for more details. 
+  - `checker`: [Model specification](#model-specification) for [MiniZinc checker model](https://www.minizinc.org/doc-2.4.3/en/checkers.html).
   - `extra_flags`: A string of command line flags supported by the solver. 
   
   Example:

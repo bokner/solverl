@@ -7,6 +7,7 @@ defmodule MinizincSolver do
 
   @type solver_opt() :: {:minizinc_executable, binary()} |
                         {:solver, binary()} |
+                        {:checker, MinizincModel.mzn_model()} |
                         {:time_limit, integer()} |
                         {:solution_handler, function()} |
                         {:extra_flags, binary()}
@@ -18,6 +19,7 @@ defmodule MinizincSolver do
   @default_solver_opts [
     minizinc_executable: MinizincUtils.default_executable(),
     solver: "gecode",
+    checker: [],
     time_limit: 60 * 5 * 1000,
     solution_handler: MinizincHandler.Default
   ]
@@ -46,18 +48,22 @@ defmodule MinizincSolver do
   @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()} | {:error, any()}
 
 
-  def solve(model, data \\ [], solver_opts \\ [], opts \\ []) do
+  def solve(model, data \\ [], solver_opts \\ [], server_opts \\ []) do
     ## Merge with defaults
     solver_opts = Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
-    case MinizincModel.mzn_dzn_info(model, data, solver_opts[:minizinc_executable]) do
+    case MinizincModel.mzn_dzn_info(model, data,
+           solver_opts[:minizinc_executable]) do
       {:error, error} ->
         {:error, error}
       model_info ->
         case MinizincData.check_dzn(model_info) do
           :ok ->
-            ## Lookup solver
+            ## Lookup the solver
             {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
-            {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, opts)
+            ## Add solution checker, if any
+            model_info = MinizincModel.add_checker(solver_opts[:checker], model_info)
+            ## Run the instance
+            {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, server_opts)
           dzn_error ->
             Logger.debug "model/dzn error: #{inspect dzn_error}"
             dzn_error

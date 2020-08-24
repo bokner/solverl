@@ -18,22 +18,25 @@ defmodule MinizincModel do
   ##
 
   def make_model([]) do
-    throw :model_is_missing
+    ""
   end
 
   ## Multiple models
   def make_model(model) when is_list(model) do
-    Enum.reduce(model, "",
-        fn m, acc -> acc <> Enum.join(
-          [
-            @submodel_header,
-            read_model(m),
-            @submodel_footer
-          ],
-          "\n"
-        ) end
-      )
-    end
+    Enum.reduce(
+      model,
+      "",
+      fn m, acc -> acc <> Enum.join(
+        [
+          @submodel_header,
+          read_model(m),
+          @submodel_footer
+        ],
+        "\n"
+                   )
+      end
+    )
+  end
 
   ## Single model
   def make_model(data) do
@@ -62,15 +65,21 @@ defmodule MinizincModel do
 
   def mzn_dzn_info(model, data, minizinc_executable \\ MinizincUtils.default_executable()) do
     ## Create a temporary file for the joint model
-    target_file = String.replace_suffix(
-                    String.trim(MinizincUtils.cmd("mktemp")),
-                    ".mzn", "") <> ".mzn"
+    model_file = String.replace_suffix(
+                   String.trim(MinizincUtils.cmd("mktemp")),
+                   ".mzn",
+                   ""
+                 ) <> ".mzn"
     model_body = MinizincModel.make_model(model)
     dzn_body = MinizincData.to_dzn(data)
-    File.write(target_file,
+    File.write(
+      model_file,
       Enum.join(
-        [model_body, @dzn_header, dzn_body, @dzn_footer], "\n"))
-    MinizincModel.model_info(target_file, minizinc_executable)
+        [model_body, @dzn_header, dzn_body, @dzn_footer],
+        "\n"
+      )
+    )
+    MinizincModel.model_info(model_file, minizinc_executable)
   end
 
 
@@ -93,8 +102,21 @@ defmodule MinizincModel do
       {:error, _jason_error} ->
         ## TODO : parse error
         {:error, mzn_output}
-      end
+    end
   end
+
+  ## Add checker model to the existing model info.
+  def add_checker(checker_model, model_info) do
+    if MinizincUtils.undefined(checker_model) do
+      model_info
+    else
+      checker_file = String.replace(model_info[:model_file], ".mzn", ".mzc.mzn")
+      checker_body = make_model(checker_model)
+      File.write(checker_file, checker_body)
+      Keyword.put(model_info, :checker_file, checker_file)
+    end
+  end
+
 
 
   defp translate_method("sat") do

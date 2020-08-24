@@ -29,6 +29,11 @@ defmodule MinizincResults do
     get_solution_value(solution, "_output")
   end
 
+  ## Get solution checker output
+  def get_checker_output(solution) do
+    get_solution_value(solution, "_checker")
+  end
+
   ## Get value of the variable from the solution
   def get_solution_value(solution, varname) do
     solution[:data][varname]

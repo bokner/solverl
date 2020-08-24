@@ -60,7 +60,7 @@ defmodule SolverlTest do
   test "Checking dzn against the model: unassigned parameter" do
     ## Add new par description to the model
     par_descr = "int: k;"
-    model_info = MinizincModel.mzn_dzn_info(["mzn/nqueens.mzn", {:model_text, par_descr}] , %{n: 4})
+    model_info = MinizincModel.mzn_dzn_info(["mzn/nqueens.mzn", {:model_text, par_descr}], %{n: 4})
     assert MinizincData.check_dzn(model_info) == {:error, {:unassigned_pars, MapSet.new(["k"])}}
   end
 
@@ -197,6 +197,15 @@ defmodule SolverlTest do
     assert model_info[:pars]["start"] == %{"dim" => 2, "type" => "int"}
     ## Model has "puzzle" variable
     assert model_info[:vars]["puzzle"] == %{"dim" => 2, "type" => "int"}
+  end
+
+  test "Run model with checker" do
+    results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, checker: "mzn/aust.mzc.mzn")
+    assert String.trim(
+             MinizincResults.get_checker_output(
+               MinizincResults.get_last_solution(results)
+             )
+           ) == "CORRECT"
   end
 end
 

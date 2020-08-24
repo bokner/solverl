@@ -13,7 +13,7 @@ defmodule MinizincPort do
   end
 
   def init([model_info, solver, solver_opts]) do
-    {:ok, pid, ospid} = run_minizinc(solver, model_info[:model_file], solver_opts)
+    {:ok, pid, ospid} = run_minizinc(solver, model_info, solver_opts)
 
     {
       :ok,
@@ -145,7 +145,9 @@ defmodule MinizincPort do
     GenServer.cast(pid, {:update_handler, handler})
   end
 
-  defp run_minizinc(solver, model_str, opts) do
+  defp run_minizinc(solver, model_info, opts) do
+    model_str = model_info[:model_file]
+    checker_str = model_info[:checker_file]
     solver_str = "--solver #{solver["id"]}"
     time_limit = opts[:time_limit]
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
@@ -154,7 +156,7 @@ defmodule MinizincPort do
       [
         opts[:minizinc_executable],
         "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a ",
-        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str}"
+        " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{checker_str}"
       ],
       " "
     )
