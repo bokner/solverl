@@ -739,56 +739,62 @@ We will simultaneously run Gecode and Chuffed on the same model. The results wil
 SolverRace.run(["chuffed", "gecode"])
 ```
 Output:
-```
-21:14:21.408 [info]  chuffed started...
+``` 
+12:58:00.212 [info]  chuffed started as #PID<0.3264.0>...
+  
+12:58:00.356 [info]  gecode started as #PID<0.3267.0>...
  
-21:14:21.562 [info]  gecode started...
+12:58:00.356 [info]  chuffed: Compiled!
  
-21:14:21.565 [info]  chuffed: 80
+12:58:00.461 [info]  gecode: Compiled!
  
-21:14:21.566 [info]  chuffed: 75
+12:58:00.470 [info]  gecode: 80
  
-21:14:21.571 [info]  chuffed: 73
+12:58:00.471 [info]  gecode: 75
  
-21:14:21.578 [info]  chuffed: 72
+12:58:00.472 [info]  gecode: 73
  
-21:14:21.592 [info]  chuffed: 70
+12:58:00.475 [info]  gecode: 72
  
-21:14:21.603 [info]  chuffed: 68
+12:58:00.483 [info]  gecode: 70
  
-21:14:21.627 [info]  chuffed: 66
+12:58:00.486 [info]  chuffed: 80
  
-21:14:21.642 [info]  chuffed: 62
+12:58:00.486 [info]  gecode: 68
  
-21:14:21.696 [info]  gecode: 80
+12:58:00.488 [info]  chuffed: 75
  
-21:14:21.697 [info]  gecode: 75
+12:58:00.492 [info]  chuffed: 73
  
-21:14:21.698 [info]  gecode: 73
+12:58:00.496 [info]  gecode: 66
  
-21:14:21.700 [info]  gecode: 72
+12:58:00.500 [info]  chuffed: 72
  
-21:14:21.709 [info]  gecode: 70
+12:58:00.503 [info]  gecode: 62
  
-21:14:21.712 [info]  gecode: 68
+12:58:00.513 [info]  chuffed: 70
  
-21:14:21.722 [info]  gecode: 66
+12:58:00.524 [info]  chuffed: 68
  
-21:14:21.728 [info]  gecode: 62
+12:58:00.546 [info]  chuffed: 66
  
-21:14:21.833 [info]  gecode: 60
+12:58:00.562 [info]  chuffed: 62
  
-21:14:21.857 [info]  chuffed: 60
+12:58:00.600 [info]  gecode: 60
  
-21:14:22.370 [info]  gecode: 55
+12:58:00.764 [info]  chuffed: 60
  
-21:14:23.062 [info]  chuffed: 55
+12:58:01.117 [info]  gecode: 55
  
-21:14:23.531 [info]  Solver gecode finished with objective 55, status: optimal
+12:58:01.883 [info]  chuffed: 55
  
-21:14:32.575 [info]  Solver chuffed finished with objective 55, status: optimal
- 
-21:14:32.575 [info]  Race results: [{"gecode", 55}, {"chuffed", 55}]
+12:58:02.223 [info]  Solver gecode finished with objective 55, status: optimal
+
+12:58:02.223 [info]  Shutting down chuffed...
+
+12:58:02.223 [info]  Solver chuffed finished with objective 55, status: satisfied
+
+12:58:02.223 [info]  Race results: [{"gecode", 55}, {"chuffed", 55}]
 
 ```
 
