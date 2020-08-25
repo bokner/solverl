@@ -21,7 +21,8 @@ defmodule MinizincSolver do
     solver: "gecode",
     checker: [],
     time_limit: 60 * 5 * 1000,
-    solution_handler: MinizincHandler.Default
+    solution_handler: MinizincHandler.Default,
+    solution_timeout: :infinity
   ]
 
   ## How long to wait after :stop_solver message had been sent to a solver port, and
