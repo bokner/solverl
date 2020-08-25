@@ -23,24 +23,21 @@ defmodule MinizincPort do
         started_at: MinizincUtils.now(:microsecond),
         parser_state: MinizincParser.initial_state(),
         solution_handler: solver_opts[:solution_handler],
-        model: model_info
+        model: model_info,
+        solution_timeout: solver_opts[:solution_timeout]
       }
     }
   end
 
   def terminate(reason, _state) do
     Logger.debug "** TERMINATE: #{inspect reason}"
-    #Logger.info "in state: #{inspect state}"
-
-    :normal
+    reason
   end
 
   # Handle incoming stream from the command's STDOUT
   def handle_info(
         {out_stream, _ospid, data},
-        %{
-          solution_handler: solution_handler
-        } = state
+        state
       ) when out_stream in [:stdout, :stderr] do
 
     ##TODO: handle data chunks that are not terminated by newline.
@@ -49,11 +46,17 @@ defmodule MinizincPort do
     res = Enum.reduce_while(
       lines,
       state,
-      fn text_line, acc ->
-        {action, s} = parse_minizinc_data(out_stream, text_line, acc, solution_handler)
+      fn text_line, acc_state ->
+        {action, s} = parse_minizinc_data(out_stream, text_line, acc_state)
         case action do
           :break ->
             {:halt, {:break, s}}
+          :keep_solving ->
+            ## There was a new solution, update a solution timer
+            {:cont, add_solution_timer(s)}
+          :start_solving ->
+            ## Compilation has just finished, start a solution timer
+            {:cont, add_solution_timer(s)}
           :ok ->
             {:cont, s}
         end
@@ -85,6 +88,14 @@ defmodule MinizincPort do
         state
       ) do
     finalize(status_info, state)
+  end
+
+  ## Solution timeout (references have to match to avoid race conditions
+  def handle_info({:solution_timeout, ref}, %{solution_timer: {_timer, ref}, solution_timeout: timeout} = state) do
+    Logger.debug "No new solutions for #{timeout} ms..."
+    ## Shut down the solver
+    ## TODO: maybe another solution handler callback?
+    finalize(:normal, state)
   end
 
   def handle_info(msg, state) do
@@ -188,8 +199,12 @@ defmodule MinizincPort do
   end
 
 
-
-  defp handle_solution(solution_handler, parser_state) do
+  defp handle_solution(
+         %{
+           solution_handler: solution_handler,
+           parser_state: parser_state
+         } = _state
+       ) do
     MinizincHandler.handle_solution(
       MinizincParser.solution(parser_state),
       solution_handler
@@ -216,7 +231,7 @@ defmodule MinizincPort do
     )
   end
 
-  defp handle_compiled(solution_handler, parser_state) do
+  defp handle_compiled(%{solution_handler: solution_handler, parser_state: parser_state} = _state) do
     MinizincHandler.on_compiled(
       MinizincParser.compilation_info(parser_state),
       solution_handler
@@ -224,7 +239,13 @@ defmodule MinizincPort do
   end
 
   ## Parse data from external Minizinc process
-  defp parse_minizinc_data(out_stream, data, %{parser_state: parser_state} = state, solution_handler) do
+  defp parse_minizinc_data(
+         out_stream,
+         data,
+         %{
+           parser_state: parser_state
+         } = state
+       ) do
 
     {parser_event, new_parser_state} = MinizincParser.parse_output(out_stream, data, parser_state)
 
@@ -235,7 +256,7 @@ defmodule MinizincPort do
       case parser_event do
         {:status, :satisfied} ->
           # Solution handler can force the termination of solver process
-          solution_res = handle_solution(solution_handler, new_parser_state)
+          solution_res = handle_solution(new_state)
           ## Deciding if the solver is to be stopped...
           case solution_res do
             :break ->
@@ -244,12 +265,12 @@ defmodule MinizincPort do
             {:break, _data} ->
               handle_summary(new_state)
               :break
-            _other ->
-              :ok
+            _keep_solving ->
+              :keep_solving
           end
         :compiled ->
-          handle_compiled(solution_handler, new_parser_state)
-          :ok
+          handle_compiled(new_state)
+          :start_solving
         _other ->
           :ok
       end
@@ -291,4 +312,23 @@ defmodule MinizincPort do
     Logger.info "Unhandled message: #{inspect msg}"
     {:noreply, state}
   end
+
+  ## Add/update a solution timer
+  defp add_solution_timer(%{solution_timeout: timeout} = state) do
+    ## Cancel existing solution timer
+    case Map.get(state, :solution_timer) do
+      {timer, _timer_ref} ->
+        Process.cancel_timer(timer)
+      nil -> :ok
+    end
+    ## Set up a new one.
+    case timeout do
+      :infinity ->
+        state
+      t when t >= 0 ->
+        Map.put(state, :solution_timer, MinizincUtils.send_after(:solution_timeout, t))
+    end
+
+  end
+
 end

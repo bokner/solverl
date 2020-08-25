@@ -309,6 +309,9 @@ MinizincSolver.stop_solver(Graph1000)
   - `time_limit`: Time in msecs given to MiniZinc to find a solution. 
   
     Default: 300000 (5 mins). Use `[time_limit: nil]` for unlimited time.
+  - `solution_timeout`: Time in msecs to wait for a next solution.
+  
+    Default: :infinity.
   - `minizinc_executable`: Full path to MiniZinc executable (you'd need it if `minizinc` executable cannot be located by your system).
   - `solution_handler`: Module or function that controls processing of solutions and/or metadata. 
   
