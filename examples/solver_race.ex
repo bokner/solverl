@@ -6,9 +6,9 @@ defmodule SolverRace do
   @model "mzn/golomb_mybab.mzn" ##"mzn/graph_coloring.mzn"
   @data  []                      ##"mzn/gc_1000.dzn"
 
-  @time_limit 60 * 1000
 
-  def run(solvers) do
+
+  def run(solvers, opts \\ []) do
     parent = self()
 
     Enum.each(
@@ -23,8 +23,8 @@ defmodule SolverRace do
               fn (event, data) ->
                 callback_fun(s, event, data, parent)
               end,
-            time_limit: @time_limit
-          ],
+
+          ] ++ opts,
           [name: solver_process_name(s)]
         )
         Logger.info "#{s} started as #{inspect :erlang.whereis(solver_process_name(s))}..."
