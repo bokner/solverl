@@ -2,19 +2,19 @@ By priority:
 
  Documentation.
 
- Add inactivity timeouts (possibly separately for compilation and solving)
-
  Provide more ways to handle solution handler exceptions.
 
  Parse dzn to be able to do more accurate checks.
-
 
  Add example of Erlang project with rebar-mix.
 
  Configure logging as a solve/solve_sync param
 
+ Make a sample web app with Phoenix (Sudoku?)
+ 
  Parameter for limiting number of solutions (?)
 =========================================================================================================
++ Add inactivity timeouts (possibly separately for compilation and solving)
 + Branch-and-bound: implementation and example.
 + LNS: implementation and example.
 + Pass GenServer options to MinizincPort.
