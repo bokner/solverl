@@ -351,7 +351,7 @@ MinizincSolver.stop_solver(Graph1000)
   
   
   Solution handler code acts as a callback for the [solver events](#solver-events) emitted by [MinizincPort](https://github.com/bokner/solverl/blob/master/lib/minizinc_port.ex),
-  which is a wrapper process for MiniZinc executable (see [Under the hood](#under-the-hood) for more details).
+  which is a managing process for MiniZinc executable (see [Under the hood](#under-the-hood) for more details).
   
   
   In case the solution handler is a function, its signature has to have 2 arguments, 1st one is an atom
@@ -367,8 +367,8 @@ Solver event is a tuple {`event_type`, `event_data`}.
 Currently, there are following types of solver events:
 
 - `:solution` - the new solution detected;
-- `:summary`  - the wrapper sent the summary metadata (usually because the solver had finished);
-- `:minizinc_error` - the wrapper detected MiniZinc runtime error.
+- `:summary`  - the summary was generated (usually because the solver had finished);
+- `:minizinc_error` - the MiniZinc runtime error was detected.
 
 ### Event-specific data
   - **For `:solution` event**, data is a map with following keys: 
