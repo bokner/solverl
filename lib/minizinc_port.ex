@@ -24,7 +24,9 @@ defmodule MinizincPort do
         parser_state: MinizincParser.initial_state(),
         solution_handler: solver_opts[:solution_handler],
         model: model_info,
-        solution_timeout: solver_opts[:solution_timeout]
+        solution_timeout: solver_opts[:solution_timeout],
+        fzn_timeout: solver_opts[:fzn_timeout],
+        fzn_timer: MinizincUtils.send_after(:fzn_timeout, solver_opts[:fzn_timeout])
       }
     }
   end
@@ -40,7 +42,6 @@ defmodule MinizincPort do
         state
       ) when out_stream in [:stdout, :stderr] do
 
-    ##TODO: handle data chunks that are not terminated by newline.
     lines = String.split(data, "\n")
 
     res = Enum.reduce_while(
@@ -96,6 +97,13 @@ defmodule MinizincPort do
     ## Shut down the solver
     ## TODO: maybe another solution handler callback?
     finalize(:by_solution_timeout, state)
+  end
+
+  def handle_info({:fzn_timeout, ref}, %{fzn_timer: {_timer, ref}, fzn_timeout: timeout} = state) do
+    Logger.debug "Flattening hasn't finished in #{timeout} ms..."
+    ## Shut down the solver
+    ## TODO: maybe another solution handler callback?
+    finalize(:by_fzn_timeout, state)
   end
 
   def handle_info(msg, state) do

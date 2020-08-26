@@ -312,6 +312,10 @@ MinizincSolver.stop_solver(Graph1000)
   - `solution_timeout`: Time in msecs to wait for a next solution.
   
     Default: :infinity.
+  - `fzn_timeout`: Time in msecs to wait for the compilation (flattening) to finish.
+  
+    Default: :infinity.
+
   - `minizinc_executable`: Full path to MiniZinc executable (you'd need it if `minizinc` executable cannot be located by your system).
   - `solution_handler`: Module or function that controls processing of solutions and/or metadata. 
   

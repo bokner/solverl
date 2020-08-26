@@ -69,10 +69,14 @@ defmodule MinizincUtils do
 
   ## Create a {timer, ref} pair.
   ## This will send {msg, ref} to self() after 'timeout' milliseconds.
-  def send_after(msg, timeout) do
+  def send_after(msg, timeout) when is_integer(timeout) and timeout >=0 do
     timer_ref = make_ref()
     timer = Process.send_after(self(), {msg, timer_ref}, timeout)
     {timer, timer_ref}
+  end
+
+  def send_after(_msg, _timeout) do
+    nil
   end
 
 end
