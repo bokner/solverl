@@ -202,8 +202,17 @@ defmodule MinizincSolver do
     newacc
   end
 
+
   defp add_solver_event(event, data, acc) do
-    Map.put(acc, event, data)
+    Map.put(acc, data_key(event), data)
+  end
+
+  defp data_key(:compiled) do
+    :compilation_info
+  end
+
+  defp data_key(event) do
+    event
   end
   ####################################################
 

@@ -95,7 +95,7 @@ defmodule MinizincPort do
     Logger.debug "No new solutions for #{timeout} ms..."
     ## Shut down the solver
     ## TODO: maybe another solution handler callback?
-    finalize(:normal, state)
+    finalize(:by_solution_timeout, state)
   end
 
   def handle_info(msg, state) do
@@ -123,7 +123,7 @@ defmodule MinizincPort do
         state
       ) do
     Logger.debug "Request to stop the solver..."
-    finalize(:normal, state)
+    finalize(:by_request, state)
   end
 
   ## Same as above, but stop the solver
@@ -177,16 +177,6 @@ defmodule MinizincPort do
   end
 
 
-  defp finalize(
-         exit_status,
-         state
-       )
-       when exit_status == :normal do
-    handle_summary(state)
-    new_state = state
-                |> Map.put(:exit_status, 0)
-    {:stop, :normal, new_state}
-  end
 
   defp finalize(
          {:exit_status, abnormal_exit},
@@ -198,6 +188,15 @@ defmodule MinizincPort do
     {:stop, :normal, new_state}
   end
 
+  defp finalize(
+         exit_status,
+         state
+       ) do
+    new_state = state
+                |> Map.put(:exit_status, exit_status)
+    handle_summary(new_state)
+    {:stop, :normal, new_state}
+  end
 
   defp handle_solution(
          %{
@@ -215,11 +214,12 @@ defmodule MinizincPort do
          %{
            solution_handler: solution_handler,
            parser_state: parser_state,
-           model: model_info
+           model: model_info,
+           exit_status: exit_status
          } = _state
        ) do
     MinizincHandler.handle_summary(
-      MinizincParser.summary(parser_state, model_info),
+      MinizincParser.summary(parser_state, model_info) |> Map.put(:exit_reason, exit_status),
       solution_handler
     )
   end

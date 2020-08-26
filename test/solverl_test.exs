@@ -213,8 +213,10 @@ defmodule SolverlTest do
     results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, solution_timeout: 1)
     ## No solutions...
     assert not MinizincResults.has_solution(results)
-    ## ..but it did compile.
-    assert results[:compiled][:compiled]
+    ## ...but it did compile...
+    assert results[:compilation_info][:compiled]
+    ## ...and the exit reason indicates a solution timeout
+    assert results[:summary][:exit_reason] == :by_solution_timeout
   end
 end
 
