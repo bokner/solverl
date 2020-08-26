@@ -207,6 +207,15 @@ defmodule SolverlTest do
              )
            ) == "CORRECT"
   end
+
+  test "Shut down on 'no new solution' timeout" do
+    ## Give it a very little time to wait for a solution...
+    results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, solution_timeout: 1)
+    ## No solutions...
+    assert not MinizincResults.has_solution(results)
+    ## ..but it did compile.
+    assert results[:compiled][:compiled]
+  end
 end
 
 ####################
