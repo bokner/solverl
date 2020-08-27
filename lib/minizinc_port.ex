@@ -31,8 +31,8 @@ defmodule MinizincPort do
     }
   end
 
-  def terminate(reason, _state) do
-    Logger.debug "** TERMINATE: #{inspect reason}"
+  def terminate(reason, %{ospid: ospid} = _state) do
+    Logger.debug "** TERMINATE: OS PID: #{ospid}, reason: #{inspect reason}"
     reason
   end
 
@@ -128,9 +128,8 @@ defmodule MinizincPort do
   ## Same as above, but stop the solver
   def handle_cast(
         :stop_solver,
-        state
+         state
       ) do
-    Logger.debug "Request to stop the solver..."
     finalize(:by_request, state)
   end
 
@@ -190,16 +189,18 @@ defmodule MinizincPort do
          {:exit_status, abnormal_exit},
          %{solution_handler: solution_handler, parser_state: parser_state} = state
        ) do
-    Logger.debug "Abnormal Minizinc execution: #{abnormal_exit}"
+    decoded_exit = Exexec.status(abnormal_exit)
+    Logger.debug "Abnormal Minizinc execution: #{inspect decoded_exit}"
     handle_minizinc_error(solution_handler, parser_state)
-    new_state = Map.put(state, :exit_status, abnormal_exit)
+    new_state = Map.put(state, :exit_status, decoded_exit)
     {:stop, :normal, new_state}
   end
 
   defp finalize(
          exit_status,
-         state
+          state
        ) do
+    Logger.debug "Request to stop the solver..."
     new_state = state
                 |> Map.put(:exit_status, exit_status)
     handle_summary(new_state)
