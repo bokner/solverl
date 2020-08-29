@@ -8,7 +8,7 @@ defmodule MinizincPort do
 
 
   # GenServer API
-  def start_link(model_info,  solver, solver_opts, opts) do
+  def start_link(model_info, solver, solver_opts, opts) do
     GenServer.start_link(__MODULE__, [model_info, solver, solver_opts], opts)
   end
 
@@ -102,7 +102,6 @@ defmodule MinizincPort do
   def handle_info({:fzn_timeout, ref}, %{fzn_timer: {_timer, ref}, fzn_timeout: timeout} = state) do
     Logger.debug "Flattening hasn't finished in #{timeout} ms..."
     ## Shut down the solver
-    ## TODO: maybe another solution handler callback?
     finalize(:by_fzn_timeout, state)
   end
 
@@ -128,12 +127,12 @@ defmodule MinizincPort do
   ## Same as above, but stop the solver
   def handle_cast(
         :stop_solver,
-         state
+        state
       ) do
     finalize(:by_request, state)
   end
 
-  ## Same as above, but stop the solver
+  ## Update solution handler
   def handle_cast(
         {:update_handler, handler},
         state
@@ -197,14 +196,26 @@ defmodule MinizincPort do
   end
 
   defp finalize(
-         exit_status,
-          state
+         :normal,
+         state
        ) do
-    Logger.debug "Request to stop the solver..."
     new_state = state
-                |> Map.put(:exit_status, exit_status)
+                |> Map.put(:exit_status, :normal)
     handle_summary(new_state)
     {:stop, :normal, new_state}
+  end
+
+  ## Finalizing on timeouts or explicit requests
+  defp finalize(
+         stop_reason,
+         %{ospid: ospid} = state
+       ) do
+
+    new_state = Map.put(state, :exit_status, stop_reason)
+    handle_summary(new_state)
+    Logger.debug "Stopping #{ospid}..."
+    {:stop, :normal, new_state}
+
   end
 
   defp handle_solution(
@@ -228,7 +239,8 @@ defmodule MinizincPort do
          } = _state
        ) do
     MinizincHandler.handle_summary(
-      MinizincParser.summary(parser_state, model_info) |> Map.put(:exit_reason, exit_status),
+      MinizincParser.summary(parser_state, model_info)
+      |> Map.put(:exit_reason, exit_status),
       solution_handler
     )
   end
