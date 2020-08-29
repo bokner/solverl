@@ -27,6 +27,7 @@ defmodule Solverl.MixProject do
   defp deps do
     [
       {:rexbug, ">= 1.0.0"},
+      {:recon, "~> 2.5"},
       {:jason, "~> 1.2"},
       {:distillery, "~> 2.1"},
       {:exexec, "~> 0.2.0"},
