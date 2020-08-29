@@ -154,7 +154,7 @@ Data could be either:
 
 - #### Arrays
 
-    Minizinc `array` type corresponds to (nested) [List](https://hexdocs.pm/elixir/List.html).
+    MiniZinc `array` type corresponds to (nested) [List](https://hexdocs.pm/elixir/List.html).
     The code determines dimensions of the array based on its nested structure.
     Each level of nested list has to contain elements of the same length, or the exception 
     `{:irregular_array, array}` will be thrown.
@@ -303,7 +303,6 @@ MinizincSolver.stop_solver(Graph1000)
 
 ### Solver options
 
-**All solver options are optional.**
     
   - `solver`: Solver id supported by your MiniZinc configuration. 
  
@@ -824,9 +823,9 @@ The API functions will always use `binary` strings whenever the function return 
 ## Under the hood
 
 Both **`MinizincSolver.solve/4`** and **`MinizincSolver.solve_sync/4`** spawn a separate **GenServer** process, which in turn spawns the external MiniZinc process, 
-and then asynchronously receives chunks of Minizinc output, parses them into solver events and fires appropriate callbacks as described [here](#solution-handlers).
+and then asynchronously receives chunks of MiniZinc output, parses them into solver events and fires appropriate callbacks as described [here](#solution-handlers).
 
-This makes the handling of Minizinc output completely asynchronous, even though **`solve_sync/4`** is a blocking call that will wait for it to terminate. 
+This makes the handling of MiniZinc output completely asynchronous, even though **`solve_sync/4`** is a blocking call that will wait for it to terminate. 
 
 As a consequence, this allows to control the solving process from outside regardless of whether **`solve/4`** or **`solve_sync/4`** is being used, as long as the PID or registered name of the process is known.
 
