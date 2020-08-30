@@ -58,7 +58,7 @@ defmodule  GraphColoring.Handler do
 
   def handle_solution(solution) do
     Logger.info "Found #{MinizincResults.get_solution_objective(solution)}-coloring"
-    solution
+    :skip
   end
 
 
