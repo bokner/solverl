@@ -26,7 +26,8 @@ defmodule MinizincPort do
         model: model_info,
         solution_timeout: solver_opts[:solution_timeout],
         fzn_timeout: solver_opts[:fzn_timeout],
-        fzn_timer: MinizincUtils.send_after(:fzn_timeout, solver_opts[:fzn_timeout])
+        fzn_timer: MinizincUtils.send_after(:fzn_timeout, solver_opts[:fzn_timeout]),
+        sync_to: solver_opts[:sync_to]
       }
     }
   end
@@ -42,6 +43,7 @@ defmodule MinizincPort do
         state
       ) when out_stream in [:stdout, :stderr] do
 
+    try do
     lines = String.split(data, "\n")
 
     res = Enum.reduce_while(
@@ -52,11 +54,8 @@ defmodule MinizincPort do
         case action do
           :break ->
             {:halt, {:break, s}}
-          :keep_solving ->
+          :continue ->
             ## There was a new solution, update a solution timer
-            {:cont, add_solution_timer(s)}
-          :start_solving ->
-            ## Compilation has just finished, start a solution timer
             {:cont, add_solution_timer(s)}
           :ok ->
             {:cont, s}
@@ -66,9 +65,16 @@ defmodule MinizincPort do
 
     case res do
       {:break, new_state} ->
-        {:stop, :normal, new_state}
+        finalize(:normal, new_state)
       new_state ->
         {:noreply, new_state}
+    end
+
+    catch
+      handler_exception ->
+        Logger.error "Solution handler error: #{inspect handler_exception}"
+        sync(state[:sync_to], :handler_exception, handler_exception)
+        finalize(:by_exception, state)
     end
 
   end
@@ -158,7 +164,7 @@ defmodule MinizincPort do
     GenServer.call(pid, :ospid)
   end
 
-  def update_solution_hanldler(pid, handler) do
+  def update_solution_handler(pid, handler) do
     GenServer.cast(pid, {:update_handler, handler})
   end
 
@@ -186,11 +192,11 @@ defmodule MinizincPort do
 
   defp finalize(
          {:exit_status, abnormal_exit},
-         %{solution_handler: solution_handler, parser_state: parser_state} = state
+         state
        ) do
     decoded_exit = Exexec.status(abnormal_exit)
     Logger.debug "Abnormal Minizinc execution: #{inspect decoded_exit}"
-    handle_minizinc_error(solution_handler, parser_state)
+    handle_minizinc_error(state)
     new_state = Map.put(state, :exit_status, decoded_exit)
     {:stop, :normal, new_state}
   end
@@ -218,15 +224,40 @@ defmodule MinizincPort do
 
   end
 
+  defp handle_solver_event(false, _state) do
+    false
+  end
+
+  defp handle_solver_event(:solution, state) do
+    handle_solution(state)
+  end
+
+  defp handle_solver_event(:compiled, state) do
+    handle_compiled(state)
+  end
+
+  defp handle_solver_event(:summary, state) do
+    handle_summary(state)
+  end
+
+  defp handle_solver_event(:minizinc_error, state) do
+    handle_minizinc_error(state)
+  end
+
   defp handle_solution(
          %{
            solution_handler: solution_handler,
-           parser_state: parser_state
+           parser_state: parser_state,
+           sync_to: caller
          } = _state
        ) do
-    MinizincHandler.handle_solution(
-      MinizincParser.solution(parser_state),
-      solution_handler
+    sync(
+      caller,
+        :solution,
+        MinizincHandler.handle_solution(
+          MinizincParser.solution(parser_state),
+          solution_handler
+        )
     )
   end
 
@@ -235,27 +266,52 @@ defmodule MinizincPort do
            solution_handler: solution_handler,
            parser_state: parser_state,
            model: model_info,
-           exit_status: exit_status
+           exit_status: exit_status,
+           sync_to: caller
          } = _state
        ) do
-    MinizincHandler.handle_summary(
-      MinizincParser.summary(parser_state, model_info)
-      |> Map.put(:exit_reason, exit_status),
-      solution_handler
+    sync(
+      caller,
+
+        :summary,
+        MinizincHandler.handle_summary(
+          MinizincParser.summary(parser_state, model_info)
+          |> Map.put(:exit_reason, exit_status),
+          solution_handler
+        )
+
     )
   end
 
-  defp handle_minizinc_error(solution_handler, parser_state) do
-    MinizincHandler.handle_minizinc_error(
-      MinizincParser.minizinc_error(parser_state),
-      solution_handler
+  defp handle_minizinc_error(
+         %{
+           solution_handler: solution_handler,
+           parser_state: parser_state,
+           sync_to: caller
+         } = _state
+       ) do
+    sync(
+      caller,
+
+        :minizinc_error,
+        MinizincHandler.handle_minizinc_error(
+          MinizincParser.minizinc_error(parser_state),
+          solution_handler
+        )
+
     )
   end
 
-  defp handle_compiled(%{solution_handler: solution_handler, parser_state: parser_state} = _state) do
-    MinizincHandler.on_compiled(
-      MinizincParser.compilation_info(parser_state),
-      solution_handler
+  defp handle_compiled(%{solution_handler: solution_handler, parser_state: parser_state, sync_to: caller} = _state) do
+    sync(
+      caller,
+
+        :compiled,
+        MinizincHandler.on_compiled(
+          MinizincParser.compilation_info(parser_state),
+          solution_handler
+        )
+
     )
   end
 
@@ -273,28 +329,23 @@ defmodule MinizincPort do
     new_state = Map.put(state, :last_event_timestamp, MinizincUtils.now(:microsecond))
                 |> Map.put(:parser_state, new_parser_state)
 
-    next_action =
-      case parser_event do
-        {:status, :satisfied} ->
-          # Solution handler can force the termination of solver process
-          solution_res = handle_solution(new_state)
-          ## Deciding if the solver is to be stopped...
-          case solution_res do
-            :break ->
-              handle_summary(new_state)
-              :break
-            {:break, _data} ->
-              handle_summary(new_state)
-              :break
-            _keep_solving ->
-              :keep_solving
-          end
-        :compiled ->
-          handle_compiled(new_state)
-          :start_solving
-        _other ->
-          :ok
-      end
+    solver_event = case parser_event do
+      {:status, :satisfied} -> :solution
+      :compiled -> :compiled
+      _other -> false
+    end
+
+    event_res = handle_solver_event(solver_event, new_state)
+    ## Deciding if the solver is to be stopped...
+    next_action = case event_res do
+      false -> :ok
+      :break ->
+        :break
+      {:break, _data} ->
+        :break
+      _keep_solving ->
+        :continue
+    end
     {next_action, new_state}
   end
 
@@ -351,5 +402,30 @@ defmodule MinizincPort do
     end
 
   end
+
+  ## If the caller is present, send the solver event back to it.
+  defp sync(caller, event, data) do
+    if caller do
+      send_to_caller(caller, event, data)
+    end
+    data
+  end
+
+  defp send_to_caller(_caller, _event, data) when data in [:break, :skip] do
+    false
+  end
+
+  defp send_to_caller(caller, event, {:break, data}) do
+    send_event(caller, event, data)
+  end
+
+  defp send_to_caller(caller, event, data) do
+    send_event(caller, event, data)
+  end
+
+  defp send_event(pid, event, data) do
+    send(pid, %{solver_results: {event, data}, from: self()})
+  end
+
 
 end

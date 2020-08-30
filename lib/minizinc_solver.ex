@@ -12,6 +12,7 @@ defmodule MinizincSolver do
                         {:solution_handler, function()} |
                         {:solution_timeout, timeout()} |
                         {:fzn_timeout, timeout()} |
+                        {:sync_to, pid() | nil} |
                         {:extra_flags, binary()}
 
   @type solver_opts() :: list(solver_opt())
@@ -25,13 +26,10 @@ defmodule MinizincSolver do
     time_limit: 60 * 5 * 1000,
     solution_handler: MinizincHandler.Default,
     solution_timeout: :infinity,
-    fzn_timeout: :infinity
+    fzn_timeout: :infinity,
+    sync_to: nil
   ]
 
-  ## How long to wait after :stop_solver message had been sent to a solver port, and
-  ## nothing came back from the port.
-
-  @stop_timeout 5000
 
   @doc false
   def default_solver_opts, do: @default_solver_opts
@@ -96,12 +94,10 @@ defmodule MinizincSolver do
 
   def solve_sync(model, data \\ [], solver_opts \\ [], opts \\ []) do
     solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
-    # Plug sync_handler to have solver send the results back to us
-    caller = self()
+
     sync_solver_opts = Keyword.put(
       solver_opts,
-      :solution_handler,
-      sync_handler(caller)
+      :sync_to, self()  ## The solver process will send results back to the caller
     )
     case solve(model, data, sync_solver_opts, opts) do
       {:ok, solver_pid} ->
@@ -109,16 +105,6 @@ defmodule MinizincSolver do
       error -> error
     end
 
-  end
-
-
-  ####################################################
-  # Support for synchronous handling of results.
-  ####################################################
-  defp sync_handler(caller) do
-    fn (event, results) ->
-      send(caller, %{solver_results: {event, results}, from: self()})
-    end
   end
 
   defp receive_events(solution_handler, solver_pid) do
@@ -135,59 +121,14 @@ defmodule MinizincSolver do
     updated_results
   end
 
-
-
-  defp stop_solving(solution_handler, solver_pid, acc) do
-    stop_solver(solver_pid)
-    final = completion_loop(solution_handler, solver_pid)
-    ## Clean up message mailbox, just in case.
-    MinizincUtils.flush()
-    if final do
-      {event, results} = final
-      add_solver_event(event, results, acc)
-    else
-      acc
-    end
-  end
-
-  defp completion_loop(solution_handler, solver_pid) do
-    receive do
-      %{from: pid, solver_results: {:solution, _results}} when pid == solver_pid ->
-        ## Ignore new solutions
-        completion_loop(solution_handler, solver_pid)
-      %{from: pid, solver_results: {event, results}} when pid == solver_pid
-                                                          and event in [:summary, :minizinc_error] ->
-        {event, MinizincHandler.handle_solver_event(event, results, solution_handler)}
-    after @stop_timeout ->
-      Logger.debug "The solver has been silent after requesting a stop for #{@stop_timeout} msecs"
-      nil
-    end
-
-  end
-
-
   defp receive_events(solution_handler, solver_pid, acc) do
     receive do
-      %{from: pid, solver_results: {event, results}} when pid == solver_pid ->
-        try do
-          case MinizincHandler.handle_solver_event(event, results, solution_handler) do
-            :skip ->
-              receive_events(solution_handler, pid, acc)
-            {:break, data} ->
-              stop_solving(solution_handler, pid, add_solver_event(event, data, acc))
-            :break ->
-              stop_solving(solution_handler, pid, acc)
-            result when event in [:summary, :minizinc_error] ->
-              add_solver_event(event, result, acc)
-            result ->
-              receive_events(solution_handler, pid, add_solver_event(event, result, acc))
-          end
-        catch
-          handler_exception ->
-            Logger.error "Solution handler error: #{inspect handler_exception}"
-
-            stop_solving(solution_handler, pid, Map.put(acc, :handler_exception, handler_exception))
-        end
+      %{from: pid, solver_results: {event, data}} when pid == solver_pid ->
+           if event in [:summary, :minizinc_error] do
+              add_solver_event(event, data, acc)
+              else
+              receive_events(solution_handler, pid, add_solver_event(event, data, acc))
+            end
       unexpected ->
         Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
     end
@@ -237,7 +178,7 @@ defmodule MinizincSolver do
   end
 
   def update_solution_handler(pid, handler) do
-    MinizincPort.update_solution_hanldler(pid, handler)
+    MinizincPort.update_solution_handler(pid, handler)
   end
 
   @doc """

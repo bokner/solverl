@@ -94,7 +94,8 @@ defmodule SolverlTest do
   end
 
   test "Sync solving: solution handler that skips every other solution" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.EveryOther])
+    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8},
+      solution_handler: SolverTest.EveryOther)
     ## 92 results for the nqueens.mzn model, but we drop every other one...
     assert length(MinizincResults.get_solutions(results)) == div(92, 2)
   end
@@ -199,25 +200,25 @@ defmodule SolverlTest do
     assert model_info[:vars]["puzzle"] == %{"dim" => 2, "type" => "int"}
   end
 
-  test "Run model with checker" do
-    results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, checker: "mzn/aust.mzc.mzn")
-    assert String.trim(
-             MinizincResults.get_checker_output(
-               MinizincResults.get_last_solution(results)
-             )
-           ) == "CORRECT"
-  end
+    test "Run model with checker" do
+      results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, checker: "mzn/aust.mzc.mzn")
+      assert String.trim(
+               MinizincResults.get_checker_output(
+                 MinizincResults.get_last_solution(results)
+               )
+             ) == "CORRECT"
+    end
 
-  test "Shut down on 'no new solution' timeout" do
-    ## Give it a very little time to wait for a solution...
-    results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, solution_timeout: 1)
-    ## No solutions...
-    assert not MinizincResults.has_solution(results)
-    ## ...but it did compile...
-    and results[:summary][:compiled]
-    ## ...and the exit reason indicates a solution timeout
-    and results[:summary][:exit_reason] == :by_solution_timeout
-  end
+    test "Shut down on 'no new solution' timeout" do
+      ## Give it a very little time to wait for a solution...
+      results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, solution_timeout: 1)
+      ## No solutions...
+      assert not MinizincResults.has_solution(results)
+      ## ...but it did compile...
+      and results[:summary][:compiled]
+      ## ...and the exit reason indicates a solution timeout
+      and results[:summary][:exit_reason] == :by_solution_timeout
+    end
 
   test "Shut down on compilation timeout" do
     ## Give it a very little time to compile...
