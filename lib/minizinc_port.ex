@@ -14,6 +14,7 @@ defmodule MinizincPort do
 
   def init([model_info, solver, solver_opts]) do
     {:ok, pid, ospid} = run_minizinc(solver, model_info, solver_opts)
+    Logger.debug "Minizinc started (OS PID: #{ospid})"
 
     {
       :ok,
@@ -185,7 +186,11 @@ defmodule MinizincPort do
     )
     Logger.debug "Minizinc command: #{command}"
     Process.flag(:trap_exit, true)
-    {:ok, _pid, _id} = Exexec.run_link(command, stdout: true, stderr: true, monitor: true)
+    {:ok, _pid, _id} = Exexec.run_link(command,
+      stdout: true,
+      stderr: true,
+      monitor: true
+    )
   end
 
 
