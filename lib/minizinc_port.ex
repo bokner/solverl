@@ -186,6 +186,13 @@ defmodule MinizincPort do
     )
     Logger.debug "Minizinc command: #{command}"
     Process.flag(:trap_exit, true)
+
+    ## Enable erlexec debugging, if requested
+    case opts[:debug_exec] do
+      nil -> :ok
+      debug_level -> :exec.debug(debug_level)
+    end
+
     {:ok, _pid, _id} = Exexec.run_link(command,
       stdout: true,
       stderr: true,

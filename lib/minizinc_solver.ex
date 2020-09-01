@@ -13,7 +13,8 @@ defmodule MinizincSolver do
                         {:solution_timeout, timeout()} |
                         {:fzn_timeout, timeout()} |
                         {:sync_to, pid() | nil} |
-                        {:extra_flags, binary()}
+                        {:extra_flags, binary()} |
+                        {:debug_exec, integer()}
 
   @type solver_opts() :: list(solver_opt())
 
