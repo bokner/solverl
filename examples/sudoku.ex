@@ -13,15 +13,18 @@ defmodule Sudoku do
   @doc """
     Solve asynchronously using Sudoku.Handler as a solution handler.
   """
-  def solve(puzzle, solver_opts \\ [solution_handler: Sudoku.Handler])  do
-    # Turn a string into 9x9 grid
-    sudoku_array = sudoku_string_to_grid(puzzle)
-    Logger.info "Sudoku puzzle:"
-    Logger.info print_grid(sudoku_array)
+  def solve(puzzle, solver_opts \\ [solution_handler: Sudoku.Handler])
 
+  def solve(puzzle, solver_opts) when is_binary(puzzle) do
+    solve(sudoku_string_to_grid(puzzle), solver_opts)
+  end
+
+  def solve(puzzle, solver_opts) when is_list(puzzle) do
+    Logger.info "Sudoku puzzle:"
+    Logger.info print_grid(puzzle)
     {:ok, _pid} = MinizincSolver.solve(
       "mzn/sudoku.mzn",
-      %{"S": 3, start: sudoku_array},
+      %{"S": 3, start: puzzle},
       solver_opts
     )
   end
@@ -38,20 +41,24 @@ defmodule Sudoku do
       end)
   ```
   """
-  def solve_sync(puzzle, solver_opts \\ [solution_handler: Sudoku.Handler]) do
-    # Turn a string into 9x9 grid
-    sudoku_array = sudoku_string_to_grid(puzzle)
+  def solve_sync(puzzle, solver_opts \\ [solution_handler: Sudoku.Handler])
+
+  def solve_sync(puzzle, solver_opts) when is_binary(puzzle) do
+    solve_sync(sudoku_string_to_grid(puzzle), solver_opts)
+  end
+
+  def solve_sync(puzzle, solver_opts) when is_list(puzzle) do
     Logger.info "Sudoku puzzle (solved synchronously)"
-    Logger.info print_grid(sudoku_array)
+    Logger.info print_grid(puzzle)
     MinizincSolver.solve_sync(
       "mzn/sudoku.mzn",
-      %{"S": 3, start: sudoku_array},
+      %{"S": 3, start: puzzle},
       solver_opts
     )
   end
 
-
-  defp sudoku_string_to_grid(sudoku_str) do
+  @doc false
+  def sudoku_string_to_grid(sudoku_str) do
     str0 = String.replace(sudoku_str, ".", "0")
     for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i - 1) * 9 + (j - 1)))
   end
