@@ -7,12 +7,37 @@ defmodule MinizincResults do
 
 
   ############### Solver results ##################
-  def get_last_solution(solver_results) do
-    solver_results[:summary][:last_solution]
+  def get_status(%{summary: summary} = _solver_results) do
+    get_status(summary)
   end
 
-  def get_solution_count(solver_results) do
-    solver_results[:summary][:solution_count]
+  def get_status(summary) do
+    status(get_method(summary), summary[:status])
+  end
+
+  def get_method(%{summary: summary} = _solver_results) do
+    get_method(summary)
+  end
+
+  def get_method(summary) do
+    MinizincModel.method(summary[:model_info])
+  end
+
+
+  def get_last_solution(%{summary: summary} = _solver_results) do
+    get_last_solution(summary)
+  end
+
+  def get_last_solution(summary) do
+    summary[:last_solution]
+  end
+
+  def get_solution_count(%{summary: summary} = _solver_results) do
+    get_solution_count(summary)
+  end
+
+  def get_solution_count(summary) do
+    summary[:solution_count]
   end
 
   def has_solution(solver_results) do
@@ -45,14 +70,6 @@ defmodule MinizincResults do
 
   def get_solutions(solver_results) do
     solver_results[:solutions]
-  end
-
-  def get_status(solver_results) do
-    status(MinizincResults.get_method(solver_results), solver_results[:summary][:status])
-  end
-
-  def get_method(solver_results) do
-    MinizincModel.method(solver_results[:summary][:model_info])
   end
 
   def status(:satisfy, :all_solutions) do
