@@ -30,7 +30,7 @@ defmodule Solverl.MixProject do
       {:recon, "~> 2.5"},
       {:jason, "~> 1.2"},
       {:distillery, "~> 2.1"},
-      {:exexec, "~> 0.2.0"},
+      {:erlexec, "~> 1.17"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
   end

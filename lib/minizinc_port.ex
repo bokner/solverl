@@ -193,10 +193,9 @@ defmodule MinizincPort do
       debug_level -> :exec.debug(debug_level)
     end
 
-    {:ok, _pid, _id} = Exexec.run_link(command,
-      stdout: true,
-      stderr: true,
-      monitor: true
+    {:ok, _pid, _id} = :exec.run_link(command,
+      [:stdout,
+      :stderr, :monitor]
     )
   end
 
@@ -206,7 +205,7 @@ defmodule MinizincPort do
          {:exit_status, abnormal_exit},
          state
        ) do
-    decoded_exit = Exexec.status(abnormal_exit)
+    decoded_exit = :exec.status(abnormal_exit)
     Logger.debug "Abnormal Minizinc execution: #{inspect decoded_exit}"
     handle_minizinc_error(state)
     new_state = Map.put(state, :exit_status, decoded_exit)
