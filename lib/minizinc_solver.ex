@@ -14,7 +14,8 @@ defmodule MinizincSolver do
                         {:fzn_timeout, timeout()} |
                         {:sync_to, pid() | nil} |
                         {:extra_flags, binary()} |
-                        {:debug_exec, integer()}
+                        {:debug_exec, integer()} |
+                        {:cmd_opts, list()}
 
   @type solver_opts() :: list(solver_opt())
 
@@ -28,7 +29,8 @@ defmodule MinizincSolver do
     solution_handler: MinizincHandler.Default,
     solution_timeout: :infinity,
     fzn_timeout: :infinity,
-    sync_to: nil
+    sync_to: nil,
+    cmd_opts: []
   ]
 
 

@@ -195,7 +195,7 @@ defmodule MinizincPort do
 
     {:ok, _pid, _id} = :exec.run_link(command,
       [:stdout,
-      :stderr, :monitor]
+      :stderr, :monitor] ++ opts[:cmd_opts]
     )
   end
 
