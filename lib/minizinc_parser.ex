@@ -334,7 +334,7 @@ defmodule MinizincParser do
 
 
   defp key_value(key, value) do
-    {String.to_atom(key), parse_value(value)}
+    {String.to_atom(key), MinizincUtils.parse_value(value)}
   end
 
   defp add_key_value(map, key, value) when is_map(map) do
@@ -350,17 +350,6 @@ defmodule MinizincParser do
     new_map
   end
 
-  @doc false
-  def parse_value(value) do
-    case Integer.parse(value) do
-      :error -> ## Must be a string
-        String.replace(value, "\"", "")
-      {int_value, ""} ->
-        int_value
-      {_rounded, _tail} -> ## Not integer, try float
-        {float_value, ""} = Float.parse(value)
-        float_value
-    end
-  end
+
 
 end

@@ -29,6 +29,7 @@ defmodule Solverl.MixProject do
       {:rexbug, ">= 1.0.0"},
       {:recon, "~> 2.5"},
       {:jason, "~> 1.2"},
+      {:distance, "~> 0.2.2"},
       {:distillery, "~> 2.1"},
       {:erlexec, "~> 1.17"},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}

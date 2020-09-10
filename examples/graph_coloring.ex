@@ -3,6 +3,7 @@ defmodule GraphColoring do
 
   require Logger
 
+  import MinizincUtils
 
   ## Example: Graph Coloring
   @gc_model "mzn/graph_coloring.mzn"
@@ -21,7 +22,7 @@ defmodule GraphColoring do
   end
 
   defp solve_sync(data, opts) do
-    MinizincSolver.solve_sync(@gc_model, data, Keyword.put_new(opts, :solution_handler, GraphColoring.Handler))
+    MinizincSolver.solve_sync(resource_file(@gc_model), data, Keyword.put_new(opts, :solution_handler, GraphColoring.Handler))
   end
 
   def show_results(gc_results) do

@@ -7,8 +7,12 @@ defmodule Sudoku do
 
   require Logger
 
+  import MinizincUtils
+
   @sample_sudoku_1_solution  "85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4."
   @sample_sudoku_5_solutions "8..6..9.5.............2.31...7318.6.24.....73...........279.1..5...8..36..3......"
+
+  @sudoku_model "mzn/sudoku.mzn"
 
   @doc """
     Solve asynchronously using Sudoku.Handler as a solution handler.
@@ -23,7 +27,7 @@ defmodule Sudoku do
     Logger.info "Sudoku puzzle:"
     Logger.info print_grid(puzzle)
     {:ok, _pid} = MinizincSolver.solve(
-      "mzn/sudoku.mzn",
+      resource_file(@sudoku_model),
       %{"S": 3, start: puzzle},
       solver_opts
     )
@@ -51,7 +55,7 @@ defmodule Sudoku do
     Logger.info "Sudoku puzzle (solved synchronously)"
     Logger.info print_grid(puzzle)
     MinizincSolver.solve_sync(
-      "mzn/sudoku.mzn",
+      resource_file(@sudoku_model),
       %{"S": 3, start: puzzle},
       solver_opts
     )

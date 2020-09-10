@@ -3,6 +3,27 @@ defmodule MinizincUtils do
 
   # Helpers
   require Logger
+
+  @doc false
+  def parse_value(value) do
+    case Integer.parse(value) do
+      :error -> ## Must be a string
+        String.replace(value, "\"", "")
+      {int_value, ""} ->
+        int_value
+      {_rounded, _tail} -> ## Not integer, try float
+        {float_value, ""} = Float.parse(value)
+        float_value
+    end
+  end
+
+  @doc false
+
+  ## Extend the file name with the "resource" directory ({app-name}/priv for now)
+  def resource_file(filename) do
+    Path.join(Application.app_dir(:solverl, "priv"), filename)
+  end
+
   def flush() do
     receive do
       msg ->

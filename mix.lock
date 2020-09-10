@@ -1,5 +1,6 @@
 %{
   "artificery": {:hex, :artificery, "0.4.3", "0bc4260f988dcb9dda4b23f9fc3c6c8b99a6220a331534fdf5bf2fd0d4333b02", [:mix], [], "hexpm", "12e95333a30e20884e937abdbefa3e7f5e05609c2ba8cf37b33f000b9ffc0504"},
+  "distance": {:hex, :distance, "0.2.2", "76f7cd6b6e21b3c1430a0776d594955baafd9ebf1133f98f62cdbb180074215a", [:mix], [], "hexpm", "e02a4b25ad5c617acaeda1b3d5b4efbe3e010eb0f95a6dedff99f8a9dfafacf1"},
   "distillery": {:hex, :distillery, "2.1.1", "f9332afc2eec8a1a2b86f22429e068ef35f84a93ea1718265e740d90dd367814", [:mix], [{:artificery, "~> 0.2", [hex: :artificery, repo: "hexpm", optional: false]}], "hexpm", "bbc7008b0161a6f130d8d903b5b3232351fccc9c31a991f8fcbf2a12ace22995"},
   "earmark": {:hex, :earmark, "1.4.9", "837e4c1c5302b3135e9955f2bbf52c6c52e950c383983942b68b03909356c0d9", [:mix], [{:earmark_parser, ">= 1.4.9", [hex: :earmark_parser, repo: "hexpm", optional: false]}], "hexpm", "0d72df7d13a3dc8422882bed5263fdec5a773f56f7baeb02379361cb9e5b0d8e"},
   "earmark_parser": {:hex, :earmark_parser, "1.4.10", "6603d7a603b9c18d3d20db69921527f82ef09990885ed7525003c7fe7dc86c56", [:mix], [], "hexpm", "8e2d5370b732385db2c9b22215c3f59c84ac7dda7ed7e544d7c459496ae519c0"},
