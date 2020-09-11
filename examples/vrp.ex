@@ -47,8 +47,8 @@ defmodule VRP do
       n: customer_count - 1,
       m: vehicle_count,
       capacity: vehicle_capacity,
-      demand: {[1], demand},
-      distance: {[1, 1], distances},
+      demand: demand,
+      distance: distances,
       max_stops: calc_max_stops(demand, vehicle_capacity)
     }
 
