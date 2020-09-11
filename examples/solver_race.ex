@@ -5,7 +5,7 @@ defmodule SolverRace do
 
   import MinizincUtils
 
-  @model "mzn/golomb_mybab.mzn"
+  @model resource_file("mzn/golomb_mybab.mzn")
   @data  []
 
 
@@ -17,7 +17,7 @@ defmodule SolverRace do
       solvers,
       fn s ->
         MinizincSolver.solve(
-          resource_file(@model),
+          @model,
           @data,
           [
             solver: s,

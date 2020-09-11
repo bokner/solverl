@@ -3,12 +3,12 @@ defmodule VRP do
 
   import MinizincUtils
 
-  @vrp_model "mzn/vrp.mzn"
+  @vrp_model resource_file("mzn/vrp.mzn")
 
   def solve(datafile, opts \\ [], distance_scale \\ 1) when is_integer(distance_scale) do
     ## Extract data
     data = extract_data(datafile, distance_scale)
-    MinizincSolver.solve_sync(resource_file(@vrp_model), data, opts)
+    MinizincSolver.solve_sync(@vrp_model, data, opts)
   end
 
 

@@ -6,14 +6,14 @@ defmodule LNS.GraphColoring do
   import MinizincSearch
   import MinizincUtils
 
-  @gc_model "mzn/graph_coloring.mzn"
+  @gc_model resource_file("mzn/graph_coloring.mzn")
 
   ## Find optimal solution for Graph Coloring instance using Randomized LNS.
   ## 'destruction_rate' is a fraction of the vertex coloring (represented in the model
   ## by 'colors' var) that will be 'destroyed' for the next iteration.
   ##
   def do_lns(data, iterations, destruction_rate, solver_opts \\ [], opts \\ []) do
-    instance = MinizincInstance.new(resource_file(@gc_model), data, solver_opts, opts)
+    instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
     result = lns(
       instance,
       iterations,
@@ -39,7 +39,7 @@ defmodule LNS.GraphColoring do
   ## It's the same as Randomized LNS, but the destruction rate gets increased by 'delta' with every iteration.
   ##
   def do_adaptive_lns(data, iterations, initial_rate, delta, solver_opts \\ [], opts \\ []) do
-    instance = MinizincInstance.new(resource_file(@gc_model), data, solver_opts, opts)
+    instance = MinizincInstance.new(@gc_model, data, solver_opts, opts)
     result = lns(
       instance,
       iterations,

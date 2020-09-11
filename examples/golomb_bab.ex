@@ -8,10 +8,10 @@ defmodule GolombBAB do
   @moduledoc false
 
   @objective_var "obj"
-  @model "mzn/golomb_mybab.mzn"
+  @model resource_file("mzn/golomb_mybab.mzn")
 
   def solve(opts \\ []) do
-    instance = MinizincInstance.new(resource_file(@model), [], opts)
+    instance = MinizincInstance.new(@model, [], opts)
 
     results = bab(
       instance,
