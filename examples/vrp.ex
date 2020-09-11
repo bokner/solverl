@@ -8,7 +8,7 @@ defmodule VRP do
   def solve(datafile, opts \\ [], distance_scale \\ 1) when is_integer(distance_scale) do
     ## Extract data
     data = extract_data(datafile, distance_scale)
-    MinizincSolver.solve_sync(@vrp_model, data, opts)
+    MinizincSolver.solve_sync(@vrp_model, Map.delete(data, :locations), opts)
   end
 
 
@@ -49,6 +49,7 @@ defmodule VRP do
       capacity: vehicle_capacity,
       demand: demand,
       distance: distances,
+      locations: coords,
       max_stops: calc_max_stops(demand, vehicle_capacity)
     }
 
