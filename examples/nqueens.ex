@@ -4,17 +4,19 @@ defmodule NQueens do
   # Example: N-queens solver.
   require Logger
 
+  import MinizincUtils
+
   @nqueens_model "mzn/nqueens.mzn"
   @queen_symbol "\u2655"
 
   # N queens puzzle
   # Async solving
   def solve(n, opts \\ [solution_handler: &solution_handler/2]) do
-    MinizincSolver.solve(@nqueens_model, %{n: n}, opts)
+    MinizincSolver.solve(resource_file(@nqueens_model), %{n: n}, opts)
   end
 
   def solve_sync(n, opts \\ [solution_handler: NQueens.Handler]) do
-    MinizincSolver.solve_sync(@nqueens_model, %{n: n}, opts)
+    MinizincSolver.solve_sync(resource_file(@nqueens_model), %{n: n}, opts)
   end
 
   @doc false

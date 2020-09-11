@@ -3,10 +3,19 @@ defmodule SolverlTest do
   doctest Solverl
 
 
+  import MinizincUtils
+
+  @nqueens_model resource_file("mzn/nqueens.mzn")
+  @sudoku_model  resource_file("mzn/sudoku.mzn")
+  @aust_model    resource_file("mzn/aust.mzn")
+
+  @test1_model  resource_file("mzn/test1.mzn")
+  @test_data2  resource_file("mzn/test_data2.dzn")
+
   test "Runs the proper solver CMD" do
     test_arr = [[[1, 2, 3], [2, 3, 1], [3, 4, 5]], [[1, 2, 3], [2, 3, 1], [3, 4, 5]]]
     assert {:ok, _pid} = MinizincSolver.solve(
-             "mzn/test1.mzn",
+             @test1_model,
              [
                %{
                  test_data1: 100,
@@ -15,7 +24,7 @@ defmodule SolverlTest do
                  test_set: MapSet.new([1, 2, 3]),
                  test_enum: MapSet.new([:red, :blue, :white])
                },
-               "mzn/test_data2.dzn"
+               @test_data2
              ],
              [solver: "gecode"]
            )
@@ -24,7 +33,7 @@ defmodule SolverlTest do
 
   test "The same as above, but with multiple models either as a text or a file" do
     test_arr = [[[1, 2, 3], [2, 3, 1], [3, 4, 5]], [[1, 2, 3], [2, 3, 1], [3, 4, 5]]]
-    models = [{:model_text, "int: test_model = true;"}, "mzn/test1.mzn"]
+    models = [{:model_text, "int: test_model = true;"}, @test1_model]
     assert {:ok, _pid} = MinizincSolver.solve(
              models,
              [
@@ -35,7 +44,7 @@ defmodule SolverlTest do
                  test_set: MapSet.new([1, 2, 3]),
                  test_enum: MapSet.new([:red, :blue, :white])
                },
-               "mzn/test_data2.dzn"
+               @test_data2
              ],
              [solver: "gecode"]
            )
@@ -47,36 +56,36 @@ defmodule SolverlTest do
              minizinc_error: %{
                error: _error
              }
-           } = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2}, extra_flags: "--fake-flag")
+           } = MinizincSolver.solve_sync(@nqueens_model, %{n: 2}, extra_flags: "--fake-flag")
   end
 
   test "Checking dzn against the model: undefined identifier" do
     ## The model expects to have 'n' par as input, but gets 'm' par instead.
     dzn = %{m: 4}
-    {:error, error} = MinizincModel.mzn_dzn_info("mzn/nqueens.mzn", dzn)
+    {:error, error} = MinizincModel.mzn_dzn_info(@nqueens_model, dzn)
     assert String.contains?(error, "type error: undefined identifier `m'")
   end
 
   test "Checking dzn against the model: unassigned parameter" do
     ## Add new par description to the model
     par_descr = "int: k;"
-    model_info = MinizincModel.mzn_dzn_info(["mzn/nqueens.mzn", {:model_text, par_descr}], %{n: 4})
+    model_info = MinizincModel.mzn_dzn_info([@nqueens_model, {:model_text, par_descr}], %{n: 4})
     assert MinizincData.check_dzn(model_info) == {:error, {:unassigned_pars, MapSet.new(["k"])}}
   end
 
   test "Unsatisfiable sync" do
-    unsat_res = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 2})
+    unsat_res = MinizincSolver.solve_sync(@nqueens_model, %{n: 2})
     assert MinizincResults.get_status(unsat_res) == :unsatisfiable
   end
 
   test "Solving with timeout sync" do
     ## Final record for sync solving results is in position 0.
-    final_data = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 50}, [time_limit: 500])
+    final_data = MinizincSolver.solve_sync(@nqueens_model, %{n: 50}, [time_limit: 500])
     assert MinizincResults.get_status(final_data) == :satisfied
   end
 
   test "Getting all solutions" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8})
+    results = MinizincSolver.solve_sync(@nqueens_model, %{n: 8})
 
     assert MinizincResults.get_status(results) == :all_solutions
     ## 92 results for the nqueens.mzn model.
@@ -85,7 +94,7 @@ defmodule SolverlTest do
 
   test "Sync solving: solution handler that interrupts the solver after first 100 solutions have been found" do
     final_data = MinizincSolver.solve_sync(
-      "mzn/nqueens.mzn",
+      @nqueens_model,
       %{n: 50},
       [solution_handler: MinizincSearch.find_k_handler(100, MinizincHandler.Default)]
     )
@@ -94,14 +103,21 @@ defmodule SolverlTest do
   end
 
   test "Sync solving: solution handler that skips every other solution" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8},
-      solution_handler: SolverTest.EveryOther)
+    results = MinizincSolver.solve_sync(
+      @nqueens_model,
+      %{n: 8},
+      solution_handler: SolverTest.EveryOther
+    )
     ## 92 results for the nqueens.mzn model, but we drop every other one...
     assert length(MinizincResults.get_solutions(results)) == div(92, 2)
   end
 
   test "Sync solving: solution handler throws an exception" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 9}, [solution_handler: SolverTest.ThrowAfter100])
+    results = MinizincSolver.solve_sync(
+      @nqueens_model,
+      %{n: 9},
+      [solution_handler: SolverTest.ThrowAfter100]
+    )
     ## Should get 100 solutions
     assert length(MinizincResults.get_solutions(results)) == 100
     ## The exception is stored with :handler_exception key
@@ -176,7 +192,11 @@ defmodule SolverlTest do
   end
 
   test "Get last solution from summary, drop intermediate solutions" do
-    results = MinizincSolver.solve_sync("mzn/nqueens.mzn", %{n: 8}, [solution_handler: SolverTest.SummaryOnly])
+    results = MinizincSolver.solve_sync(
+      @nqueens_model,
+      %{n: 8},
+      [solution_handler: SolverTest.SummaryOnly]
+    )
     ## We dropped all solutions...
     assert length(MinizincResults.get_solutions(results)) == 0
     ## ... but the solution count is still correct...
@@ -193,36 +213,40 @@ defmodule SolverlTest do
   end
 
   test "Get model info" do
-    model_info = MinizincModel.model_info("mzn/sudoku.mzn")
+    model_info = MinizincModel.model_info(@sudoku_model)
     ## Model has "start" parameter
     assert model_info[:pars]["start"] == %{"dim" => 2, "type" => "int"}
     ## Model has "puzzle" variable
     assert model_info[:vars]["puzzle"] == %{"dim" => 2, "type" => "int"}
   end
 
-    test "Run model with checker" do
-      results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, checker: "mzn/aust.mzc.mzn")
-      assert String.trim(
-               MinizincResults.get_checker_output(
-                 MinizincResults.get_last_solution(results)
-               )
-             ) == "CORRECT"
-    end
+  test "Run model with checker" do
+    results = MinizincSolver.solve_sync(
+      @aust_model,
+      nil,
+      checker: resource_file("mzn/aust.mzc.mzn")
+    )
+    assert String.trim(
+             MinizincResults.get_checker_output(
+               MinizincResults.get_last_solution(results)
+             )
+           ) == "CORRECT"
+  end
 
-    test "Shut down on 'no new solution' timeout" do
-      ## Give it a very little time to wait for a solution...
-      results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, solution_timeout: 1)
-      ## No solutions...
-      assert not MinizincResults.has_solution(results)
-      ## ...but it did compile...
-      and results[:summary][:compiled]
-      ## ...and the exit reason indicates a solution timeout
-      and results[:summary][:exit_reason] == :by_solution_timeout
-    end
+  test "Shut down on 'no new solution' timeout" do
+    ## Give it a very little time to wait for a solution...
+    results = MinizincSolver.solve_sync(@aust_model, nil, solution_timeout: 1)
+    ## No solutions...
+    assert not MinizincResults.has_solution(results)
+           ## ...but it did compile...
+           and results[:summary][:compiled]
+           ## ...and the exit reason indicates a solution timeout
+           and results[:summary][:exit_reason] == :by_solution_timeout
+  end
 
   test "Shut down on compilation timeout" do
     ## Give it a very little time to compile...
-    results = MinizincSolver.solve_sync("mzn/aust.mzn", nil, fzn_timeout: 10)
+    results = MinizincSolver.solve_sync(@aust_model, nil, fzn_timeout: 10)
     ## No solutions...
     assert not MinizincResults.has_solution(results)
            ## ...and it didn't compile...

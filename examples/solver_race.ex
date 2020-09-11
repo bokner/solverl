@@ -3,8 +3,10 @@ defmodule SolverRace do
 
   require Logger
 
-  @model "mzn/golomb_mybab.mzn" ##"mzn/graph_coloring.mzn"
-  @data  []                      ##"mzn/gc_1000.dzn"
+  import MinizincUtils
+
+  @model "mzn/golomb_mybab.mzn"
+  @data  []
 
 
 
@@ -15,7 +17,7 @@ defmodule SolverRace do
       solvers,
       fn s ->
         MinizincSolver.solve(
-          @model,
+          resource_file(@model),
           @data,
           [
             solver: s,

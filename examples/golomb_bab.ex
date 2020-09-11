@@ -1,6 +1,7 @@
 defmodule GolombBAB do
 
   import MinizincSearch
+  import MinizincUtils
 
   require Logger
 
@@ -10,7 +11,7 @@ defmodule GolombBAB do
   @model "mzn/golomb_mybab.mzn"
 
   def solve(opts \\ []) do
-    instance = MinizincInstance.new(@model, [], opts)
+    instance = MinizincInstance.new(resource_file(@model), [], opts)
 
     results = bab(
       instance,
