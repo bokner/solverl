@@ -153,6 +153,12 @@ solve:: search
 
 
 
+
+% output ["\(succ[v,c])" ++ if c = DEPOT then "\n" elseif c = m then "  " else "," endif | v in VEHICLES, c in CUSTOMERS];
+
+% output ["\n\n"] ++ ["\(vehicle_assignment[v,c])" ++ if c = DEPOT then "\n" elseif c = m then "  " else "," endif | v in VEHICLES, c in CUSTOMERS];
+%output ["\(vehicle_assignment[v, succ[v, 1]])::" ++ "\(succ[v, 1])"++ "\n"  | v in VEHICLES];
+%output["\nvehicle assignment = \(vehicle_assignment)\n"];
 %output["vehicles used = \(vehiclesUsed)\n"];
 %output["customers: \(n), vehicles: \(m)\n"];
 %output["LNS: \(lns), restart: \(restart)\n"];
