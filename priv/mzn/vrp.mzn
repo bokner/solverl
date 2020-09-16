@@ -143,12 +143,12 @@ search =
           ]);
 
 solve:: search
-          :: relax_and_reconstruct(array1d(succ)
+          %:: relax_and_reconstruct(array1d(succ)
                                               % ++ array1d(vehicle_assignment)
                                               %++ vehicle_load
                                               %++ vehicle_customer_count
-          , lns)
-          :: restart_luby(restart)
+          %, lns)
+          %:: restart_luby(restart)
           minimize distanceTravelled;
 
 
