@@ -28,7 +28,8 @@ defmodule MinizincPort do
         solution_timeout: solver_opts[:solution_timeout],
         fzn_timeout: solver_opts[:fzn_timeout],
         fzn_timer: MinizincUtils.send_after(:fzn_timeout, solver_opts[:fzn_timeout]),
-        sync_to: solver_opts[:sync_to]
+        sync_to: solver_opts[:sync_to],
+        log_output: solver_opts[:log_output]
       }
     }
   end
@@ -51,6 +52,7 @@ defmodule MinizincPort do
       lines,
       state,
       fn text_line, acc_state ->
+        log_output(text_line, state.log_output)
         {action, s} = parse_minizinc_data(out_stream, text_line, acc_state)
         case action do
           :break ->
@@ -167,6 +169,16 @@ defmodule MinizincPort do
 
   def update_solution_handler(pid, handler) do
     GenServer.cast(pid, {:update_handler, handler})
+  end
+
+  defp log_output("", _log_cfg) do
+    :ok
+  end
+
+  defp log_output(line, log_cfg) do
+      if log_cfg do
+        Logger.debug("MZN: #{line}")
+      end
   end
 
   defp run_minizinc(solver, model_info, opts) do
