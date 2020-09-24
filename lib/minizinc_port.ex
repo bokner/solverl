@@ -175,10 +175,12 @@ defmodule MinizincPort do
     :ok
   end
 
-  defp log_output(line, log_cfg) do
-      if log_cfg do
-        Logger.debug("MZN: #{line}")
-      end
+  defp log_output(line, func) when is_function(func) do
+      func.(line)
+  end
+
+  defp log_output(_line, _other) do
+    
   end
 
   defp run_minizinc(solver, model_info, opts) do
