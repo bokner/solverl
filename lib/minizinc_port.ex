@@ -180,7 +180,7 @@ defmodule MinizincPort do
   end
 
   defp log_output(_line, _other) do
-    
+
   end
 
   defp run_minizinc(solver, model_info, opts) do

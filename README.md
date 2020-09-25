@@ -316,11 +316,12 @@ MinizincSolver.stop_solver(Graph1000)
   - `fzn_timeout`: Time in msecs to wait for the compilation (flattening) to finish.
 
   - `minizinc_executable`: Full path to MiniZinc executable (you'd need it if `minizinc` executable cannot be located by your system).
+  - `checker`: [Model specification](#model-specification) for [MiniZinc checker model](https://www.minizinc.org/doc-2.4.3/en/checkers.html).
+  - `extra_flags`: A string of command line flags supported by the solver. 
   - `solution_handler`: Module or function that controls processing of solutions and/or metadata. 
   
     Default: `MinizincHandler.Default`. Check out [Solution handlers](#solution-handlers) for more details. 
-  - `checker`: [Model specification](#model-specification) for [MiniZinc checker model](https://www.minizinc.org/doc-2.4.3/en/checkers.html).
-  - `extra_flags`: A string of command line flags supported by the solver. 
+  - `log_output`: A function with arity 1. If specified, will be called and passed the output line as the MiniZinc process writes it to `stdout` and/or `stderr`
   
   Example:
   ```elixir
