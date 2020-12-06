@@ -192,7 +192,7 @@ defmodule MinizincPort do
     extra_flags = Keyword.get(opts, :extra_flags, "")
     command = Enum.join(
       [
-        opts[:minizinc_executable] || MinizincUtils.default_executable(),
+        opts[:minizinc_executable],
         "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a ",
         " #{solver_str} #{time_limit_str} #{extra_flags} #{model_str} #{checker_str}"
       ],

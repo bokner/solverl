@@ -22,7 +22,6 @@ defmodule MinizincSolver do
   @type server_opts() :: GenServer.options()
 
   @default_solver_opts [
-    minizinc_executable: MinizincUtils.default_executable(),
     solver: "gecode",
     checker: [],
     time_limit: 60 * 5 * 1000,
@@ -35,7 +34,9 @@ defmodule MinizincSolver do
 
 
   @doc false
-  def default_solver_opts, do: @default_solver_opts
+  def default_solver_opts do
+    [{:minizinc_executable, MinizincUtils.default_executable()} | @default_solver_opts]
+  end
 
   @doc """
   Solve (asynchronously) with model, data and options.
