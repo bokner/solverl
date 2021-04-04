@@ -4,7 +4,7 @@ defmodule Solverl.MixProject do
   def project do
     [
       app: :solverl,
-      version: "1.0.7",
+      version: "1.0.9",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: ["lib", "examples"],
@@ -26,7 +26,7 @@ defmodule Solverl.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rexbug, ">= 1.0.0"},
+      {:rexbug, git: "https://github.com/grepz/rexbug.git"},
       {:recon, "~> 2.5"},
       {:jason, "~> 1.2"},
       {:distance, "~> 0.2.2"},
