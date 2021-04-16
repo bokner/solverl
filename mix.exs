@@ -26,7 +26,7 @@ defmodule Solverl.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rexbug, git: "https://github.com/grepz/rexbug.git"},
+      {:rexbug, "~> 0.1"},
       {:recon, "~> 2.5"},
       {:jason, "~> 1.2"},
       {:distance, "~> 0.2.2"},
