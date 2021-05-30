@@ -51,25 +51,36 @@ defmodule MinizincSolver do
     Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
 
-  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()} | {:error, any()}
+  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()} | {
+    :error,
+    any()
+  }
 
 
   def solve(model, data \\ [], solver_opts \\ [], server_opts \\ []) do
     ## Merge with defaults
     solver_opts = Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
-    case MinizincModel.mzn_dzn_info(model, data,
-           solver_opts[:minizinc_executable]) do
+    case MinizincModel.mzn_dzn_info(
+           model,
+           data,
+           solver_opts[:minizinc_executable]
+         ) do
       {:error, error} ->
         {:error, error}
       model_info ->
         case MinizincData.check_dzn(model_info) do
           :ok ->
             ## Lookup the solver
-            {:ok, solver} = MinizincSolver.lookup(solver_opts[:solver])
-            ## Add solution checker, if any
-            model_info = MinizincModel.add_checker(solver_opts[:checker], model_info)
-            ## Run the instance
-            {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, server_opts)
+            case MinizincSolver.lookup(solver_opts[:solver]) do
+              {:ok, solver} ->
+                ## Add solution checker, if any
+                model_info = MinizincModel.add_checker(solver_opts[:checker], model_info)
+                ## Run the instance
+                {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, server_opts)
+              lookup_error ->
+                Logger.debug "Solver lookup error: #{inspect lookup_error}"
+                lookup_error
+            end
           dzn_error ->
             Logger.debug "model/dzn error: #{inspect dzn_error}"
             dzn_error
@@ -94,14 +105,16 @@ defmodule MinizincSolver do
     Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
   """
-  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: [any()]
+  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: map()
 
   def solve_sync(model, data \\ [], solver_opts \\ [], opts \\ []) do
     solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
 
     sync_solver_opts = Keyword.put(
       solver_opts,
-      :sync_to, self()  ## The solver process will send results back to the caller
+      :sync_to,
+      self()
+      ## The solver process will send results back to the caller
     )
     case solve(model, data, sync_solver_opts, opts) do
       {:ok, solver_pid} ->
@@ -128,11 +141,11 @@ defmodule MinizincSolver do
   defp receive_events(solution_handler, solver_pid, acc) do
     receive do
       %{from: pid, solver_results: {event, data}} when pid == solver_pid ->
-           if event in [:summary, :minizinc_error] do
-              add_solver_event(event, data, acc)
-              else
-              receive_events(solution_handler, pid, add_solver_event(event, data, acc))
-            end
+        if event in [:summary, :minizinc_error] do
+          add_solver_event(event, data, acc)
+        else
+          receive_events(solution_handler, pid, add_solver_event(event, data, acc))
+        end
       unexpected ->
         Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
     end
@@ -216,11 +229,11 @@ defmodule MinizincSolver do
     )
     case solvers do
       [] ->
-        {:solver_not_found, solver_id}
+        {:error, {:solver_not_found, solver_id}}
       [solver] ->
         {:ok, solver}
       [_ | _rest] ->
-        {:solver_id_ambiguous, (for solver <- solvers, do: solver["id"])}
+        {:error, {:solver_id_ambiguous, (for solver <- solvers, do: solver["id"])}}
     end
   end
 
