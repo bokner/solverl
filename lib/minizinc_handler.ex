@@ -3,9 +3,8 @@ defmodule MinizincHandler do
     Behaviour, default implementations and helpers for solution handlers.
   """
 
-
-  @callback handle_solution(solution :: map())
-            :: :break | {:break, any()} | :skip | any()
+  @callback handle_solution(solution :: map()) ::
+              :break | {:break, any()} | :skip | any()
 
   @callback handle_summary(summary :: map()) :: any()
 
@@ -20,9 +19,11 @@ defmodule MinizincHandler do
       def handle_solution(solution) do
         MinizincHandler.Default.handle_solution(solution)
       end
+
       def handle_summary(summary) do
         MinizincHandler.Default.handle_summary(summary)
       end
+
       def handle_minizinc_error(error) do
         MinizincHandler.Default.handle_minizinc_error(error)
       end
@@ -92,7 +93,6 @@ defmodule MinizincHandler do
   def on_compiled(compilation_info, solution_handler) do
     solution_handler.on_compiled(compilation_info)
   end
-
 end
 
 defmodule MinizincHandler.Default do
@@ -116,7 +116,4 @@ defmodule MinizincHandler.Default do
   def on_compiled(compilation_info) do
     compilation_info
   end
-
 end
-
-

@@ -9,10 +9,8 @@ defmodule MinizincModel do
   @type model_chunk :: Path.t() | {:model_text, binary()}
   @type mzn_model :: model_chunk() | list(model_chunk())
 
-
   @submodel_header "%%%%% START OF SUBMODEL %%%%%"
   @submodel_footer "%%%%% END OF SUBMODEL %%%%%\n\n"
-
 
   ## Build model from multiple files and/or textual chunks.
   ##
@@ -26,14 +24,16 @@ defmodule MinizincModel do
     Enum.reduce(
       model,
       "",
-      fn m, acc -> acc <> Enum.join(
-        [
-          @submodel_header,
-          read_model(m),
-          @submodel_footer
-        ],
-        "\n"
-                   )
+      fn m, acc ->
+        acc <>
+          Enum.join(
+            [
+              @submodel_header,
+              read_model(m),
+              @submodel_footer
+            ],
+            "\n"
+          )
       end
     )
   end
@@ -42,7 +42,6 @@ defmodule MinizincModel do
   def make_model(data) do
     make_model([data])
   end
-
 
   ## Model as text
   defp read_model({:model_text, model_text}) when is_binary(model_text) do
@@ -60,18 +59,21 @@ defmodule MinizincModel do
   end
 
   ## Model + DZN info.
-  @dzn_header      "%%%%% DZN START"
-  @dzn_footer      "%%%%% DZN END"
+  @dzn_header "%%%%% DZN START"
+  @dzn_footer "%%%%% DZN END"
 
   def mzn_dzn_info(model, data, minizinc_executable \\ MinizincUtils.default_executable()) do
     ## Create a temporary file for the joint model
-    model_file = String.replace_suffix(
-                   String.trim(MinizincUtils.cmd("mktemp")),
-                   ".mzn",
-                   ""
-                 ) <> ".mzn"
+    model_file =
+      String.replace_suffix(
+        String.trim(MinizincUtils.cmd("mktemp")),
+        ".mzn",
+        ""
+      ) <> ".mzn"
+
     model_body = MinizincModel.make_model(model)
     dzn_body = MinizincData.to_dzn(data)
+
     File.write(
       model_file,
       Enum.join(
@@ -79,26 +81,32 @@ defmodule MinizincModel do
         "\n"
       )
     )
+
     MinizincModel.model_info(model_file, minizinc_executable)
   end
 
+  def model_info(model_file, minizinc_executable \\ default_executable())
+      when is_binary(model_file) do
+    mzn_output =
+      cmd(
+        "#{minizinc_executable} #{model_file} --model-interface-only --allow-multiple-assignments"
+      )
 
-  def model_info(model_file, minizinc_executable \\ default_executable()) when is_binary(model_file) do
-    mzn_output = cmd("#{minizinc_executable} #{model_file} --model-interface-only --allow-multiple-assignments")
     case Jason.decode(mzn_output) do
       {:ok, model_info} ->
         [
-          {:model_file, model_file} |
-          Enum.map(
-            model_info,
-            fn
-              {"input", v} -> {:pars, v};
-              {"output", v} -> {:vars, v};
-              {"method", method_name} -> {:method, translate_method(method_name)};
-              {k, v} -> {String.to_atom(k), v}
-            end
-          )
+          {:model_file, model_file}
+          | Enum.map(
+              model_info,
+              fn
+                {"input", v} -> {:pars, v}
+                {"output", v} -> {:vars, v}
+                {"method", method_name} -> {:method, translate_method(method_name)}
+                {k, v} -> {String.to_atom(k), v}
+              end
+            )
         ]
+
       {:error, _jason_error} ->
         ## TODO : parse error
         {:error, mzn_output}
@@ -117,8 +125,6 @@ defmodule MinizincModel do
     end
   end
 
-
-
   defp translate_method("sat") do
     :satisfy
   end
@@ -130,7 +136,6 @@ defmodule MinizincModel do
   defp translate_method("min") do
     :minimize
   end
-
 
   def method(model) do
     model[:method]
@@ -151,5 +156,4 @@ defmodule MinizincModel do
       end
     )
   end
-
 end

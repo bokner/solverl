@@ -5,17 +5,18 @@ defmodule MinizincSolver do
 
   require Logger
 
-  @type solver_opt() :: {:minizinc_executable, binary()} |
-                        {:solver, binary()} |
-                        {:checker, MinizincModel.mzn_model()} |
-                        {:time_limit, integer()} |
-                        {:solution_handler, function()} |
-                        {:solution_timeout, timeout()} |
-                        {:fzn_timeout, timeout()} |
-                        {:sync_to, pid() | nil} |
-                        {:extra_flags, binary()} |
-                        {:debug_exec, integer()} |
-                        {:cmd_opts, list()}
+  @type solver_opt() ::
+          {:minizinc_executable, binary()}
+          | {:solver, binary()}
+          | {:checker, MinizincModel.mzn_model()}
+          | {:time_limit, integer()}
+          | {:solution_handler, function()}
+          | {:solution_timeout, timeout()}
+          | {:fzn_timeout, timeout()}
+          | {:sync_to, pid() | nil}
+          | {:extra_flags, binary()}
+          | {:debug_exec, integer()}
+          | {:cmd_opts, list()}
 
   @type solver_opts() :: list(solver_opt())
 
@@ -31,7 +32,6 @@ defmodule MinizincSolver do
     sync_to: nil,
     cmd_opts: []
   ]
-
 
   @doc false
   def default_solver_opts do
@@ -51,15 +51,17 @@ defmodule MinizincSolver do
     Check out `Sudoku` module in `examples/sudoku.ex` for more details on handling solutions.
   """
 
-  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: {:ok, pid()} | {
-    :error,
-    any()
-  }
-
+  @spec solve(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) ::
+          {:ok, pid()}
+          | {
+              :error,
+              any()
+            }
 
   def solve(model, data \\ [], solver_opts \\ [], server_opts \\ []) do
     ## Merge with defaults
-    solver_opts = Keyword.merge(MinizincSolver.default_solver_opts, solver_opts)
+    solver_opts = Keyword.merge(MinizincSolver.default_solver_opts(), solver_opts)
+
     case MinizincModel.mzn_dzn_info(
            model,
            data,
@@ -67,6 +69,7 @@ defmodule MinizincSolver do
          ) do
       {:error, error} ->
         {:error, error}
+
       model_info ->
         case MinizincData.check_dzn(model_info) do
           :ok ->
@@ -76,20 +79,20 @@ defmodule MinizincSolver do
                 ## Add solution checker, if any
                 model_info = MinizincModel.add_checker(solver_opts[:checker], model_info)
                 ## Run the instance
-                {:ok, _pid} = MinizincPort.start_link(model_info, solver, solver_opts, server_opts)
+                {:ok, _pid} =
+                  MinizincPort.start_link(model_info, solver, solver_opts, server_opts)
+
               lookup_error ->
-                Logger.debug "Solver lookup error: #{inspect lookup_error}"
+                Logger.debug("Solver lookup error: #{inspect(lookup_error)}")
                 lookup_error
             end
+
           dzn_error ->
-            Logger.debug "model/dzn error: #{inspect dzn_error}"
+            Logger.debug("model/dzn error: #{inspect(dzn_error)}")
             dzn_error
         end
     end
   end
-
-
-
 
   @doc """
 
@@ -105,36 +108,46 @@ defmodule MinizincSolver do
     Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
   """
-  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: map() | {:error, any()}
+  @spec solve_sync(
+          model :: MinizincModel.mzn_model(),
+          data :: MinizincData.mzn_data(),
+          solver_opts :: solver_opts(),
+          server_opts :: server_opts()
+        ) :: {:ok, any()} | {:error, any()}
 
   def solve_sync(model, data \\ [], solver_opts \\ [], opts \\ []) do
     solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
 
-    sync_solver_opts = Keyword.put(
-      solver_opts,
-      :sync_to,
-      self()
-      ## The solver process will send results back to the caller
-    )
+    sync_solver_opts =
+      Keyword.put(
+        solver_opts,
+        :sync_to,
+        self()
+        ## The solver process will send results back to the caller
+      )
+
     case solve(model, data, sync_solver_opts, opts) do
       {:ok, solver_pid} ->
-        receive_events(solution_handler, solver_pid)
-      error -> error
+        result = receive_events(solution_handler, solver_pid)
+        (result && {:ok, result}) || {:error, :unexpected}
+      {:error, error} ->
+        {:error, error}
     end
-
   end
 
   defp receive_events(solution_handler, solver_pid) do
     results = receive_events(solution_handler, solver_pid, %{})
     # Reverse list of solutions (as they are being added in reverse order)
-    {nil, updated_results} = Map.get_and_update(
-      results,
-      :solutions,
-      fn
-        nil -> {nil, []};
-        solutions -> {nil, Enum.reverse(solutions)}
-      end
-    )
+    {nil, updated_results} =
+      Map.get_and_update(
+        results,
+        :solutions,
+        fn
+          nil -> {nil, []}
+          solutions -> {nil, Enum.reverse(solutions)}
+        end
+      )
+
     updated_results
   end
 
@@ -146,23 +159,31 @@ defmodule MinizincSolver do
         else
           receive_events(solution_handler, pid, add_solver_event(event, data, acc))
         end
+
       unexpected ->
-        Logger.error("Unexpected message from the solver sync handler (#{inspect solver_pid}): #{inspect unexpected}")
+        Logger.error(
+          "Unexpected message from the solver sync handler (#{inspect(solver_pid)}): #{
+            inspect(unexpected)
+          }"
+        )
+
+        nil
     end
   end
 
   defp add_solver_event(:solution, data, acc) do
-    {nil, newacc} = Map.get_and_update(
-      acc,
-      :solutions,
-      fn
-        nil -> {nil, [data]};
-        current -> {nil, [data | current]}
-      end
-    )
+    {nil, newacc} =
+      Map.get_and_update(
+        acc,
+        :solutions,
+        fn
+          nil -> {nil, [data]}
+          current -> {nil, [data | current]}
+        end
+      )
+
     newacc
   end
-
 
   defp add_solver_event(event, data, acc) do
     Map.put(acc, data_key(event), data)
@@ -175,9 +196,8 @@ defmodule MinizincSolver do
   defp data_key(event) do
     event
   end
+
   ####################################################
-
-
 
   @doc """
     Get solver status
@@ -220,22 +240,24 @@ defmodule MinizincSolver do
   """
 
   def lookup(solver_id) do
-    solvers = Enum.filter(
-      get_solvers(),
-      fn s ->
-        s["id"] == solver_id or
-        List.last(String.split(s["id"], ".")) == solver_id
-      end
-    )
+    solvers =
+      Enum.filter(
+        get_solvers(),
+        fn s ->
+          s["id"] == solver_id or
+            List.last(String.split(s["id"], ".")) == solver_id
+        end
+      )
+
     case solvers do
       [] ->
         {:error, {:solver_not_found, solver_id}}
+
       [solver] ->
         {:ok, solver}
+
       [_ | _rest] ->
-        {:error, {:solver_id_ambiguous, (for solver <- solvers, do: solver["id"])}}
+        {:error, {:solver_id_ambiguous, for(solver <- solvers, do: solver["id"])}}
     end
   end
-
 end
-

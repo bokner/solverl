@@ -17,7 +17,6 @@ defmodule ParserState do
             json_buffer: ""
 end
 
-
 defmodule MinizincParser do
   @moduledoc false
 
@@ -26,14 +25,14 @@ defmodule MinizincParser do
   # Functions for parsing a stream of text produced by Minizinc process.
   require Logger
 
-  @solution_separator      "----------"
+  @solution_separator "----------"
 
-  @status_completed          "=========="
-  @status_unsatisfiable    "=====UNSATISFIABLE====="
-  @status_unknown          "=====UNKNOWN====="
-  @status_error            "=====ERROR====="
+  @status_completed "=========="
+  @status_unsatisfiable "=====UNSATISFIABLE====="
+  @status_unknown "=====UNKNOWN====="
+  @status_error "=====ERROR====="
   @status_unsatOrUnbounded "=====UNSATorUNBOUNDED====="
-  @status_unbounded        "=====UNBOUNDED====="
+  @status_unbounded "=====UNBOUNDED====="
 
   def initial_state do
     %ParserState{}
@@ -42,12 +41,14 @@ defmodule MinizincParser do
   ## Parser interface
   def parse_output(stream, data, parser_state) do
     parser_event = parse_output(stream, data)
+
     case update_state(parser_state, parser_event) do
       {extended_parser_event, new_parser_state} ->
         {extended_parser_event, new_parser_state}
+
       new_parser_state ->
         {parser_event, new_parser_state}
-      #when is_record()
+        # when is_record()
     end
   end
 
@@ -115,7 +116,6 @@ defmodule MinizincParser do
     {:solver_stats, key_value(stats_key, stats_value)}
   end
 
-
   defp parse_output("%%%mzn-stat-end" <> _rest) do
     :stats_end
   end
@@ -124,25 +124,24 @@ defmodule MinizincParser do
     new_line
   end
 
-
-    defp map_to_elixir(map) do
-      Enum.reduce(
-        map,
-        %{},
-        fn ({k, v}, acc) ->
-          Map.put(acc, k, MinizincData.to_elixir(v))
-        end
-      )
-    end
+  defp map_to_elixir(map) do
+    Enum.reduce(
+      map,
+      %{},
+      fn {k, v}, acc ->
+        Map.put(acc, k, MinizincData.to_elixir(v))
+      end
+    )
+  end
 
   @doc false
   # Update parser with the line produced by Minizinc port.
   defp update_state(%ParserState{solution_count: sc} = results, {:status, :satisfied}) do
     %{
-      results |
-      status: :satisfied,
-      timestamp: MinizincUtils.now(:microsecond),
-      solution_count: sc + 1
+      results
+      | status: :satisfied,
+        timestamp: MinizincUtils.now(:microsecond),
+        solution_count: sc + 1
     }
   end
 
@@ -202,24 +201,25 @@ defmodule MinizincParser do
   end
 
   ## Closing of JSON
-  defp update_state(%ParserState{json_buffer: "{" <> _jbuffer = buff} = results, :solution_json_end) do
-    {:ok, solution_data} = Jason.decode(
-      buff <> "}"
-    )
+  defp update_state(
+         %ParserState{json_buffer: "{" <> _jbuffer = buff} = results,
+         :solution_json_end
+       ) do
+    {:ok, solution_data} = Jason.decode(buff <> "}")
+
     %{
-      results |
-      json_buffer: "",
-      solution_data: map_to_elixir(solution_data)
+      results
+      | json_buffer: "",
+        solution_data: map_to_elixir(solution_data)
     }
   end
-
-
 
   ## Collecting JSON data
   defp update_state(
          %ParserState{json_buffer: "{" <> _jbuffer = buff} = results,
          json_chunk
-       ) when is_binary(json_chunk) do
+       )
+       when is_binary(json_chunk) do
     %{results | json_buffer: buff <> json_chunk}
   end
 
@@ -229,12 +229,14 @@ defmodule MinizincParser do
   end
 
   ## Minizinc stderr.
-  defp update_state(%ParserState{minizinc_stderr: u} = results, {:stderr, new_line}) when is_binary(new_line) do
+  defp update_state(%ParserState{minizinc_stderr: u} = results, {:stderr, new_line})
+       when is_binary(new_line) do
     %{results | minizinc_stderr: u <> "\n" <> new_line}
   end
 
   ## Compilation in progress...
-  defp update_state(%ParserState{fzn_output: u, compiled: false} = results, new_line) when is_binary(new_line) do
+  defp update_state(%ParserState{fzn_output: u, compiled: false} = results, new_line)
+       when is_binary(new_line) do
     %{results | fzn_output: u <> "\n" <> new_line}
   end
 
@@ -246,29 +248,34 @@ defmodule MinizincParser do
 
   ## 'Parser -> solver events' mapping
 
-#  @summary_fields [
-#    :status,           # Solver status (one of :satisfied, :unsatisfiable etc)
-#    :fzn_stats,        # Map of FlatZinc statistics values keyed with the field names
-#    :solver_stats,     # Map of solver statistics values keyed with the field names
-#    :solution_count,   # Total number of solutions found
-#    :last_solution,    # Data for last :solution event (see above)
-#    :minizinc_output,  # MiniZinc errors and warnings
-#    :time_elapsed      # Time elapsed, verbatim as reported by MiniZinc
-#  ]
-#
-#  @solution_fields [
-#    :data,       # Map of values keyed with their variable names
-#    :timestamp,  # Timestamp of the moment solution was parsed
-#    :index,      # Sequential number of the solution
-#    :stats       # Map of solution statistics values keyed with the field names
-#  ]
-#
-#  @minizinc_error_fields [
-#    :error       # MiniZinc output generated by runtime error
-#  ]
+  #  @summary_fields [
+  #    :status,           # Solver status (one of :satisfied, :unsatisfiable etc)
+  #    :fzn_stats,        # Map of FlatZinc statistics values keyed with the field names
+  #    :solver_stats,     # Map of solver statistics values keyed with the field names
+  #    :solution_count,   # Total number of solutions found
+  #    :last_solution,    # Data for last :solution event (see above)
+  #    :minizinc_output,  # MiniZinc errors and warnings
+  #    :time_elapsed      # Time elapsed, verbatim as reported by MiniZinc
+  #  ]
+  #
+  #  @solution_fields [
+  #    :data,       # Map of values keyed with their variable names
+  #    :timestamp,  # Timestamp of the moment solution was parsed
+  #    :index,      # Sequential number of the solution
+  #    :stats       # Map of solution statistics values keyed with the field names
+  #  ]
+  #
+  #  @minizinc_error_fields [
+  #    :error       # MiniZinc output generated by runtime error
+  #  ]
 
   ## Data for solver events
-  def solution(%ParserState{solution_data: data, timestamp: timestamp, mzn_stats: stats, solution_count: count}) do
+  def solution(%ParserState{
+        solution_data: data,
+        timestamp: timestamp,
+        mzn_stats: stats,
+        solution_count: count
+      }) do
     %{data: data, timestamp: timestamp, index: count, stats: stats}
   end
 
@@ -300,12 +307,14 @@ defmodule MinizincParser do
       unclassified_output: unclassified,
       time_elapsed: time_elapsed
     }
+
     ## Update status and add model info
     case model_info do
       _info when is_list(model_info) ->
         raw_summary
         |> Map.put(:status, MinizincResults.status(model_info[:method], status))
         |> Map.put(:model_info, model_info)
+
       _no_model_info ->
         raw_summary
     end
@@ -320,36 +329,35 @@ defmodule MinizincParser do
   end
 
   def compilation_info(%ParserState{
-    fzn_stats: fzn_stats,
-    fzn_output: fzn_output,
-    compiled: compiled,
-    compilation_timestamp: compilation_timestamp}) do
+        fzn_stats: fzn_stats,
+        fzn_output: fzn_output,
+        compiled: compiled,
+        compilation_timestamp: compilation_timestamp
+      }) do
     %{
       fzn_stats: fzn_stats,
       fzn_output: fzn_output,
       compiled: compiled,
-      compilation_timestamp: compilation_timestamp}
+      compilation_timestamp: compilation_timestamp
+    }
   end
-
-
 
   defp key_value(key, value) do
     {String.to_atom(key), MinizincUtils.parse_value(value)}
   end
 
   defp add_key_value(map, key, value) when is_map(map) do
-    {nil, new_map} = Map.get_and_update(
-      map,
-      key,
-      fn
-        nil -> {nil, value};
-        current when is_list(current) -> {nil, [value | current]}
-        current -> {nil, [value, current]}
-      end
-    )
+    {nil, new_map} =
+      Map.get_and_update(
+        map,
+        key,
+        fn
+          nil -> {nil, value}
+          current when is_list(current) -> {nil, [value | current]}
+          current -> {nil, [value, current]}
+        end
+      )
+
     new_map
   end
-
-
-
 end

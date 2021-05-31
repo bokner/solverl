@@ -21,16 +21,14 @@ defmodule MinizincData do
   end
 
   def to_dzn(data) when is_list(data) do
-     Enum.reduce(data, "",
-      fn d, acc ->
-        acc <> read_dzn(d)
-      end)
+    Enum.reduce(data, "", fn d, acc ->
+      acc <> read_dzn(d)
+    end)
   end
 
   def to_dzn(data) when is_binary(data) or is_map(data) do
     to_dzn([data])
   end
-
 
   # Dzn as filename
   defp read_dzn(data) when is_binary(data) do
@@ -42,35 +40,35 @@ defmodule MinizincData do
     map_to_dzn(data)
   end
 
-
-
   # Convert map to the list of strings in .dzn format
   defp map_to_dzn(data) do
     Enum.reduce(
       data,
       "",
-      fn ({k, v}, acc) ->
+      fn {k, v}, acc ->
         "#{k} = #{elixir_to_dzn(v)};\n" <> acc
       end
     )
   end
 
   @doc """
-  Serialize output produced by MinizincParser to Elixir data.
-"""
+    Serialize output produced by MinizincParser to Elixir data.
+  """
   @spec to_elixir(any()) :: binary()
 
   def to_elixir(el) when is_map(el) do
     [map_type] = Map.keys(el)
+
     case map_type do
       "set" ->
         MapSet.new(List.flatten(el["set"]))
+
       "e" ->
         el["e"]
-      _unknown ->
-        throw {:unknown_map_type, map_type}
-    end
 
+      _unknown ->
+        throw({:unknown_map_type, map_type})
+    end
   end
 
   def to_elixir(el) when is_list(el) do
@@ -80,8 +78,6 @@ defmodule MinizincData do
   def to_elixir(el) do
     el
   end
-
-
 
   #############################################
   # Convert element to .dzn string
@@ -106,24 +102,26 @@ defmodule MinizincData do
 
   defp elixir_to_dzn(enum) when is_tuple(enum) do
     enum_list = Tuple.to_list(enum)
-    "{" <> Enum.join(
-             Enum.map(enum_list, fn e -> "#{e}" end),
-             @element_separator
-           ) <> "}"
+
+    "{" <>
+      Enum.join(
+        Enum.map(enum_list, fn e -> "#{e}" end),
+        @element_separator
+      ) <> "}"
   end
 
   defp elixir_to_dzn(el) do
     el
   end
 
-
-  defp array_to_dzn(el, bases)  do
+  defp array_to_dzn(el, bases) do
     dims = dimensions(el)
+
     if dims do
-      array_dimensions(dims, make_base_list(dims, bases))
-      <> "[#{Enum.join(List.flatten(el), @element_separator)}]" <> ")"
+      array_dimensions(dims, make_base_list(dims, bases)) <>
+        "[#{Enum.join(List.flatten(el), @element_separator)}]" <> ")"
     else
-      throw {:irregular_array, el}
+      throw({:irregular_array, el})
     end
   end
 
@@ -136,26 +134,24 @@ defmodule MinizincData do
   end
 
   defp array_dimensions(dims, _bases) when length(dims) > @max_dimensions do
-    throw {:too_many_dimensions, "#{length(dims)}"}
+    throw({:too_many_dimensions, "#{length(dims)}"})
   end
 
   defp array_dimensions(dims, bases) do
     if length(dims) == length(bases) do
       "array#{length(dims)}d(" <>
-      Enum.reduce(
-        Enum.zip(dims, bases),
-        "",
-        fn {d, b}, acc ->
-          acc <> "#{b}..#{d + b - 1},"
-          ## Shift upper bound to match dimension base
-        end
-      )
+        Enum.reduce(
+          Enum.zip(dims, bases),
+          "",
+          fn {d, b}, acc ->
+            acc <> "#{b}..#{d + b - 1},"
+            ## Shift upper bound to match dimension base
+          end
+        )
     else
-      throw {:base_list_mismatch, bases}
+      throw({:base_list_mismatch, bases})
     end
-
   end
-
 
   @doc false
   ## Dimensions of a nested list of lists.
@@ -176,8 +172,9 @@ defmodule MinizincData do
 
   defp dimensions(array, acc) when is_list(array) do
     [head | tail] = array
+
     Enum.all?(tail, fn t -> dimensions(t) == dimensions(head) end) and
-    dimensions(head, [length(array) | acc])
+      dimensions(head, [length(array) | acc])
   end
 
   defp dimensions(_el, acc) do
@@ -193,12 +190,11 @@ defmodule MinizincData do
 
   def check_dzn(model_info) do
     model_pars = MapSet.new(Map.keys(model_info[:pars]))
+
     if Enum.empty?(model_pars) do
       :ok
     else
       {:error, {:unassigned_pars, model_pars}}
     end
   end
-
-
 end

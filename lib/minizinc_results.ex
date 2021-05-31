@@ -5,7 +5,6 @@ defmodule MinizincResults do
 
   require Logger
 
-
   ############### Solver results ##################
   def get_status(%{summary: summary} = _solver_results) do
     get_status(summary)
@@ -22,7 +21,6 @@ defmodule MinizincResults do
   def get_method(summary) do
     MinizincModel.method(summary[:model_info])
   end
-
 
   def get_last_solution(%{summary: summary} = _solver_results) do
     get_last_solution(summary)
@@ -83,5 +81,4 @@ defmodule MinizincResults do
   def status(_method, status) do
     status
   end
-
 end

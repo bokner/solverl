@@ -22,8 +22,8 @@ defmodule MinizincInstance do
           server_opts: server_opts
         } = instance,
         sync
-      ) when is_map(instance) and is_boolean(sync) do
-
+      )
+      when is_map(instance) and is_boolean(sync) do
     if sync do
       MinizincSolver.solve_sync(model, data, solver_opts, server_opts)
     else
