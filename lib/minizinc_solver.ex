@@ -105,7 +105,7 @@ defmodule MinizincSolver do
     Check out `NQueens` module in `examples/nqueens.ex` for more details on handling solutions.
 
   """
-  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: map()
+  @spec solve_sync(MinizincModel.mzn_model(), MinizincData.mzn_data(), solver_opts(), server_opts()) :: map() | {:error, any()}
 
   def solve_sync(model, data \\ [], solver_opts \\ [], opts \\ []) do
     solution_handler = Keyword.get(solver_opts, :solution_handler, MinizincHandler.Default)
