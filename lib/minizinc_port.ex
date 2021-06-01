@@ -266,14 +266,6 @@ defmodule MinizincPort do
     handle_compiled(state)
   end
 
-  defp handle_solver_event(:summary, state) do
-    handle_summary(state)
-  end
-
-  defp handle_solver_event(:minizinc_error, state) do
-    handle_minizinc_error(state)
-  end
-
   defp handle_solution(
          %{
            solution_handler: solution_handler,

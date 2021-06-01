@@ -47,7 +47,7 @@ stop_solver(Pid) ->
     ?MINIZINC:stop_solver(Pid).
 
 solver_status(Pid) ->
-    ?MINIZINC:solve_status(Pid).
+    ?MINIZINC:solver_status(Pid).
 
 get_solvers() ->
     ?MINIZINC:get_solvers().

@@ -41,7 +41,7 @@ defmodule MinizincSearch do
         :lists.seq(1, iterations),
         {instance, nil},
         fn i, {prev_instance, prev_results} ->
-          iteration_results = MinizincInstance.run(prev_instance)
+          {:ok, iteration_results} = MinizincInstance.run(prev_instance)
 
           results =
             if MinizincResults.has_solution(iteration_results) do
@@ -66,7 +66,7 @@ defmodule MinizincSearch do
   end
 
   defp repeat_impl(instance, step_fun, iteration, prev_results) do
-    iteration_results = MinizincInstance.run(instance)
+    {:ok, iteration_results} = MinizincInstance.run(instance)
 
     case step_fun.(instance, iteration_results, iteration) do
       :break ->

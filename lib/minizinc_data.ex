@@ -201,7 +201,7 @@ defmodule MinizincData do
   Currently only checking for unassigned pars.
   """
 
-  @spec check_dzn(map()) :: :ok | {:error, any()}
+  @spec check_dzn(any()) :: :ok | {:error, any()}
 
   def check_dzn(model_info) do
     model_pars = MapSet.new(Map.keys(model_info[:pars]))

@@ -138,17 +138,15 @@ defmodule MinizincSolver do
   defp receive_events(solution_handler, solver_pid) do
     results = receive_events(solution_handler, solver_pid, %{})
     # Reverse list of solutions (as they are being added in reverse order)
-    {nil, updated_results} =
-      Map.get_and_update(
+    results &&
+    Map.update(
         results,
         :solutions,
+        [],
         fn
-          nil -> {nil, []}
-          solutions -> {nil, Enum.reverse(solutions)}
+          solutions -> Enum.reverse(solutions)
         end
       )
-
-    updated_results
   end
 
   defp receive_events(solution_handler, solver_pid, acc) do
@@ -166,23 +164,19 @@ defmodule MinizincSolver do
             inspect(unexpected)
           }"
         )
-
         nil
     end
   end
 
   defp add_solver_event(:solution, data, acc) do
-    {nil, newacc} =
-      Map.get_and_update(
+      Map.update(
         acc,
         :solutions,
+        [data],
         fn
-          nil -> {nil, [data]}
-          current -> {nil, [data | current]}
+          current -> [data | current]
         end
       )
-
-    newacc
   end
 
   defp add_solver_event(event, data, acc) do
