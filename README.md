@@ -221,7 +221,7 @@ Data could be either:
     var COLOR: color;
     constraint color = max(COLOR);
   """
-  results = MinizincSolver.solve_sync({:model_text, enum_model}, 
+  {:ok, results} = MinizincSolver.solve_sync({:model_text, enum_model}, 
       %{'COLOR': {"White", "Black", "Red", "BLue", "Green"}})   
   
   MinizincResults.get_last_solution(results)[:data]["color"]  
