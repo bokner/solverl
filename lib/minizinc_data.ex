@@ -61,7 +61,7 @@ defmodule MinizincData do
 
     case map_type do
       "set" ->
-        MapSet.new(List.flatten(el["set"]))
+        make_set(el["set"])
 
       "e" ->
         el["e"]
@@ -131,6 +131,21 @@ defmodule MinizincData do
 
   defp make_base_list(dims, base) when is_integer(base) do
     List.duplicate(base, length(dims))
+  end
+
+  defp make_set(mzn_set) do
+    MapSet.new(
+    Enum.reduce(
+      mzn_set,
+      [],
+      fn
+        [lower, upper], acc ->
+          ## This is a range
+          Enum.to_list(lower..upper) ++ acc
+        int, acc ->
+          [int | acc]
+      end
+    ))
   end
 
   defp array_dimensions(dims, _bases) when length(dims) > @max_dimensions do
