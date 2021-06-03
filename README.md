@@ -6,7 +6,7 @@ Inspired by [MiniZinc Python](https://minizinc-python.readthedocs.io/en/0.3.0/in
 
 View docs [here](https://hexdocs.pm/solverl).
 
-**Disclaimer**: This project is in its very early stages, and has not been used in production, nor extensively tested. Use at your own risk.
+**Disclaimer**: This project is in its very early stages, and has only been used in a single production application. Use at your own risk.
 
 - [Installation](#installation)
 
