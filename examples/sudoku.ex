@@ -54,11 +54,12 @@ defmodule Sudoku do
   def solve_sync(puzzle, solver_opts) when is_list(puzzle) do
     Logger.info "Sudoku puzzle (solved synchronously)"
     Logger.info print_grid(puzzle)
-    MinizincSolver.solve_sync(
+    {:ok, res} = MinizincSolver.solve_sync(
       @sudoku_model,
       %{"S": 3, start: puzzle},
       solver_opts
     )
+    res
   end
 
   @doc false

@@ -22,7 +22,8 @@ defmodule GraphColoring do
   end
 
   defp solve_sync(data, opts) do
-    MinizincSolver.solve_sync(@gc_model, data, Keyword.put_new(opts, :solution_handler, GraphColoring.Handler))
+  {:ok, res} = MinizincSolver.solve_sync(@gc_model, data, Keyword.put_new(opts, :solution_handler, GraphColoring.Handler))
+  res
   end
 
   def show_results(gc_results) do
