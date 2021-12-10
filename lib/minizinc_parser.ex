@@ -6,6 +6,7 @@ defmodule ParserState do
             fzn_output: "",
             compiled: false,
             compilation_timestamp: nil,
+            solver: nil,
             solver_stats: %{},
             mzn_stats: %{},
             solution_data: %{},
@@ -48,7 +49,7 @@ defmodule MinizincParser do
 
       new_parser_state ->
         {parser_event, new_parser_state}
-        # when is_record()
+      # when is_record()
     end
   end
 
@@ -139,9 +140,10 @@ defmodule MinizincParser do
   defp update_state(%ParserState{solution_count: sc} = results, {:status, :satisfied}) do
     %{
       results
-      | status: :satisfied,
-        timestamp: MinizincUtils.now(:microsecond),
-        solution_count: sc + 1
+    |
+      status: :satisfied,
+      timestamp: MinizincUtils.now(:microsecond),
+      solution_count: sc + 1
     }
   end
 
@@ -209,8 +211,9 @@ defmodule MinizincParser do
 
     %{
       results
-      | json_buffer: "",
-        solution_data: map_to_elixir(solution_data)
+    |
+      json_buffer: "",
+      solution_data: map_to_elixir(solution_data)
     }
   end
 
@@ -251,6 +254,7 @@ defmodule MinizincParser do
   #  @summary_fields [
   #    :status,           # Solver status (one of :satisfied, :unsatisfiable etc)
   #    :fzn_stats,        # Map of FlatZinc statistics values keyed with the field names
+  #    :solver,           # solver MiniZinc id
   #    :solver_stats,     # Map of solver statistics values keyed with the field names
   #    :solution_count,   # Total number of solutions found
   #    :last_solution,    # Data for last :solution event (see above)
@@ -270,49 +274,45 @@ defmodule MinizincParser do
   #  ]
 
   ## Data for solver events
-  def solution(%ParserState{
-        solution_data: data,
-        timestamp: timestamp,
-        mzn_stats: stats,
-        solution_count: count
-      }) do
+  def solution(
+        %ParserState{
+          solution_data: data,
+          timestamp: timestamp,
+          mzn_stats: stats,
+          solution_count: count
+        }
+      ) do
     %{data: data, timestamp: timestamp, index: count, stats: stats}
   end
 
   def summary(
-        %ParserState{
-          status: status,
-          solution_count: solution_count,
-          solver_stats: solver_stats,
-          fzn_stats: fzn_stats,
-          fzn_output: fzn_output,
-          compiled: compiled,
-          compilation_timestamp: compilation_timestamp,
-          minizinc_stderr: minizinc_stderr,
-          unclassified_output: unclassified,
-          time_elapsed: time_elapsed
-        } = results,
+        %ParserState{} = results,
         model_info \\ nil
       ) do
-    raw_summary = %{
-      status: status,
-      solution_count: solution_count,
-      fzn_stats: fzn_stats,
-      fzn_output: fzn_output,
-      compiled: compiled,
-      compilation_timestamp: compilation_timestamp,
-      solver_stats: solver_stats,
-      last_solution: solution(results),
-      minizinc_stderr: minizinc_stderr,
-      unclassified_output: unclassified,
-      time_elapsed: time_elapsed
-    }
+    raw_summary =
+      results
+      |> Map.take(
+           [
+             :status,
+             :solution_count,
+             :fzn_stats,
+             :fzn_output,
+             :compiled,
+             :compilation_timestamp,
+             :solver,
+             :solver_stats,
+             :minizinc_stderr,
+             :unclassified_input,
+             :time_elapsed
+           ]
+         )
+      |> Map.put(:last_solution, solution(results))
 
     ## Update status and add model info
     case model_info do
       _info when is_list(model_info) ->
         raw_summary
-        |> Map.put(:status, MinizincResults.status(model_info[:method], status))
+        |> Map.put(:status, MinizincResults.status(model_info[:method], results.status))
         |> Map.put(:model_info, model_info)
 
       _no_model_info ->
@@ -328,18 +328,10 @@ defmodule MinizincParser do
     %{error: error}
   end
 
-  def compilation_info(%ParserState{
-        fzn_stats: fzn_stats,
-        fzn_output: fzn_output,
-        compiled: compiled,
-        compilation_timestamp: compilation_timestamp
-      }) do
-    %{
-      fzn_stats: fzn_stats,
-      fzn_output: fzn_output,
-      compiled: compiled,
-      compilation_timestamp: compilation_timestamp
-    }
+  def compilation_info(
+        %ParserState{} = state
+      ) do
+     Map.take(state, [:fzn_stats, :fzn_output, :compiled, :compilation_timestamp])
   end
 
   defp key_value(key, value) do

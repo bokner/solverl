@@ -22,6 +22,10 @@ defmodule MinizincResults do
     MinizincModel.method(summary[:model_info])
   end
 
+  def get_solver(%{summary: summary} = _solver_results) do
+    summary.solver
+  end
+
   def get_last_solution(%{summary: summary} = _solver_results) do
     get_last_solution(summary)
   end

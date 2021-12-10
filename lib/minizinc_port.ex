@@ -20,6 +20,7 @@ defmodule MinizincPort do
       %{
         pid: pid,
         ospid: ospid,
+        solver: solver,
         started_at: MinizincUtils.now(:microsecond),
         parser_state: MinizincParser.initial_state(),
         solution_handler: solver_opts[:solution_handler],
@@ -287,6 +288,7 @@ defmodule MinizincPort do
          %{
            solution_handler: solution_handler,
            parser_state: parser_state,
+           solver: solver,
            model: model_info,
            exit_status: exit_status,
            sync_to: caller
@@ -297,7 +299,8 @@ defmodule MinizincPort do
       :summary,
       MinizincHandler.handle_summary(
         MinizincParser.summary(parser_state, model_info)
-        |> Map.put(:exit_reason, exit_status),
+        |> Map.put(:exit_reason, exit_status)
+        |> Map.put(:solver, solver["id"]),
         solution_handler
       )
     )
