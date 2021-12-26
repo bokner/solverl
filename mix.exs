@@ -28,6 +28,7 @@ defmodule Solverl.MixProject do
       {:jason, "~> 1.2"},
       {:distance, "~> 0.2.2"},
       {:erlexec, "~> 1.17"},
+      {:rexbug, ">= 1.0.0"},
       {:dialyxir, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
     ]
