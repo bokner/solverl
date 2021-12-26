@@ -65,7 +65,7 @@ defmodule MinizincSolver do
     case MinizincModel.mzn_dzn_info(
            model,
            data,
-           solver_opts[:minizinc_executable]
+           solver_opts
          ) do
       {:error, error} ->
         {:error, error}

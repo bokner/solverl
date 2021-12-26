@@ -54,12 +54,8 @@ defmodule SolverlTest do
 
   test "Minizinc error" do
     ## Unrecognized Minizinc option
-    assert {:ok,
-            %{
-              minizinc_error: %{
-                error: _error
-              }
-            }} = MinizincSolver.solve_sync(@nqueens_model, %{n: 2}, extra_flags: "--fake-flag")
+    {:error, invalid_option_or_bad_format} = MinizincSolver.solve_sync(@nqueens_model, %{n: 2}, extra_flags: "--fake-flag")
+    assert String.starts_with?(invalid_option_or_bad_format, "minizinc: Unrecognized option or bad format `--fake-flag'")
   end
 
   test "Checking dzn against the model: undefined identifier" do
