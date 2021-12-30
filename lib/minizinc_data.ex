@@ -35,6 +35,10 @@ defmodule MinizincData do
     File.read!(data)
   end
 
+  defp read_dzn(data) when is_list(data) do
+    elixir_to_dzn(data)
+  end
+
   # Dzn as dict/map
   defp read_dzn(data) when is_map(data) do
     map_to_dzn(data)
@@ -83,24 +87,24 @@ defmodule MinizincData do
   # Convert element to .dzn string
   #############################################
 
-  defp elixir_to_dzn(array) when is_list(array) do
+  def elixir_to_dzn(array) when is_list(array) do
     array_to_dzn(array, @default_array_base)
   end
 
   # Support optional list of index bases for array dimensions.
   #
-  defp elixir_to_dzn({bases, array}) when is_list(array) do
+  def elixir_to_dzn({bases, array}) when is_list(array) do
     array_to_dzn(array, bases)
   end
 
   #
   # Sets
   #
-  defp elixir_to_dzn(map) when is_map(map) do
+  def elixir_to_dzn(map) when is_map(map) do
     "{" <> Enum.join(map, @element_separator) <> "}"
   end
 
-  defp elixir_to_dzn(enum) when is_tuple(enum) do
+  def elixir_to_dzn(enum) when is_tuple(enum) do
     enum_list = Tuple.to_list(enum)
 
     "{" <>
@@ -110,7 +114,7 @@ defmodule MinizincData do
       ) <> "}"
   end
 
-  defp elixir_to_dzn(el) do
+  def elixir_to_dzn(el) do
     el
   end
 
