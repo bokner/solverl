@@ -5,6 +5,7 @@ defmodule MinizincPort do
 
   use GenServer
   require Logger
+  import MinizincUtils
 
   # GenServer API
   def start_link(model_info, solver, solver_opts, opts) do
@@ -193,8 +194,7 @@ defmodule MinizincPort do
     solver_str = "--solver #{solver["id"]}"
     time_limit = opts[:time_limit]
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
-    extra_flags = Keyword.get(opts, :extra_flags, "")
-
+    extra_flags = build_extra_flags(opts)
     command =
       Enum.join(
         [
@@ -461,4 +461,5 @@ defmodule MinizincPort do
   defp send_event(pid, event, data) do
     send(pid, %{solver_results: {event, data}, from: self()})
   end
+
 end

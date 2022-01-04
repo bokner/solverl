@@ -4,6 +4,7 @@ defmodule MinizincSolver do
   """
 
   require Logger
+  import MinizincUtils
 
   @type solver_opt() ::
           {:minizinc_executable, binary()}
@@ -60,8 +61,7 @@ defmodule MinizincSolver do
 
   def solve(model, data \\ [], solver_opts \\ [], server_opts \\ []) do
     ## Merge with defaults
-    solver_opts = Keyword.merge(MinizincSolver.default_solver_opts(), solver_opts)
-
+    solver_opts = build_solver_opts(solver_opts)
     case MinizincModel.mzn_dzn_info(
            model,
            data,

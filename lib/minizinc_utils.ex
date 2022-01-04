@@ -104,4 +104,14 @@ defmodule MinizincUtils do
   def send_after(_msg, _timeout) do
     nil
   end
+
+  def build_extra_flags(opts) do
+    extra_flags = Keyword.get(opts, :extra_flags, "")
+    is_list(extra_flags) && Enum.join(extra_flags, " ") || extra_flags
+  end
+
+  def build_solver_opts(opts) do
+    opts = Keyword.merge(MinizincSolver.default_solver_opts(), opts)
+    Keyword.put(opts, :extra_flags, build_extra_flags(opts))
+  end
 end

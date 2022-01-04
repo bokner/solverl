@@ -62,7 +62,7 @@ defmodule MinizincModel do
   @dzn_header "%%%%% DZN START"
   @dzn_footer "%%%%% DZN END"
 
-  def mzn_dzn_info(model, data, solver_opts \\ MinizincSolver.default_solver_opts()) do
+  def mzn_dzn_info(model, data, solver_opts \\ []) do
     ## Create a temporary file for the joint model
     model_file =
       String.replace_suffix(
@@ -85,12 +85,12 @@ defmodule MinizincModel do
     MinizincModel.model_info(model_file, solver_opts)
   end
 
-  def model_info(model_file, solver_opts \\ MinizincSolver.default_solver_opts())
+  def model_info(model_file, solver_opts \\ [])
       when is_binary(model_file) do
+    solver_opts = Keyword.merge(MinizincSolver.default_solver_opts(), solver_opts)
+    model_info_cmd = "#{solver_opts[:minizinc_executable]} #{model_file} --model-interface-only --allow-multiple-assignments #{solver_opts[:extra_flags]}"
     mzn_output =
-      cmd(
-        "#{solver_opts[:minizinc_executable]} #{model_file} --model-interface-only --allow-multiple-assignments #{solver_opts[:extra_flags]}"
-      )
+      cmd(model_info_cmd)
 
     case Jason.decode(mzn_output) do
       {:ok, model_info} ->
