@@ -129,10 +129,18 @@ defmodule MinizincSolver do
     case solve(model, data, sync_solver_opts, opts) do
       {:ok, solver_pid} ->
         result = receive_events(solution_handler, solver_pid)
-        (result && {:ok, result}) || {:error, :unexpected}
+        build_result(result)
       {:error, error} ->
         {:error, error}
     end
+  end
+
+  defp build_result(%{minizinc_error: _error} = error_event) do
+    {:error, error_event}
+  end
+
+  defp build_result(events) do
+    (events && {:ok, events}) || {:error, :unexpected}
   end
 
   defp receive_events(solution_handler, solver_pid) do
