@@ -88,7 +88,7 @@ defmodule MinizincModel do
   def model_info(model_file, solver_opts \\ [])
       when is_binary(model_file) do
     solver_opts = Keyword.merge(MinizincSolver.default_solver_opts(), solver_opts)
-    model_info_cmd = "#{solver_opts[:minizinc_executable]} #{model_file} --model-interface-only --allow-multiple-assignments #{solver_opts[:extra_flags]}"
+    model_info_cmd = "#{solver_opts[:minizinc_executable]} #{model_file} --solver #{solver_opts[:solver]} --model-interface-only --allow-multiple-assignments #{solver_opts[:extra_flags]}"
     mzn_output =
       cmd(model_info_cmd)
 
