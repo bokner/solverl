@@ -7,6 +7,7 @@ defmodule MinizincData do
   @type mzn_data() :: data_chunk() | list(data_chunk)
 
   @element_separator ", "
+  @row_separator " | "
   @default_array_base 1
   @max_dimensions 6
 
@@ -121,11 +122,21 @@ defmodule MinizincData do
   defp array_to_dzn(array, bases) do
     dims = dimensions(array)
 
-    if dims do
-      array_dimensions(dims, make_base_list(dims, bases)) <>
-        "[#{Enum.map_join(List.flatten(array), @element_separator, fn el -> elixir_to_dzn(el) end)}]" <> ")"
-    else
-      throw({:irregular_array, array})
+    case dims do
+      [_] ->
+        # 1D
+        "[#{array_row_to_dzn(array)}]"
+
+      [_, _] ->
+        # 2D
+        "[|#{Enum.map_join(array, @row_separator, &array_row_to_dzn/1)}|]"
+
+      [_ | _] ->
+        array_dimensions(dims, make_base_list(dims, bases)) <>
+          "[#{Enum.map_join(List.flatten(array), @element_separator, &elixir_to_dzn/1)}]" <> ")"
+
+      _ ->
+        throw({:irregular_array, array})
     end
   end
 
@@ -137,19 +148,25 @@ defmodule MinizincData do
     List.duplicate(base, length(dims))
   end
 
+  defp array_row_to_dzn(el) when is_list(el) do
+    Enum.map_join(el, @element_separator, &elixir_to_dzn/1)
+  end
+
   defp make_set(mzn_set) do
     MapSet.new(
-    Enum.reduce(
-      mzn_set,
-      [],
-      fn
-        [lower, upper], acc ->
-          ## This is a range
-          Enum.to_list(lower..upper) ++ acc
-        int, acc ->
-          [int | acc]
-      end
-    ))
+      Enum.reduce(
+        mzn_set,
+        [],
+        fn
+          [lower, upper], acc ->
+            ## This is a range
+            Enum.to_list(lower..upper) ++ acc
+
+          int, acc ->
+            [int | acc]
+        end
+      )
+    )
   end
 
   defp array_dimensions(dims, _bases) when length(dims) > @max_dimensions do

@@ -277,7 +277,7 @@ defmodule SolverlTest do
       MapSet.new()
     ]
 
-    expected = "array1d(1..3,[{1, 2}, {3}, {}])"
+    expected = "[{1, 2}, {3}, {}]"
     actual = MinizincData.elixir_to_dzn(array)
 
     assert expected == actual
