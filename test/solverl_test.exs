@@ -269,6 +269,19 @@ defmodule SolverlTest do
              not results[:summary][:compiled] and
              results[:summary][:exit_reason] == :by_fzn_timeout
   end
+
+  test "can create an array of sets" do
+    array = [
+      MapSet.new([1, 2]),
+      MapSet.new([3]),
+      MapSet.new()
+    ]
+
+    expected = "array1d(1..3,[{1, 2}, {3}, {}])"
+    actual = MinizincData.elixir_to_dzn(array)
+
+    assert expected == actual
+  end
 end
 
 ####################

@@ -118,14 +118,14 @@ defmodule MinizincData do
     el
   end
 
-  defp array_to_dzn(el, bases) do
-    dims = dimensions(el)
+  defp array_to_dzn(array, bases) do
+    dims = dimensions(array)
 
     if dims do
       array_dimensions(dims, make_base_list(dims, bases)) <>
-        "[#{Enum.join(List.flatten(el), @element_separator)}]" <> ")"
+        "[#{Enum.map_join(List.flatten(array), @element_separator, fn el -> elixir_to_dzn(el) end)}]" <> ")"
     else
-      throw({:irregular_array, el})
+      throw({:irregular_array, array})
     end
   end
 
