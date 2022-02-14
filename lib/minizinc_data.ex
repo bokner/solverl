@@ -118,60 +118,57 @@ defmodule MinizincData do
     el
   end
 
-  defp array_to_dzn(array, bases) do
+  defp array_to_dzn(array, range_specs) do
     dims = dimensions(array)
 
     if dims do
-      array_dimensions(dims, make_base_list(dims, bases)) <>
+      array_dimensions(dims, make_range_specs_list(dims, range_specs)) <>
         "[#{Enum.map_join(List.flatten(array), @element_separator, fn el -> elixir_to_dzn(el) end)}]" <> ")"
     else
       throw({:irregular_array, array})
     end
   end
 
-  defp make_base_list(_dims, base) when is_list(base) do
-    base
+  defp make_range_specs_list(_dims, range_specs) when is_list(range_specs) do
+    range_specs
+  end
+  ## Range specs as a single integer is interpreted as a common index base
+  ## for all array dimensions
+  defp make_range_specs_list(dims, common_array_spec) when is_integer(common_array_spec) do
+    List.duplicate(common_array_spec, length(dims))
   end
 
-  defp make_base_list(dims, base) when is_integer(base) do
-    List.duplicate(base, length(dims))
-  end
 
-  defp make_set(mzn_set) do
-    MapSet.new(
-    Enum.reduce(
-      mzn_set,
-      [],
-      fn
-        [lower, upper], acc ->
-          ## This is a range
-          Enum.to_list(lower..upper) ++ acc
-        int, acc ->
-          [int | acc]
-      end
-    ))
-  end
 
-  defp array_dimensions(dims, _bases) when length(dims) > @max_dimensions do
+  defp array_dimensions(dims, _range_specs) when length(dims) > @max_dimensions do
     throw({:too_many_dimensions, "#{length(dims)}"})
   end
 
-  defp array_dimensions(dims, bases) do
-    if length(dims) == length(bases) do
+  defp array_dimensions(dims, range_specs) do
+    if length(dims) == length(range_specs) do
       "array#{length(dims)}d(" <>
         Enum.reduce(
-          Enum.zip(dims, bases),
+          Enum.zip(dims, range_specs),
           "",
-          fn {d, b}, acc ->
-            acc <> "#{b}..#{d + b - 1},"
+          fn {dim, range_spec}, acc ->
+            acc <> dimension_to_dzn(dim, range_spec) <> ","
             ## Shift upper bound to match dimension base
           end
         )
     else
-      throw({:base_list_mismatch, bases})
+      throw({:base_list_mismatch, range_specs})
     end
   end
 
+  # Range spec as an integer is interpreted as a dimension base
+  defp dimension_to_dzn(dimension, base) when is_integer(base) do
+    "#{base}..#{dimension + base - 1}"
+  end
+
+  # Range spec as a string is interpreted as a enum name
+  defp dimension_to_dzn(_dimension, enum_name) when is_binary(enum_name) do
+    enum_name
+  end
   @doc false
   ## Dimensions of a nested list of lists.
   ## The lengths of sublists within a dimension have to be the same,
@@ -199,6 +196,24 @@ defmodule MinizincData do
   defp dimensions(_el, acc) do
     Enum.reverse(acc)
   end
+
+
+  defp make_set(mzn_set) do
+    MapSet.new(
+    Enum.reduce(
+      mzn_set,
+      [],
+      fn
+        [lower, upper], acc ->
+          ## This is a range
+          Enum.to_list(lower..upper) ++ acc
+        int, acc ->
+          [int | acc]
+      end
+    ))
+  end
+
+
 
   @doc """
   Check dzn against the model info.

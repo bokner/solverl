@@ -23,7 +23,13 @@ defmodule SolverlTest do
                    test_arr: test_arr,
                    test_base_arr: {[0, 1, 0], test_arr},
                    test_set: MapSet.new([1, 2, 3]),
-                   test_enum: MapSet.new([:red, :blue, :white])
+                   test_enum: MapSet.new([:red, :blue, :white]),
+                   test_enum_arr: { ["test_enum"], [1, 2, 3]},
+                   test_enum_arr2d: {["test_enum", "test_enum"],
+                   [
+                     [1, 2, 3],
+                     [4, 5, 6]
+                   ]}
                  },
                  @test_data2
                ],
@@ -44,7 +50,13 @@ defmodule SolverlTest do
                    test_arr: test_arr,
                    test_base_arr: {[0, 1, 0], test_arr},
                    test_set: MapSet.new([1, 2, 3]),
-                   test_enum: MapSet.new([:red, :blue, :white])
+                   test_enum: MapSet.new([:red, :blue, :white]),
+                   test_enum_arr: {["test_enum"], [1, 2, 3]},
+                   test_enum_arr2d: {["test_enum", "test_enum"],
+                   [
+                     [1, 2, 3],
+                     [4, 5, 6]
+                   ]}
                  },
                  @test_data2
                ],

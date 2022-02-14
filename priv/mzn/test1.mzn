@@ -12,10 +12,14 @@ set of int: test_set;
 
 %% Test enums
 enum test_enum;
+array[test_enum] of int: test_enum_arr;
+array[test_enum, test_enum] of int: test_enum_arr2d;
 
 array[1..4] of var 1..10: x;
 array[1..100] of var 1..100: y;
 var 1..3: z;
+
+
 
 var set of 0..4: test_var_set;
 constraint all_different(x);
