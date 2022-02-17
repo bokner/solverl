@@ -11,7 +11,7 @@ defmodule MinizincSolver do
           | {:solver, binary()}
           | {:checker, MinizincModel.mzn_model()}
           | {:time_limit, integer()}
-          | {:solution_handler, function()}
+          | {:solution_handler, function() | module()}
           | {:solution_timeout, timeout()}
           | {:fzn_timeout, timeout()}
           | {:sync_to, pid() | nil}
