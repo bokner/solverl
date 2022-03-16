@@ -26,6 +26,10 @@ defmodule MinizincResults do
     summary.solver
   end
 
+  def get_solver_stats(%{summary: summary} = _solver_results) do
+    summary.solver_stats
+  end
+
   def get_last_solution(%{summary: summary} = _solver_results) do
     get_last_solution(summary)
   end
