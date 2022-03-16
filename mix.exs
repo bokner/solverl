@@ -4,7 +4,7 @@ defmodule Solverl.MixProject do
   def project do
     [
       app: :solverl,
-      version: "1.0.14",
+      version: "1.0.15",
       elixir: "~> 1.10",
       start_permanent: Mix.env() == :prod,
       elixirc_paths: ["lib", "examples"],
