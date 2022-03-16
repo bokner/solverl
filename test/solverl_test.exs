@@ -266,9 +266,8 @@ defmodule SolverlTest do
     ## No solutions...
     ## ...but it did compile...
     ## ...and the exit reason indicates a solution timeout
-    assert not MinizincResults.has_solution(results) and
-             results[:summary][:compiled] and
-             results[:summary][:exit_reason] == :by_solution_timeout
+    assert results[:summary][:compiled]
+    assert results[:summary][:exit_reason] == :by_solution_timeout
   end
 
   test "Shut down on compilation timeout" do
