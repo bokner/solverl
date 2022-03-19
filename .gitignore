@@ -24,3 +24,6 @@ solverl-*.tar
 
 # Ignore .idea files
 /.idea
+
+# Ignore asdf files
+/.tool-versions
