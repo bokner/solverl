@@ -156,7 +156,7 @@ Data could be either:
 
     MiniZinc `array` type corresponds to (nested) [List](https://hexdocs.pm/elixir/List.html).
     The code determines dimensions of the array based on its nested structure.
-    Each level of nested list has to contain elements of the same length, or the exception 
+    Each level of the nested list has to contain lists of the same length, or the exception 
     `{:irregular_array, array}` will be thrown.
     6 levels of nesting are currently supported, in line with MiniZinc current limit.
     
@@ -187,6 +187,26 @@ Data could be either:
      ```
      "a = array2d(0..4,1..5,[0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 0]);\n"
      ```
+
+    There is an option to specify array's index sets through `enum` names specified in your model and/or data.
+
+    Example: assume your model has a definition of `enum`
+    ```
+    enum test_enum = {blue, red, white};
+    ```
+
+    You could then generate the data for the array that uses `enum` as an index set:
+     
+    ```elixir
+      enum_arr2d = 
+      {["test_enum", "test_enum"], [[1, 2, 3], [4, 5, 6]]}
+       MinizincData.to_dzn(%{enum_arr2d: enum_arr2d})
+    ```
+    Output:
+    ```
+    "enum_arr2d = array2d(test_enum, test_enum,[1, 2, 3, 4, 5, 6]);\n"
+    ```
+
       
 - #### Sets
 
