@@ -88,11 +88,13 @@ defmodule MinizincModel do
   def model_info(model_file, solver_opts \\ [])
       when is_binary(model_file) do
     solver_opts = Keyword.merge(MinizincSolver.default_solver_opts(), solver_opts)
-    model_info_cmd = "#{solver_opts[:minizinc_executable]} #{model_file} --solver #{solver_opts[:solver]} --model-interface-only --allow-multiple-assignments #{solver_opts[:extra_flags]}"
-    mzn_output =
-      cmd(model_info_cmd)
 
-    case Jason.decode(mzn_output) do
+    model_info_cmd =
+      "#{solver_opts[:minizinc_executable]} #{model_file} --solver #{solver_opts[:solver]} --model-interface-only --allow-multiple-assignments #{solver_opts[:extra_flags]}"
+
+    mzn_output = cmd(model_info_cmd)
+
+    case decode_model_info(mzn_output) do
       {:ok, model_info} ->
         [
           {:model_file, model_file}
@@ -110,6 +112,18 @@ defmodule MinizincModel do
       {:error, _jason_error} ->
         ## TODO : parse error
         {:error, mzn_output}
+    end
+  end
+
+  def decode_model_info(model_output) do
+    case Jason.decode(model_output) do
+      {:ok, model_info} ->
+        {:ok, model_info}
+
+      {:error, %{data: data, position: position}} ->
+        ## Try to re-parse the "valid" part of the output
+        json_part = String.slice(data, 0..(position - 1))
+        Jason.decode(json_part)
     end
   end
 
