@@ -62,6 +62,7 @@ defmodule MinizincSolver do
   def solve(model, data \\ [], solver_opts \\ [], server_opts \\ []) do
     ## Merge with defaults
     solver_opts = build_solver_opts(solver_opts)
+
     case MinizincModel.mzn_dzn_info(
            model,
            data,
@@ -130,6 +131,7 @@ defmodule MinizincSolver do
       {:ok, solver_pid} ->
         result = receive_events(solution_handler, solver_pid)
         build_result(result)
+
       {:error, error} ->
         {:error, error}
     end
@@ -147,7 +149,7 @@ defmodule MinizincSolver do
     results = receive_events(solution_handler, solver_pid, %{})
     # Reverse list of solutions (as they are being added in reverse order)
     results &&
-    Map.update(
+      Map.update(
         results,
         :solutions,
         [],
@@ -168,23 +170,22 @@ defmodule MinizincSolver do
 
       unexpected ->
         Logger.error(
-          "Unexpected message from the solver sync handler (#{inspect(solver_pid)}): #{
-            inspect(unexpected)
-          }"
+          "Unexpected message from the solver sync handler (#{inspect(solver_pid)}): #{inspect(unexpected)}"
         )
+
         nil
     end
   end
 
   defp add_solver_event(:solution, data, acc) do
-      Map.update(
-        acc,
-        :solutions,
-        [data],
-        fn
-          current -> [data | current]
-        end
-      )
+    Map.update(
+      acc,
+      :solutions,
+      [data],
+      fn
+        current -> [data | current]
+      end
+    )
   end
 
   defp add_solver_event(event, data, acc) do

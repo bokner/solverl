@@ -195,12 +195,13 @@ defmodule MinizincPort do
     time_limit = opts[:time_limit]
     time_limit_str = if time_limit, do: "--time-limit #{time_limit}", else: ""
     extra_flags = build_extra_flags(opts)
+
     command =
       Enum.join(
         [
           opts[:minizinc_executable],
           "--allow-multiple-assignments --output-mode json --output-time --output-objective --output-output-item -s -a",
-	  "#{extra_flags}",
+          "#{extra_flags}",
           "#{solver_str} #{time_limit_str} #{model_str} #{checker_str}"
         ],
         " "
@@ -462,5 +463,4 @@ defmodule MinizincPort do
   defp send_event(pid, event, data) do
     send(pid, %{solver_results: {event, data}, from: self()})
   end
-
 end

@@ -49,7 +49,7 @@ defmodule MinizincParser do
 
       new_parser_state ->
         {parser_event, new_parser_state}
-      # when is_record()
+        # when is_record()
     end
   end
 
@@ -140,10 +140,9 @@ defmodule MinizincParser do
   defp update_state(%ParserState{solution_count: sc} = results, {:status, :satisfied}) do
     %{
       results
-    |
-      status: :satisfied,
-      timestamp: MinizincUtils.now(:microsecond),
-      solution_count: sc + 1
+      | status: :satisfied,
+        timestamp: MinizincUtils.now(:microsecond),
+        solution_count: sc + 1
     }
   end
 
@@ -211,9 +210,8 @@ defmodule MinizincParser do
 
     %{
       results
-    |
-      json_buffer: "",
-      solution_data: map_to_elixir(solution_data)
+      | json_buffer: "",
+        solution_data: map_to_elixir(solution_data)
     }
   end
 
@@ -274,14 +272,12 @@ defmodule MinizincParser do
   #  ]
 
   ## Data for solver events
-  def solution(
-        %ParserState{
-          solution_data: data,
-          timestamp: timestamp,
-          mzn_stats: stats,
-          solution_count: count
-        }
-      ) do
+  def solution(%ParserState{
+        solution_data: data,
+        timestamp: timestamp,
+        mzn_stats: stats,
+        solution_count: count
+      }) do
     %{data: data, timestamp: timestamp, index: count, stats: stats}
   end
 
@@ -291,21 +287,19 @@ defmodule MinizincParser do
       ) do
     raw_summary =
       results
-      |> Map.take(
-           [
-             :status,
-             :solution_count,
-             :fzn_stats,
-             :fzn_output,
-             :compiled,
-             :compilation_timestamp,
-             :solver,
-             :solver_stats,
-             :minizinc_stderr,
-             :unclassified_input,
-             :time_elapsed
-           ]
-         )
+      |> Map.take([
+        :status,
+        :solution_count,
+        :fzn_stats,
+        :fzn_output,
+        :compiled,
+        :compilation_timestamp,
+        :solver,
+        :solver_stats,
+        :minizinc_stderr,
+        :unclassified_input,
+        :time_elapsed
+      ])
       |> Map.put(:last_solution, solution(results))
 
     ## Update status and add model info
@@ -328,10 +322,8 @@ defmodule MinizincParser do
     %{error: error}
   end
 
-  def compilation_info(
-        %ParserState{} = state
-      ) do
-     Map.take(state, [:fzn_stats, :fzn_output, :compiled, :compilation_timestamp])
+  def compilation_info(%ParserState{} = state) do
+    Map.take(state, [:fzn_stats, :fzn_output, :compiled, :compilation_timestamp])
   end
 
   defp key_value(key, value) do

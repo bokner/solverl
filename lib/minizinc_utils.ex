@@ -107,7 +107,7 @@ defmodule MinizincUtils do
 
   def build_extra_flags(opts) do
     extra_flags = Keyword.get(opts, :extra_flags, "")
-    is_list(extra_flags) && Enum.join(extra_flags, " ") || extra_flags
+    (is_list(extra_flags) && Enum.join(extra_flags, " ")) || extra_flags
   end
 
   def build_solver_opts(opts) do
