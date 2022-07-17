@@ -24,12 +24,13 @@ defmodule SolverlTest do
                    test_base_arr: {[0, 1, 0], test_arr},
                    test_set: MapSet.new([1, 2, 3]),
                    test_enum: MapSet.new([:red, :blue, :white]),
-                   test_enum_arr: { ["test_enum"], [1, 2, 3]},
-                   test_enum_arr2d: {["test_enum", "test_enum"],
-                   [
-                     [1, 2, 3],
-                     [4, 5, 6]
-                   ]}
+                   test_enum_arr: {["test_enum"], [1, 2, 3]},
+                   test_enum_arr2d:
+                     {["test_enum", "test_enum"],
+                      [
+                        [1, 2, 3],
+                        [4, 5, 6]
+                      ]}
                  },
                  @test_data2
                ],
@@ -52,11 +53,12 @@ defmodule SolverlTest do
                    test_set: MapSet.new([1, 2, 3]),
                    test_enum: MapSet.new([:red, :blue, :white]),
                    test_enum_arr: {["test_enum"], [1, 2, 3]},
-                   test_enum_arr2d: {["test_enum", "test_enum"],
-                   [
-                     [1, 2, 3],
-                     [4, 5, 6]
-                   ]}
+                   test_enum_arr2d:
+                     {["test_enum", "test_enum"],
+                      [
+                        [1, 2, 3],
+                        [4, 5, 6]
+                      ]}
                  },
                  @test_data2
                ],
@@ -66,8 +68,13 @@ defmodule SolverlTest do
 
   test "Minizinc error" do
     ## Unrecognized Minizinc option
-    {:error, invalid_option_or_bad_format} = MinizincSolver.solve_sync(@nqueens_model, %{n: 2}, extra_flags: "--fake-flag")
-    assert String.starts_with?(invalid_option_or_bad_format, "minizinc: Unrecognized option or bad format `--fake-flag'")
+    {:error, invalid_option_or_bad_format} =
+      MinizincSolver.solve_sync(@nqueens_model, %{n: 2}, extra_flags: "--fake-flag")
+
+    assert String.starts_with?(
+             invalid_option_or_bad_format,
+             "minizinc: Unrecognized option or bad format `--fake-flag'"
+           )
   end
 
   test "Checking dzn against the model: undefined identifier" do
