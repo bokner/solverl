@@ -517,8 +517,8 @@ MinizincSearch.bab(instance, branch_fun)
 
 The problem: [Reindeer Ordering](https://dmcommunity.org/challenge/challenge-dec-2017/)
 
-- [Source code](https://github.com/bokner/solverl/blob/master/examples/reindeer_ordering.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/reindeer.mzn)
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/reindeer_order.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/reindeer.mzn)
 
 Solve it:
 ```elixir
@@ -531,7 +531,7 @@ Output:
 ### N-Queens
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/nqueens.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/nqueens.mzn)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/nqueens.mzn)
 
 The following code solves [N-queens](https://developers.google.com/optimization/cp/queens) puzzle for N = 4:
 
@@ -570,7 +570,7 @@ iex(75)>
 ### Sudoku
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/sudoku.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/sudoku.mzn)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/sudoku.mzn)
 
 ```elixir
 Sudoku.solve("85...24..72......9..4.........1.7..23.5...9...4...........8..7..17..........36.4.")
@@ -627,7 +627,7 @@ iex(79)>
 ### Graph coloring
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/graph_coloring.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/graph_coloring.mzn)
 
 
 The model's objective is to minimize the number of colors for proper [Graph Vertex Coloring](https://www.wikiwand.com/en/Graph_coloring#/Vertex_coloring).
@@ -655,7 +655,7 @@ Output:
 ### Large Neighbourhood Search examples
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/gc_lns.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/graph_coloring.mzn)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/graph_coloring.mzn)
 
 #### Randomized LNS example
 It's a Graph Coloring again, now on a graph with 1000 vertices.
@@ -736,7 +736,7 @@ Partial output (last solution and a final line only):
 ### Branch-and-Bound example
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/golomb_bab.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/golomb_mybab.mzn)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/golomb_mybab.mzn)
 
 This is an implementation of [Golomb Ruler example from MiniSearch distribution](https://github.com/MiniZinc/libminizinc/blob/feature/minisearch/tests/minisearch/regression_tests/golomb_mybab.mzn).
 ```elixir
@@ -773,7 +773,7 @@ Note that the model's output (last 2 rows) is being used, to show that it is pre
 ### Solver Race
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/solver_race.ex)
-- [Model](https://github.com/bokner/solverl/blob/master/mzn/nqueens.mzn)
+- [Model](https://github.com/bokner/solverl/blob/master/priv/mzn/nqueens.mzn)
 
 We will simultaneously run Gecode and Chuffed on the same model. The results will be collected by the parent process, which will do logging of intermediate results and the final standing.
 

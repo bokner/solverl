@@ -14,7 +14,3 @@ defmodule ReindeerOrdering do
     |> Enum.map_join(", ", fn {reindeer, _pos} -> reindeer end)
   end
 end
-
-defmodule ReindeerOrdering.Handler do
-
-end
