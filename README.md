@@ -20,6 +20,7 @@ View docs [here](https://hexdocs.pm/solverl).
     - [Meta-search](#meta-search)
     
 - [Examples](#examples)
+    - [Reindeer Ordering](#reindeer-ordering)
     - [N-Queens](#n-queens)
     - [Sudoku](#sudoku)
     - [Graph Coloring](#graph-coloring)
@@ -502,6 +503,7 @@ MinizincSearch.bab(instance, branch_fun)
 ```
 
 ## Examples
+- [Reindeer Ordering](#reindeer-ordering)
 - [N-Queens](#n-queens)
 - [Sudoku](#sudoku)
 - [Graph Coloring](#graph-coloring)
@@ -511,6 +513,21 @@ MinizincSearch.bab(instance, branch_fun)
 - [Solver Race](#solver-race)
 - [More examples in unit tests](https://github.com/bokner/solverl/blob/master/test/solverl_test.exs)
  
+### Reindeer Ordering
+
+The problem: [Reindeer Ordering](https://dmcommunity.org/challenge/challenge-dec-2017/)
+
+- [Source code](https://github.com/bokner/solverl/blob/master/examples/reindeer_ordering.ex)
+- [Model](https://github.com/bokner/solverl/blob/master/mzn/reindeer.mzn)
+
+Solve it:
+```elixir
+ReindeerOrdering.solve()
+```
+Output:
+```
+"Prancer, Cupid, Rudolph, Dasher, Blitzen, Vixen, Comet, Donder, Dancer"
+```
 ### N-Queens
 
 - [Source code](https://github.com/bokner/solverl/blob/master/examples/nqueens.ex)
