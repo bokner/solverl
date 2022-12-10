@@ -6,7 +6,7 @@ defmodule ReindeerOrdering do
   @reindeer_model resource_file("mzn/reindeer.mzn")
 
   def solve() do
-    {:ok, solutions} = Solver.solve_sync(@reindeer_model, %{})
+    {:ok, solutions} = Solver.solve_sync(@reindeer_model)
     solutions
     |> MinizincResults.get_last_solution()
     |> Map.get(:data)
