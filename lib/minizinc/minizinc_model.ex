@@ -116,15 +116,35 @@ defmodule MinizincModel do
   end
 
   def decode_model_info(model_output) do
-    case Jason.decode(model_output) do
+    json_body =
+      model_output
+      |> String.split("\n")
+      ## Advance to the beginning of json block
+      |> Enum.drop_while(fn l -> not String.starts_with?(l, "{") end)
+      |> get_json_body()
+
+    case Jason.decode(json_body) do
       {:ok, model_info} ->
         {:ok, model_info}
 
-      {:error, %{data: data, position: position}} ->
-        ## Try to re-parse the "valid" part of the output
-        json_part = String.slice(data, 0..(position - 1))
-        Jason.decode(json_part)
+      {:error, error} ->
+        {:error, error}
     end
+  end
+
+  defp get_json_body([]) do
+    ""
+  end
+
+  defp get_json_body(json_block) do
+    Enum.reduce_while(json_block, {"", 0}, fn line, {buffer, open_brackets} ->
+      (0 ==
+         Enum.reduce(String.graphemes(line), open_brackets, fn
+           "{", count -> count + 1
+           "}", count -> count - 1
+           _, count -> count
+         end) && {:halt, buffer <> line}) || {:cont, buffer <> line}
+    end)
   end
 
   ## Add checker model to the existing model info.

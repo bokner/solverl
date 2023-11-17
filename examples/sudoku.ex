@@ -65,7 +65,11 @@ defmodule Sudoku do
   @doc false
   def sudoku_string_to_grid(sudoku_str) do
     str0 = String.replace(sudoku_str, ".", "0")
-    for i <- 1..9, do: for j <- 1..9, do: String.to_integer(String.at(str0, (i - 1) * 9 + (j - 1)))
+    for i <- 1..9 do
+       for j <- 1..9 do
+         String.to_integer(String.at(str0, (i - 1) * 9 + (j - 1)))
+       end
+      end
   end
 
   @doc false
@@ -137,5 +141,3 @@ defmodule Sudoku.Handler do
     MinizincHandler.Default.handle_minizinc_error(error)
   end
 end
-
-
