@@ -161,7 +161,7 @@ defmodule MinizincSolver do
 
   defp receive_events(solution_handler, solver_pid, acc) do
     receive do
-      %{from: pid, solver_results: {event, data}} when pid == solver_pid ->
+      %{from: pid, solver_results: {event, data}} ->
         if event in [:summary, :minizinc_error] do
           add_solver_event(event, data, acc)
         else
